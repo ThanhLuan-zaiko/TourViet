@@ -22,6 +22,10 @@ public class RegisterRequest
     [MaxLength(20, ErrorMessage = "Số điện thoại không được vượt quá 20 ký tự")]
     public string Phone { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Địa chỉ là bắt buộc")]
+    [MaxLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự")]
+    public string Address { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
     [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
     public string Password { get; set; } = string.Empty;

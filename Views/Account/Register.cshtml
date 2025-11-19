@@ -10,20 +10,9 @@
                 <div class="card-body p-4">
                     <h2 class="card-title text-center mb-4 fw-bold">Đăng ký tài khoản</h2>
 
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                                {
-                                    <li>@error.ErrorMessage</li>
-                                }
-                            </ul>
-                        </div>
-                    }
 
-                    <form asp-action="Register" asp-controller="Account" method="post" id="registerForm" class="needs-validation" novalidate>
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <form asp-action="Register" asp-controller="Account" method="post" id="registerForm" class="needs-validation" novalidate onsubmit="return validateForm(event)">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
 
                         <div class="mb-3">
                             <label asp-for="FullName" class="form-label fw-semibold"></label>
@@ -47,6 +36,12 @@
                             <label asp-for="Phone" class="form-label fw-semibold"></label>
                             <input asp-for="Phone" class="form-control form-control-lg" placeholder="Nhập số điện thoại" />
                             <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-semibold"></label>
+                            <input asp-for="Address" class="form-control form-control-lg" placeholder="Nhập địa chỉ" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
@@ -91,8 +86,8 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toggle password visibility
+        // Toggle password visibility functions
+        function togglePasswordVisibility() {
             const togglePassword = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('Password');
             const passwordIcon = document.getElementById('passwordIcon');
@@ -119,25 +114,80 @@
                     confirmPasswordIcon.classList.toggle('bi-eye-slash');
                 });
             }
+        }
 
-            // Prevent multiple submissions
-            const registerForm = document.getElementById('registerForm');
+        // Validation function
+        function validateForm(event) {
+            const form = document.getElementById('registerForm');
             const submitBtn = document.getElementById('submitBtn');
             const loadingSpinner = document.getElementById('loadingSpinner');
             const submitText = document.getElementById('submitText');
             
-            if (registerForm && submitBtn && loadingSpinner && submitText) {
-                registerForm.addEventListener('submit', function(e) {
-                    if (submitBtn.disabled) {
-                        e.preventDefault();
-                        return false;
-                    }
-                    
-                    submitBtn.disabled = true;
-                    loadingSpinner.classList.remove('d-none');
-                    submitText.innerHTML = 'Đang xử lý...';
-                });
+            // Add validation class to show validation messages
+            form.classList.add('was-validated');
+            
+            // Check if form is valid
+            if (!form.checkValidity()) {
+                // Prevent form submission if invalid
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Make sure loading state is not shown
+                submitBtn.disabled = false;
+                loadingSpinner.classList.add('d-none');
+                submitText.innerHTML = '<i class="bi bi-person-plus me-2"></i>Đăng ký';
+                
+                return false;
             }
+            
+            // Only proceed with loading state if form is valid and button is not disabled
+            if (!submitBtn.disabled) {
+                submitBtn.disabled = true;
+                loadingSpinner.classList.remove('d-none');
+                submitText.innerHTML = 'Đang xử lý...';
+            } else {
+                // If button is already disabled, prevent duplicate submission
+                event.preventDefault();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Add real-time validation to disable submit button when form is invalid
+        document.addEventListener('DOMContentLoaded', function() {
+            togglePasswordVisibility();
+            
+            const form = document.getElementById('registerForm');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Function to check form validity and update button state
+            function updateSubmitButtonState() {
+                if (form.checkValidity()) {
+                    submitBtn.disabled = false;
+                } else {
+                    submitBtn.disabled = true;
+                    // Ensure loading state is not shown when form is invalid
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    const submitText = document.getElementById('submitText');
+                    loadingSpinner.classList.add('d-none');
+                    submitText.innerHTML = '<i class="bi bi-person-plus me-2"></i>Đăng ký';
+                }
+            }
+            
+            // Add event listeners to all form inputs to check validity in real-time
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateSubmitButtonState);
+                input.addEventListener('blur', updateSubmitButtonState);
+            });
+            
+            // Initialize button state
+            updateSubmitButtonState();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            togglePasswordVisibility();
         });
     </script>
 }

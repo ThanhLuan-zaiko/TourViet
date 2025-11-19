@@ -34,9 +34,9 @@
                     <span class="fw-bold text-primary">TourViet</span>
                 </div>
 
-                <!-- Search Box -->
-                <div class="col col-md-4 col-lg-5">
-                    <div class="input-group w-100">
+                <!-- Search Box - Centered -->
+                <div class="col d-flex justify-content-center">
+                    <div class="input-group w-75 w-lg-50">
                         <input type="text" class="form-control border-0 bg-light" placeholder="Tìm kiếm tour, địa điểm..." aria-label="Search">
                         <button class="btn btn-link border-0 bg-light" type="button" aria-label="Search">
                             <i class="bi bi-search"></i>
@@ -44,55 +44,58 @@
                     </div>
                 </div>
 
-                <!-- Notification Bell -->
-                <div class="col-auto">
-                    <button class="btn btn-link p-2" type="button" id="notificationBtn" aria-label="Notifications">
-                        <i class="bi bi-bell fs-5"></i>
-                    </button>
-                </div>
+                <!-- Notification Bell and User Icon - Right side -->
+                <div class="col-auto d-flex align-items-center">
+                    <!-- Notification Bell -->
+                    <div class="me-3">
+                        <button class="btn btn-link p-2" type="button" id="notificationBtn" aria-label="Notifications">
+                            <i class="bi bi-bell fs-5"></i>
+                        </button>
+                    </div>
 
-                <!-- User Icon -->
-                <div class="col-auto">
-                    @{
-                        var userId = Context.Session.GetString("UserId");
-                        var fullName = Context.Session.GetString("FullName");
-                        var email = Context.Session.GetString("Email");
-                    }
-                    @if (userId != null)
-                    {
-                        <!-- User is logged in - Show dropdown menu -->
-                        <div class="dropdown">
-                            <button class="btn btn-link p-2 dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                    <!-- User Icon -->
+                    <div>
+                        @{
+                            var userId = Context.Session.GetString("UserId");
+                            var fullName = Context.Session.GetString("FullName");
+                            var email = Context.Session.GetString("Email");
+                        }
+                        @if (userId != null)
+                        {
+                            <!-- User is logged in - Show dropdown menu -->
+                            <div class="dropdown">
+                                <button class="btn btn-link p-2 dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                                    <i class="bi bi-person-circle fs-4"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><h6 class="dropdown-header">@(fullName ?? "User")</h6></li>
+                                    <li><p class="dropdown-item-text small text-muted">@email</p></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account">
+                                            <i class="bi bi-key me-2"></i>Đổi mật khẩu
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- User is not logged in - Show login button -->
+                            <a class="btn btn-link p-2" asp-action="Login" asp-controller="Account" aria-label="Đăng nhập">
                                 <i class="bi bi-person-circle fs-4"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><h6 class="dropdown-header">@(fullName ?? "User")</h6></li>
-                                <li><p class="dropdown-item-text small text-muted">@email</p></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account">
-                                        <i class="bi bi-key me-2"></i>Đổi mật khẩu
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        <!-- User is not logged in - Show login button -->
-                        <a class="btn btn-link p-2" asp-action="Login" asp-controller="Account" aria-label="Đăng nhập">
-                            <i class="bi bi-person-circle fs-4"></i>
-                        </a>
-                    }
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>

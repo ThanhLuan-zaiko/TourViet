@@ -27,6 +27,11 @@ public class RegisterViewModel
     [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
     public string Phone { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Địa chỉ là bắt buộc")]
+    [Display(Name = "Địa chỉ")]
+    [MaxLength(255, ErrorMessage = "Địa chỉ không được vượt quá 25 ký tự")]
+    public string Address { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
     [Display(Name = "Mật khẩu")]
     [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]

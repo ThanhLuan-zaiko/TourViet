@@ -83,6 +83,7 @@ public class AuthService : IAuthService
                 Email = request.Email,
                 Phone = request.Phone,
                 FullName = request.FullName,
+                Address = request.Address,
                 PasswordHash = hash,
                 PasswordSalt = salt,
                 PasswordAlgo = "SHA2_512+iter1000",
