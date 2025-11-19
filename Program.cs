@@ -1,7 +1,31 @@
+using TourViet.Extensions;
+using TourViet.Middleware;
+using TourViet.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services
+    .AddControllersWithViews();
+
+builder.Services
+    .AddPersistence(builder.Configuration);
+
+// Add Session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+// Register Services
+builder.Services.AddMemoryCache(); // For rate limiting
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IPasswordStrengthValidator, PasswordStrengthValidator>();
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
@@ -14,7 +38,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 app.UseRouting();
+
+// Add Session middleware (must be before UseAuthorization)
+app.UseSession();
+
+// Add custom middleware (order matters!)
+app.UseMiddleware<GlobalExceptionMiddleware>(); // Should be first to catch all exceptions
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<AuthenticationMiddleware>();
 
 app.UseAuthorization();
 

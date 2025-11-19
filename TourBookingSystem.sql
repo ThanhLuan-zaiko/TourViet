@@ -1,4 +1,29 @@
-﻿CREATE DATABASE TourBookingSystem;
+﻿USE master;
+GO
+
+SELECT 
+    session_id, 
+    login_name, 
+    host_name, 
+    program_name
+FROM sys.dm_exec_sessions
+WHERE database_id = DB_ID('TourBookingSystem');
+
+DECLARE @sql NVARCHAR(MAX) = N'';
+SELECT @sql += 'KILL ' + CAST(session_id AS NVARCHAR(10)) + ';'
+FROM sys.dm_exec_sessions
+WHERE database_id = DB_ID('TourBookingSystem');
+
+EXEC(@sql);
+
+ALTER DATABASE TourBookingSystem SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+GO
+
+DROP DATABASE TourBookingSystem;
+GO
+
+
+CREATE DATABASE TourBookingSystem;
 GO
 USE TourBookingSystem;
 GO
@@ -39,7 +64,8 @@ CREATE TABLE dbo.UserRoles (
 -- Seed roles (chạy trong cùng batch)
 INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'Customer', N'Customer / Guest');
 INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'Admin', N'Administrator with full privileges');
-INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'Guide', N'Tour guide');
+INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'AdministrativeStaff', N'Tour guide');
+INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'ExecutiveStaff', N'Tour guide');
 
 -- Tạo clustered index cho Users và UserRoles, index phụ
 CREATE CLUSTERED INDEX CX_Users_CreatedAt_UserID ON dbo.Users (CreatedAt, UserID);
@@ -47,50 +73,6 @@ CREATE CLUSTERED INDEX CX_Users_CreatedAt_UserID ON dbo.Users (CreatedAt, UserID
 CREATE CLUSTERED INDEX CX_UserRoles_AssignedAt_UserID ON dbo.UserRoles (AssignedAt, UserID);
 
 CREATE NONCLUSTERED INDEX IX_UserRoles_RoleID ON dbo.UserRoles(RoleID);
-
--- Tạo admin tạm (hash trong DB). Chạy whole block (không có GO giữa các dòng)
-DECLARE 
-  @plain NVARCHAR(4000) = N'AdminPassword123!',   -- thay mật khẩu an toàn trước khi production
-  @salt VARBINARY(32) = CRYPT_GEN_RANDOM(32),
-  @hash VARBINARY(MAX),
-  @i INT = 0,
-  @iterations INT = 1000,
-  @adminUserID UNIQUEIDENTIFIER,
-  @adminRoleID UNIQUEIDENTIFIER;
-
-SET @hash = CONVERT(VARBINARY(MAX), @plain) + @salt;
-
-WHILE @i < @iterations
-BEGIN
-  SET @hash = HASHBYTES('SHA2_512', @hash);
-  SET @i += 1;
-END
-
-SET @adminUserID = NEWID();
-
-INSERT INTO dbo.Users (UserID, Username, Email, PasswordHash, PasswordSalt, PasswordAlgo, CreatedAt, FullName)
-VALUES (
-  @adminUserID,
-  N'admin',
-  N'admin@example.com',
-  @hash,
-  @salt,
-  N'SHA2_512+iter1000',
-  SYSUTCDATETIME(),
-  N'Administrator'
-);
-
-SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'Admin';
-
-INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
-VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);
-
--- Kiểm tra nhanh
-SELECT u.UserID, u.Username, u.Email, r.RoleName, ur.AssignedAt
-FROM dbo.Users u
-JOIN dbo.UserRoles ur ON u.UserID = ur.UserID
-JOIN dbo.Roles r ON ur.RoleID = r.RoleID
-WHERE u.UserID = @adminUserID;
 
 -- Tạo bảng địa điểm
 -- Countries (quốc gia, dùng UUID)
@@ -425,3 +407,6 @@ CREATE UNIQUE NONCLUSTERED INDEX UQ_TourServices_Tour_Service ON dbo.TourService
 CREATE NONCLUSTERED INDEX IDX_Tours_TourName ON dbo.Tours(TourName);
 CREATE NONCLUSTERED INDEX IDX_Users_Email ON dbo.Users(Email);
 
+select * from users;
+select * from userroles;
+select * from roles
