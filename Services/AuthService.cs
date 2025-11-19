@@ -97,16 +97,23 @@ public class AuthService : IAuthService
             var customerRole = await _context.Roles
                 .FirstOrDefaultAsync(r => r.RoleName == "Customer");
 
-            if (customerRole != null)
+            if (customerRole == null)
             {
-                var userRole = new UserRole
+                _logger.LogError("Customer role not found in database during registration");
+                return new AuthResponse
                 {
-                    UserID = user.UserID,
-                    RoleID = customerRole.RoleID,
-                    AssignedAt = DateTime.UtcNow
+                    Success = false,
+                    Message = "Hệ thống chưa được cấu hình đầy đủ. Vui lòng liên hệ quản trị viên."
                 };
-                _context.UserRoles.Add(userRole);
             }
+
+            var userRole = new UserRole
+            {
+                UserID = user.UserID,
+                RoleID = customerRole.RoleID,
+                AssignedAt = DateTime.UtcNow
+            };
+            _context.UserRoles.Add(userRole);
 
             await _context.SaveChangesAsync();
 
@@ -226,6 +233,13 @@ public class AuthService : IAuthService
             {
                 _logger.LogWarning("Change password attempt with incorrect current password for user: {UserId}", userId);
                 return (false, "Mật khẩu hiện tại không đúng");
+            }
+
+            // Check if new password is the same as current password
+            if (_passwordHasher.VerifyPassword(request.NewPassword, user.PasswordHash, user.PasswordSalt))
+            {
+                _logger.LogWarning("Change password attempt with same password as current for user: {UserId}", userId);
+                return (false, "Mật khẩu không thay đổi, vui lòng nhập lại");
             }
 
             // Hash new password

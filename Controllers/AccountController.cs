@@ -157,7 +157,7 @@ public class AccountController : Controller
         }
 
         TempData["SuccessMessage"] = message;
-        return RedirectToAction("ChangePassword");
+        return RedirectToAction("Index", "Home");
     }
 
     #region Session Helpers

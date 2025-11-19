@@ -15,6 +15,7 @@ public static class MappingExtensions
             Username = viewModel.Username,
             Email = viewModel.Email,
             Phone = viewModel.Phone,
+            Address = viewModel.Address,
             Password = viewModel.Password,
             ConfirmPassword = viewModel.ConfirmPassword
         };

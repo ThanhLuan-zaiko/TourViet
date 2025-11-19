@@ -29,7 +29,7 @@ public class RegisterViewModel
 
     [Required(ErrorMessage = "Địa chỉ là bắt buộc")]
     [Display(Name = "Địa chỉ")]
-    [MaxLength(255, ErrorMessage = "Địa chỉ không được vượt quá 25 ký tự")]
+    [MaxLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự")]
     public string Address { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
