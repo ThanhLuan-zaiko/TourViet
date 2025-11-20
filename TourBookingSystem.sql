@@ -119,6 +119,47 @@ CREATE TABLE dbo.Categories (
   CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME()
 );
 
+-- Du lịch biển
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch biển', N'Tour nghỉ dưỡng tại các bãi biển nổi tiếng, hoạt động lặn biển, chèo thuyền, tiệc BBQ hải sản.');
+
+-- Du lịch núi
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch núi', N'Khám phá núi rừng, trekking, leo núi, cắm trại, trải nghiệm thiên nhiên hoang sơ.');
+
+-- Du lịch văn hóa
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch văn hóa', N'Tìm hiểu phong tục tập quán, lễ hội truyền thống, tham quan di tích lịch sử và bảo tàng.');
+
+-- Du lịch sinh thái
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch sinh thái', N'Tour tham quan rừng ngập mặn, vườn quốc gia, trải nghiệm thiên nhiên gắn với bảo tồn môi trường.');
+
+-- Du lịch tâm linh
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch tâm linh', N'Hành hương đến các chùa, đền, nhà thờ, trải nghiệm không gian tôn giáo và tín ngưỡng.');
+
+-- Du lịch nghỉ dưỡng cao cấp
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch nghỉ dưỡng cao cấp', N'Tour tại resort 5 sao, spa, golf, dịch vụ sang trọng dành cho khách hàng cao cấp.');
+
+-- Du lịch mạo hiểm
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch mạo hiểm', N'Hoạt động thể thao mạo hiểm như nhảy dù, leo vách đá, lặn biển sâu, khám phá hang động.');
+
+-- Du lịch ẩm thực
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch ẩm thực', N'Tour trải nghiệm đặc sản vùng miền, lớp học nấu ăn, tham quan chợ truyền thống và nhà hàng nổi tiếng.');
+
+-- Du lịch nông thôn
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch nông thôn', N'Trải nghiệm cuộc sống làng quê, tham gia sản xuất nông nghiệp, thưởng thức đặc sản dân dã.');
+
+-- Du lịch kết hợp hội nghị (MICE)
+INSERT INTO dbo.Categories (CategoryName, Description)
+VALUES (N'Du lịch MICE', N'Tour kết hợp hội nghị, hội thảo, triển lãm và du lịch, phục vụ doanh nghiệp và tổ chức.');
+
+
 -- Tạo bảng Tours (Tour du lịch - lõi của hệ thống, hỗ trợ quản lý tour) 
 CREATE TABLE dbo.Tours (
   TourID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Tours PRIMARY KEY NONCLUSTERED DEFAULT NEWID(),

@@ -26,6 +26,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IPasswordStrengthValidator, PasswordStrengthValidator>();
 builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 

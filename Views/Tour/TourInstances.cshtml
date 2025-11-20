@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Quản lý Lịch Trình Tour";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<TourViet.Models.TourInstance>
+
+@{
+    var tour = ViewBag.Tour as TourViet.Models.Tour;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Quản lý Lịch Trình Tour: @tour?.TourName</h1>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a asp-action="CreateInstance" asp-route-tourId="@tour?.TourID" class="btn btn-primary">Thêm mới Lịch Trình</a>
+                <a asp-action="Index" class="btn btn-secondary">Quay lại Danh sách Tour</a>
+            </div>
+            
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="tourInstancesTable">
+                            <thead>
+                                <tr>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Sức chứa</th>
+                                    <th>Đã đặt</th>
+                                    <th>Giá cơ bản</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hướng dẫn viên</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    @foreach (var instance in Model)
+                                    {
+                                        <tr>
+                                            <td>@instance.StartDate.ToString("dd/MM/yyyy")</td>
+                                            <td>@instance.EndDate.ToString("dd/MM/yyyy")</td>
+                                            <td>@instance.Capacity</td>
+                                            <td>@instance.SeatsBooked</td>
+                                            <td>@instance.PriceBase.ToString("N2") @instance.Currency</td>
+                                            <td>
+                                                <span class="badge @(instance.Status == "Open" ? "bg-success" : instance.Status == "Closed" ? "bg-danger" : "bg-warning")">
+                                                    @instance.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @(instance.Guide != null ? instance.Guide.FullName : "Chưa có hướng dẫn viên")
+                                            </td>
+                                            <td>
+                                                <a asp-action="EditInstance" asp-route-id="@instance.InstanceID" class="btn btn-sm btn-primary">Sửa</a>
+                                                <a asp-action="DeleteInstance" asp-route-id="@instance.InstanceID" class="btn btn-sm btn-danger">Xóa</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">Không có lịch trình nào cho tour này</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-hide success alerts after 5 seconds
+    setTimeout(function() {
+        var alert = document.querySelector('.alert');
+        if (alert) {
+            var bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 5000);
+</script>

@@ -9,6 +9,18 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<Tour> Tours { get; set; }
+    public DbSet<Location> Locations { get; set; }
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<TourInstance> TourInstances { get; set; }
+    public DbSet<TourPrice> TourPrices { get; set; }
+    public DbSet<Itinerary> Itineraries { get; set; }
+    public DbSet<TourImage> TourImages { get; set; }
+    public DbSet<TourService> TourServices { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<Review> Reviews { get; set; }
+    public DbSet<Booking> Bookings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +55,154 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(e => e.RoleID)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure Tour entity
+        modelBuilder.Entity<Tour>(entity =>
+        {
+            entity.HasKey(e => e.TourID);
+            entity.HasIndex(e => e.TourName);
+            entity.HasIndex(e => e.Slug);
+            entity.HasOne(e => e.Location)
+                .WithMany(l => l.Tours)
+                .HasForeignKey(e => e.LocationID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Tours)
+                .HasForeignKey(e => e.CategoryID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.DefaultGuide)
+                .WithMany()
+                .HasForeignKey(e => e.DefaultGuideID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure Location entity
+        modelBuilder.Entity<Location>(entity =>
+        {
+            entity.HasKey(e => e.LocationID);
+            entity.HasOne(e => e.Country)
+                .WithMany(c => c.Locations)
+                .HasForeignKey(e => e.CountryID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure Country entity
+        modelBuilder.Entity<Country>(entity =>
+        {
+            entity.HasKey(e => e.CountryID);
+            entity.HasIndex(e => e.CountryName).IsUnique();
+            entity.HasIndex(e => e.ISO2).IsUnique();
+            entity.HasIndex(e => e.ISO3).IsUnique();
+        });
+        
+        // Configure Category entity
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.CategoryID);
+            entity.HasIndex(e => e.CategoryName).IsUnique();
+        });
+        
+        // Configure TourInstance entity
+        modelBuilder.Entity<TourInstance>(entity =>
+        {
+            entity.HasKey(e => e.InstanceID);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.TourInstances)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Guide)
+                .WithMany()
+                .HasForeignKey(e => e.GuideID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure TourPrice entity
+        modelBuilder.Entity<TourPrice>(entity =>
+        {
+            entity.HasKey(e => e.TourPriceID);
+            entity.HasOne(e => e.TourInstance)
+                .WithMany(ti => ti.TourPrices)
+                .HasForeignKey(e => e.InstanceID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.TourPrices)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure Itinerary entity
+        modelBuilder.Entity<Itinerary>(entity =>
+        {
+            entity.HasKey(e => e.ItineraryID);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.Itineraries)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure TourImage entity
+        modelBuilder.Entity<TourImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageID);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.TourImages)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.UploadedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.UploadedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure TourService entity
+        modelBuilder.Entity<TourService>(entity =>
+        {
+            entity.HasKey(e => e.TourServiceID);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.TourServices)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Service)
+                .WithMany(s => s.TourServices)
+                .HasForeignKey(e => e.ServiceID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure Service entity
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.HasKey(e => e.ServiceID);
+            entity.HasIndex(e => e.ServiceName);
+        });
+        
+        // Configure Review entity
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.HasKey(e => e.ReviewID);
+            entity.HasOne(e => e.Tour)
+                .WithMany(t => t.Reviews)
+                .HasForeignKey(e => e.TourID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure Booking entity
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.HasKey(e => e.BookingID);
+            entity.HasIndex(e => e.BookingRef).IsUnique();
+            entity.HasOne(e => e.TourInstance)
+                .WithMany(ti => ti.Bookings)
+                .HasForeignKey(e => e.InstanceID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

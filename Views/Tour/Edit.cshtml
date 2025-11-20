@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "Chỉnh sửa Tour";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model TourViet.Models.Tour
+
+@{
+    var locations = ViewBag.Locations as IEnumerable<TourViet.Models.Location>;
+    var categories = ViewBag.Categories as IEnumerable<TourViet.Models.Category>;
+    var guides = ViewBag.Guides as IEnumerable<TourViet.Models.User>;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Chỉnh sửa Tour</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="TourID" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="TourName" class="control-label">Tên Tour</label>
+                                    <input asp-for="TourName" class="form-control" />
+                                    <span asp-validation-for="TourName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
+                                    <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
+                                    <span asp-validation-for="Slug" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
+                            <input asp-for="ShortDescription" class="form-control" />
+                            <span asp-validation-for="ShortDescription" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="LocationID" class="control-label">Địa điểm</label>
+                                    <select asp-for="LocationID" class="form-control" asp-items="@(locations != null ? new SelectList(locations, "LocationID", "LocationName") : new SelectList(new List<TourViet.Models.Location>(), "LocationID", "LocationName"))">
+                                        <option value="">-- Chọn địa điểm --</option>
+                                    </select>
+                                    <span asp-validation-for="LocationID" class="text-danger"></span>
+                                </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="CategoryID" class="control-label">Danh mục</label>
+                                    <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
+                                        <option value="">-- Chọn danh mục --</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryID" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
+                            <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                                <option value="">-- Chọn hướng dẫn viên --</option>
+                            </select>
+                            <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="submit" value="Cập nhật" class="btn btn-primary" />
+                            <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

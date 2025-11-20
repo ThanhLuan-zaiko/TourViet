@@ -1,6 +1,12 @@
 @{
     ViewData["Title"] = "Quản lý Tour";
-    Layout = "_Layout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<TourViet.Models.Tour>
+
+@{
+    var tours = ViewBag.Tours as IEnumerable<TourViet.Models.Tour>;
 }
 
 <div class="container-fluid">
@@ -24,75 +30,78 @@
                         </div>
                     </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Tên Tour</th>
-                                    <th>Địa điểm</th>
-                                    <th>Ngày bắt đầu</th>
-                                    <th>Ngày kết thúc</th>
-                                    <th>Giá</th>
-                                    <th>Trạng thái</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Du lịch Đà Lạt</td>
-                                    <td>Đà Lạt, Lâm Đồng</td>
-                                    <td>20/11/2025</td>
-                                    <td>23/11/2025</td>
-                                    <td>4,500,000 VNĐ</td>
-                                    <td><span class="badge bg-success">Đang hoạt động</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
-                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Du lịch Nha Trang</td>
-                                    <td>Nha Trang, Khánh Hòa</td>
-                                    <td>25/11/2025</td>
-                                    <td>28/11/2025</td>
-                                    <td>5,200,000 VNĐ</td>
-                                    <td><span class="badge bg-success">Đang hoạt động</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
-                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Du lịch Phú Quốc</td>
-                                    <td>Phú Quốc, Kiên Giang</td>
-                                    <td>02/12/2025</td>
-                                    <td>05/12/2025</td>
-                                    <td>6,800,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Chưa kích hoạt</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
-                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1">Trước</a>
-                            </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Sau</a>
-                            </li>
-                        </ul>
-                    </nav>
+                   <div class="d-flex justify-content-between align-items-center mb-3">
+                       <a asp-controller="Tour" asp-action="Create" class="btn btn-primary">Thêm mới Tour</a>
+                       @if (TempData["SuccessMessage"] != null)
+                       {
+                           <div class="alert alert-success alert-dismissible fade show" role="alert">
+                               @TempData["SuccessMessage"]
+                               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                           </div>
+                       }
+                   </div>
+                   
+                   <div class="table-responsive">
+                       <table class="table table-bordered" id="toursTable">
+                           <thead>
+                               <tr>
+                                   <th>Tên Tour</th>
+                                   <th>Địa điểm</th>
+                                   <th>Mô tả ngắn</th>
+                                   <th>Trạng thái</th>
+                                   <th>Ngày tạo</th>
+                                   <th>Hành động</th>
+                               </tr>
+                           </thead>
+                           <tbody>
+                               @if (ViewBag.Tours != null && ViewBag.Tours.Any())
+                               {
+                                   @foreach (var tour in ViewBag.Tours)
+                                   {
+                                       <tr>
+                                           <td>@tour.TourName</td>
+                                           <td>
+                                               @(tour.Location != null ? tour.Location.LocationName : "Chưa có địa điểm")
+                                           </td>
+                                           <td>
+                                               @(string.IsNullOrEmpty(tour.ShortDescription) ? "Chưa có mô tả" : tour.ShortDescription)
+                                           </td>
+                                           <td>
+                                               <span class="badge @(tour.IsPublished ? "bg-success" : "bg-warning")">
+                                                   @(tour.IsPublished ? "Đang hoạt động" : "Chưa kích hoạt")
+                                               </span>
+                                           </td>
+                                           <td>@tour.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                           <td>
+                                               <a asp-controller="Tour" asp-action="Details" asp-route-id="@tour.TourID" class="btn btn-sm btn-info">Xem</a>
+                                               <a asp-controller="Tour" asp-action="Edit" asp-route-id="@tour.TourID" class="btn btn-sm btn-primary">Sửa</a>
+                                               <a asp-controller="Tour" asp-action="Delete" asp-route-id="@tour.TourID" class="btn btn-sm btn-danger">Xóa</a>
+                                           </td>
+                                       </tr>
+                                   }
+                               }
+                               else
+                               {
+                                   <tr>
+                                       <td colspan="6" class="text-center">Không có dữ liệu tour</td>
+                                   </tr>
+                               }
+                           </tbody>
+                       </table>
+                   </div>
                 </div>
             </div>
         </div>
    </div>
 </div>
+
+<script>
+   // Auto-hide success alerts after 5 seconds
+   setTimeout(function() {
+       var alert = document.querySelector('.alert');
+       if (alert) {
+           var bsAlert = new bootstrap.Alert(alert);
+           bsAlert.close();
+       }
+   }, 5000);
+</script>
