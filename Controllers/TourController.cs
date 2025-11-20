@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using TourViet.Data;
 using TourViet.Models;
 using TourViet.Services;
+using TourService = TourViet.Models.TourService;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 
 namespace TourViet.Controllers;
 
@@ -51,6 +55,8 @@ public class TourController : Controller
         ViewBag.Locations = await _context.Locations.Where(l => !l.IsDeleted).ToListAsync();
         ViewBag.Categories = await _context.Categories.ToListAsync();
         ViewBag.Guides = await _context.Users.Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == "AdministrativeStaff" || ur.Role.RoleName == "ExecutiveStaff")).ToListAsync();
+        ViewBag.Countries = await _context.Countries.ToListAsync();
+        ViewBag.Services = await _context.Services.Where(s => !s.IsDeleted).ToListAsync();
 
         return View();
     }
@@ -58,7 +64,20 @@ public class TourController : Controller
     // POST: Tour/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Tour tour)
+    public async Task<IActionResult> Create(
+        Tour tour,
+        Guid? CountryID,
+        string NewLocationName,
+        string NewLocationCity,
+        string NewLocationAddress,
+        decimal? NewLocationLatitude,
+        decimal? NewLocationLongitude,
+        string NewLocationDescription,
+        List<TourInstance> TourInstances,
+        List<TourPrice> TourPrices,
+        List<Itinerary> Itineraries,
+        List<Guid> TourServiceIds,
+        IFormFileCollection files)
     {
         if (ModelState.IsValid)
         {
@@ -68,7 +87,145 @@ public class TourController : Controller
                 tour.Slug = GenerateSlug(tour.TourName);
             }
             
+            // Handle new location creation if provided
+            if (!string.IsNullOrEmpty(NewLocationName))
+            {
+                var newLocation = new Location
+                {
+                    LocationName = NewLocationName,
+                    CountryID = CountryID,
+                    City = NewLocationCity,
+                    Address = NewLocationAddress,
+                    Latitude = NewLocationLatitude,
+                    Longitude = NewLocationLongitude,
+                    Description = NewLocationDescription,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.Locations.Add(newLocation);
+                await _context.SaveChangesAsync();
+                
+                // Set the tour's LocationID to the new location
+                tour.LocationID = newLocation.LocationID;
+            }
+            
+            // Create the tour first
             await _tourService.CreateTourAsync(tour);
+            
+            // Add tour instances if provided
+            if (TourInstances != null)
+            {
+                foreach (var instance in TourInstances)
+                {
+                    if (instance.StartDate != default && instance.EndDate != default && instance.StartDate < instance.EndDate)
+                    {
+                        instance.TourID = tour.TourID;
+                        instance.CreatedAt = DateTime.UtcNow;
+                        _context.TourInstances.Add(instance);
+                    }
+                }
+            }
+            
+            // Add tour prices if provided
+            if (TourPrices != null)
+            {
+                foreach (var price in TourPrices)
+                {
+                    if (!string.IsNullOrEmpty(price.PriceType) && price.Amount > 0)
+                    {
+                        price.TourID = tour.TourID;
+                        _context.TourPrices.Add(price);
+                    }
+                }
+            }
+            
+            // Add itineraries if provided
+            if (Itineraries != null)
+            {
+                foreach (var itinerary in Itineraries)
+                {
+                    if (!string.IsNullOrEmpty(itinerary.Title))
+                    {
+                        itinerary.TourID = tour.TourID;
+                        _context.Itineraries.Add(itinerary);
+                    }
+                }
+            }
+            
+            // Add tour services if provided
+            if (TourServiceIds != null)
+            {
+                foreach (var serviceId in TourServiceIds)
+                {
+                    var tourService = new TourService
+                    {
+                        TourID = tour.TourID,
+                        ServiceID = serviceId,
+                        IsIncluded = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.TourServices.Add(tourService);
+                }
+            }
+            
+            // Handle image uploads if provided
+            if (files != null && files.Count > 0)
+            {
+                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", tour.TourID.ToString());
+                Directory.CreateDirectory(uploadsPath);
+                
+                foreach (var file in files)
+                {
+                    if (file.Length > 0 && file.ContentType.StartsWith("image/"))
+                    {
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+                        var fileExtension = Path.GetExtension(file.FileName);
+                        var webpFileName = $"{originalFileName}.webp";
+                        var filePath = Path.Combine(uploadsPath, webpFileName);
+                        
+                        int imageWidth = 0;
+                        int imageHeight = 0;
+                        
+                        // Convert image to WebP and save
+                        using (var inputStream = file.OpenReadStream())
+                        using (var output = new FileStream(filePath, FileMode.Create))
+                        using (var image = Image.Load(inputStream))
+                        {
+                            // Get image dimensions
+                            imageWidth = image.Width;
+                            imageHeight = image.Height;
+                            
+                            // Convert and save as WebP
+                            image.Save(output, new WebpEncoder()
+                            {
+                                Quality = 80, // Set quality for WebP compression
+                                FileFormat = WebpFileFormatType.Lossy // Use lossy compression for smaller file sizes
+                            });
+                        }
+                        
+                        // Create TourImage record
+                        var tourImage = new TourImage
+                        {
+                            TourID = tour.TourID,
+                            FileName = webpFileName,
+                            Path = Path.Combine("uploads", tour.TourID.ToString(), webpFileName),
+                            Url = $"/uploads/{tour.TourID}/{webpFileName}",
+                            MimeType = "image/webp",
+                            FileSize = (int)new FileInfo(filePath).Length, // Get actual file size after conversion
+                            Width = imageWidth, // Get actual width after conversion
+                            Height = imageHeight, // Get actual height after conversion
+                            UploadedAt = DateTime.UtcNow,
+                            IsPublic = true
+                        };
+                        
+                        _context.TourImages.Add(tourImage);
+                    }
+                }
+            }
+            
+            // Save all related entities
+            await _context.SaveChangesAsync();
+            
             TempData["SuccessMessage"] = "Tour created successfully!";
             return RedirectToAction(nameof(Index));
         }
@@ -77,6 +234,8 @@ public class TourController : Controller
         ViewBag.Locations = await _context.Locations.Where(l => !l.IsDeleted).ToListAsync();
         ViewBag.Categories = await _context.Categories.ToListAsync();
         ViewBag.Guides = await _context.Users.Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == "AdministrativeStaff" || ur.Role.RoleName == "ExecutiveStaff")).ToListAsync();
+        ViewBag.Countries = await _context.Countries.ToListAsync();
+        ViewBag.Services = await _context.Services.Where(s => !s.IsDeleted).ToListAsync();
 
         return View(tour);
     }
@@ -299,7 +458,11 @@ public class TourController : Controller
 
         // Load data for dropdowns if model is invalid
         ViewBag.Guides = await _context.Users.Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == "AdministrativeStaff" || ur.Role.RoleName == "ExecutiveStaff")).ToListAsync();
-        tourInstance.Tour = await _tourService.GetTourByIdAsync(tourInstance.TourID);
+        var tourData = await _tourService.GetTourByIdAsync(tourInstance.TourID);
+        if (tourData != null)
+        {
+            tourInstance.Tour = tourData;
+        }
 
         return View(tourInstance);
     }

@@ -40,7 +40,7 @@
                                     <span asp-validation-for="EndDate" class="text-danger"></span>
                                 </div>
                             </div>
-                        
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -48,6 +48,7 @@
                                     <input asp-for="Capacity" class="form-control" type="number" min="0" />
                                     <span asp-validation-for="Capacity" class="text-danger"></span>
                                 </div>
+                            </div>    
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label asp-for="PriceBase" class="control-label">Giá cơ bản</label>
@@ -55,7 +56,7 @@
                                     <span asp-validation-for="PriceBase" class="text-danger"></span>
                                 </div>
                             </div>
-                        
+                        </div>
                         <div class="form-group">
                             <label asp-for="Currency" class="control-label">Đơn vị tiền tệ</label>
                             <select asp-for="Currency" class="form-control">

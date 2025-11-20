@@ -450,4 +450,14 @@ CREATE NONCLUSTERED INDEX IDX_Users_Email ON dbo.Users(Email);
 
 select * from users;
 select * from userroles;
-select * from roles
+select * from roles;
+
+select * from Countries;
+select * from Locations;
+select * from Tours;
+select * from TourInstances;
+select * from TourPrices;
+select * from Itineraries;
+select * from Services
+select * from TourServices;
+select * from TourImages;
