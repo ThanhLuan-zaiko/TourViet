@@ -10,42 +10,80 @@
                 <span>Trang chủ</span>
             </a>
         </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-fire"></i>
-                <span>Thịnh hành</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-geo-alt"></i>
-                <span>Du lịch trong nước</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-globe"></i>
-                <span>Du lịch nước ngoài</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-clock-history"></i>
-                <span>Lịch sử đặt gói</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-calendar-check"></i>
-                <span>Theo dõi lịch trình</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="sidebar-item">
-                <i class="bi bi-pencil-square"></i>
-                <span>Thiết kế tour riêng</span>
-            </a>
-        </li>
+        
+        @{
+            var userRoles = Context.Session.GetString("Roles")?.Split(',') ?? new string[0];
+            var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        }
+        
+        @if (isAdministrativeStaff)
+        {
+            <!-- AdministrativeStaff specific menu items -->
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="ManageTours" class="sidebar-item">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Quản lý Tour</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="ManageBookings" class="sidebar-item">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Quản lý Đặt Tour</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="TourSchedule" class="sidebar-item">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Lịch Trình Tour</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="CustomerList" class="sidebar-item">
+                    <i class="bi bi-people"></i>
+                    <span>Danh Sách Khách Hàng</span>
+                </a>
+            </li>
+        }
+        else
+        {
+            <!-- Customer menu items -->
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-fire"></i>
+                    <span>Thịnh hành</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Du lịch trong nước</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-globe"></i>
+                    <span>Du lịch nước ngoài</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Lịch sử đặt gói</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Theo dõi lịch trình</span>
+                </a>
+            </li>
+            <li>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Thiết kế tour riêng</span>
+                </a>
+            </li>
+        }
     </ul>
 </div>
 

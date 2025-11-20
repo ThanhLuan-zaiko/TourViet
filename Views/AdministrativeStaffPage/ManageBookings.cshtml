@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "Quản lý Đặt Tour";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Quản lý Đặt Tour</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh sách Đặt Tour</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" href="#">Xuất dữ liệu</a>
+                            <a class="dropdown-item" href="#">In báo cáo</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="#">Xóa mục đã chọn</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Mã đặt tour</th>
+                                    <th>Khách hàng</th>
+                                    <th>Tour</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Số lượng</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#BK001</td>
+                                    <td>Nguyễn Văn A</td>
+                                    <td>Du lịch Đà Lạt</td>
+                                    <td>15/11/2025</td>
+                                    <td>2 người</td>
+                                    <td>9,000,000 VNĐ</td>
+                                    <td><span class="badge bg-success">Đã xác nhận</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#BK002</td>
+                                    <td>Trần Thị B</td>
+                                    <td>Du lịch Nha Trang</td>
+                                    <td>16/11/2025</td>
+                                    <td>3 người</td>
+                                    <td>15,600,000 VNĐ</td>
+                                    <td><span class="badge bg-warning">Chờ xác nhận</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#BK003</td>
+                                    <td>Lê Văn C</td>
+                                    <td>Du lịch Phú Quốc</td>
+                                    <td>17/11/2025</td>
+                                    <td>4 người</td>
+                                    <td>27,200,000 VNĐ</td>
+                                    <td><span class="badge bg-info">Đang xử lý</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#BK004</td>
+                                    <td>Phạm Thị D</td>
+                                    <td>Du lịch Đà Nẵng</td>
+                                    <td>18/11/2025</td>
+                                    <td>2 người</td>
+                                    <td>7,800,000 VNĐ</td>
+                                    <td><span class="badge bg-danger">Đã hủy</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Trước</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

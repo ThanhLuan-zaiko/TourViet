@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Quản lý Tour";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Quản lý Tour</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh sách Tour</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" href="#">Thêm mới</a>
+                            <a class="dropdown-item" href="#">Xuất dữ liệu</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="#">Xóa mục đã chọn</a>
+                        </div>
+                    </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tên Tour</th>
+                                    <th>Địa điểm</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Giá</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Du lịch Đà Lạt</td>
+                                    <td>Đà Lạt, Lâm Đồng</td>
+                                    <td>20/11/2025</td>
+                                    <td>23/11/2025</td>
+                                    <td>4,500,000 VNĐ</td>
+                                    <td><span class="badge bg-success">Đang hoạt động</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Du lịch Nha Trang</td>
+                                    <td>Nha Trang, Khánh Hòa</td>
+                                    <td>25/11/2025</td>
+                                    <td>28/11/2025</td>
+                                    <td>5,200,000 VNĐ</td>
+                                    <td><span class="badge bg-success">Đang hoạt động</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Du lịch Phú Quốc</td>
+                                    <td>Phú Quốc, Kiên Giang</td>
+                                    <td>02/12/2025</td>
+                                    <td>05/12/2025</td>
+                                    <td>6,800,000 VNĐ</td>
+                                    <td><span class="badge bg-warning">Chưa kích hoạt</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Sửa</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Xóa</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Trước</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

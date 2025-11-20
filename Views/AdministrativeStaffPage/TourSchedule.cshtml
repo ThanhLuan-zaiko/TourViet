@@ -1,0 +1,128 @@
+@{
+    ViewData["Title"] = "Lịch Trình Tour";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Lịch Trình Tour</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Lịch Trình Tour Trong Tháng</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="monthSelect">Chọn tháng:</label>
+                                <select class="form-control" id="monthSelect">
+                                    <option>Tháng 11/2025</option>
+                                    <option>Tháng 12/2025</option>
+                                    <option>Tháng 1/2026</option>
+                                </select>
+                            </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="statusFilter">Lọc theo trạng thái:</label>
+                                <select class="form-control" id="statusFilter">
+                                    <option>Tất cả</option>
+                                    <option>Đang diễn ra</option>
+                                    <option>Sắp diễn ra</option>
+                                    <option>Đã kết thúc</option>
+                                </select>
+                            </div>
+                        </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tour</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Khách hàng</th>
+                                    <th>Số lượng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Du lịch Đà Lạt</td>
+                                    <td>20/11/2025</td>
+                                    <td>23/11/2025</td>
+                                    <td>Nguyễn Văn A</td>
+                                    <td>2 người</td>
+                                    <td><span class="badge bg-success">Sắp diễn ra</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Du lịch Nha Trang</td>
+                                    <td>25/11/2025</td>
+                                    <td>28/11/2025</td>
+                                    <td>Trần Thị B</td>
+                                    <td>3 người</td>
+                                    <td><span class="badge bg-success">Sắp diễn ra</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Du lịch Phú Quốc</td>
+                                    <td>02/12/2025</td>
+                                    <td>05/12/2025</td>
+                                    <td>Lê Văn C</td>
+                                    <td>4 người</td>
+                                    <td><span class="badge bg-info">Chưa diễn ra</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Du lịch Đà Nẵng</td>
+                                    <td>10/12/2025</td>
+                                    <td>13/12/2025</td>
+                                    <td>Phạm Thị D</td>
+                                    <td>2 người</td>
+                                    <td><span class="badge bg-info">Chưa diễn ra</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Lịch Trình Tuần Này</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Du lịch Đà Lạt</h5>
+                                <small>20/11 - 23/11/2025</small>
+                            </div>
+                            <p class="mb-1">Khách hàng: Nguyễn Văn A (2 người)</p>
+                            <small class="text-muted">Địa điểm: Đà Lạt, Lâm Đồng</small>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Du lịch Nha Trang</h5>
+                                <small>25/11 - 28/11/2025</small>
+                            </div>
+                            <p class="mb-1">Khách hàng: Trần Thị B (3 người)</p>
+                            <small class="text-muted">Địa điểm: Nha Trang, Khánh Hòa</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

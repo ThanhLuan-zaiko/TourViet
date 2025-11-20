@@ -1,0 +1,185 @@
+@{
+    ViewData["Title"] = "Danh Sách Khách Hàng";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Danh Sách Khách Hàng</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh Sách Khách Hàng</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" href="#">Thêm khách hàng</a>
+                            <a class="dropdown-item" href="#">Xuất dữ liệu</a>
+                            <a class="dropdown-item" href="#">Gửi email</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="#">Xóa mục đã chọn</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Địa chỉ</th>
+                                    <th>Ngày đăng ký</th>
+                                    <th>Tour đã đặt</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Nguyễn Văn A</td>
+                                    <td>nguyenvana@email.com</td>
+                                    <td>0987654321</td>
+                                    <td>123 Đường ABC, Quận 1, TP.HCM</td>
+                                    <td>10/11/2025</td>
+                                    <td>2 tour</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Trần Thị B</td>
+                                    <td>tranthib@email.com</td>
+                                    <td>0987654322</td>
+                                    <td>456 Đường XYZ, Ba Đình, Hà Nội</td>
+                                    <td>12/11/2025</td>
+                                    <td>1 tour</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Lê Văn C</td>
+                                    <td>levanc@email.com</td>
+                                    <td>0987654323</td>
+                                    <td>789 Đường PQR, Hải Châu, Đà Nẵng</td>
+                                    <td>15/11/2025</td>
+                                    <td>3 tour</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Phạm Thị D</td>
+                                    <td>phamthid@email.com</td>
+                                    <td>0987654324</td>
+                                    <td>321 Đường MNO, Sơn Trà, Đà Nẵng</td>
+                                    <td>16/11/2025</td>
+                                    <td>1 tour</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Trước</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thống Kê Khách Hàng</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-10 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Tổng số khách
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">124</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="bi bi-people fs-2 text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Khách tháng này
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="bi bi-calendar fs-2 text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Tour đã đặt
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">89</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="bi bi-bag-check fs-2 text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Doanh thu
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">2.48 tỷ</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="bi bi-currency-dollar fs-2 text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
