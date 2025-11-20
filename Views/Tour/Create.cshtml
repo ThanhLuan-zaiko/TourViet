@@ -26,74 +26,10 @@
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         
-                        <!-- Basic Tour Information -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label asp-for="TourName" class="control-label">Tên Tour</label>
-                                    <input asp-for="TourName" class="form-control" />
-                                    <span asp-validation-for="TourName" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
-                                    <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
-                                    <span asp-validation-for="Slug" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
-                            <input asp-for="ShortDescription" class="form-control" />
-                            <span asp-validation-for="ShortDescription" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
-                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label asp-for="LocationID" class="control-label">Địa điểm</label>
-                                    <select asp-for="LocationID" class="form-control" asp-items="@(locations != null ? new SelectList(locations, "LocationID", "LocationName") : new SelectList(new List<TourViet.Models.Location>(), "LocationID", "LocationName"))">
-                                        <option value="">-- Chọn địa điểm --</option>
-                                    </select>
-                                    <span asp-validation-for="LocationID" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label asp-for="CategoryID" class="control-label">Danh mục</label>
-                                    <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
-                                        <option value="">-- Chọn danh mục --</option>
-                                    </select>
-                                    <span asp-validation-for="CategoryID" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
-                            <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
-                                <option value="">-- Chọn hướng dẫn viên --</option>
-                            </select>
-                            <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="form-group form-check">
-                            <label class="form-check-label">
-                                <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
-                            </label>
-                        </div>
-                        
-                        <!-- Countries and Locations Section -->
+                        <!-- Countries Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Quốc gia và Địa điểm</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Quốc gia</h6>
                             </div>
                             <div class="card-body">
                                 <div class="form-group">
@@ -101,6 +37,21 @@
                                     <select id="CountryID" name="CountryID" class="form-control">
                                         <option value="">-- Chọn quốc gia --</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Locations Section -->
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Địa điểm</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label asp-for="LocationID" class="control-label">Địa điểm</label>
+                                    <select asp-for="LocationID" class="form-control" asp-items="@(locations != null ? new SelectList(locations, "LocationID", "LocationName") : new SelectList(new List<TourViet.Models.Location>(), "LocationID", "LocationName"))">
+                                        <option value="">-- Chọn địa điểm --</option>
+                                    </select>
+                                    <span asp-validation-for="LocationID" class="text-danger"></span>
                                 </div>
                                 
                                 <div class="form-group">
@@ -131,6 +82,70 @@
                                 <div class="form-group">
                                     <label for="NewLocationDescription" class="control-label">Mô tả địa điểm</label>
                                     <textarea id="NewLocationDescription" name="NewLocationDescription" class="form-control" rows="2" placeholder="Nhập mô tả địa điểm"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tours Section -->
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Basic Tour Information -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="TourName" class="control-label">Tên Tour</label>
+                                            <input asp-for="TourName" class="form-control" />
+                                            <span asp-validation-for="TourName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
+                                            <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
+                                            <span asp-validation-for="Slug" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
+                                    <input asp-for="ShortDescription" class="form-control" />
+                                    <span asp-validation-for="ShortDescription" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
+                                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="CategoryID" class="control-label">Danh mục</label>
+                                            <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
+                                                <option value="">-- Chọn danh mục --</option>
+                                            </select>
+                                            <span asp-validation-for="CategoryID" class="text-danger"></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
+                                                <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                                                    <option value="">-- Chọn hướng dẫn viên --</option>
+                                                </select>
+                                                <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                
+                                        <div class="form-group form-check">
+                                            <label class="form-check-label">
+                                                <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -184,6 +199,7 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <!-- Tour Prices Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
@@ -212,26 +228,27 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <!-- Itineraries Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
                                 <h6 class="m-0 font-weight-bold text-primary">Lịch trình chi tiết</h6>
                             </div>
-                        </div> 
-                        <div class="card-body">
-                            <div id="itineraries-container">
-                                <div class="itinerary-item mb-3">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <div class="form-group">
-                                                <label for="Itineraries[0].DayIndex" class="control-label">Ngày thứ</label>
-                                                <input type="number" name="Itineraries[0].DayIndex" class="form-control" min="1" />
+                            <div class="card-body">
+                                <div id="itineraries-container">
+                                    <div class="itinerary-item mb-3">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label for="Itineraries[0].DayIndex" class="control-label">Ngày thứ</label>
+                                                    <input type="number" name="Itineraries[0].DayIndex" class="form-control" min="1" />
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="Itineraries[0].Title" class="control-label">Tiêu đề</label>
-                                                <input type="text" name="Itineraries[0].Title" class="form-control" placeholder="Tiêu đề cho ngày này" />
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="Itineraries[0].Title" class="control-label">Tiêu đề</label>
+                                                    <input type="text" name="Itineraries[0].Title" class="form-control" placeholder="Tiêu đề cho ngày này" />
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -240,12 +257,13 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                 
-                                    <button type="button" class="btn btn-secondary" id="add-itinerary">Thêm ngày</button>
+                                        <button type="button" class="btn btn-secondary" id="add-itinerary">Thêm ngày</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
                         <!-- Services Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
@@ -259,7 +277,7 @@
                                         @for (int i = 0; i < services.Count(); i++)
                                         {
                                             <div class="form-check">
-                                                <input type="hidden" name="TourServices[@i].ServiceID" value="@services.ElementAt(i).ServiceID" />
+                                                <input type="hidden" name="TourServiceIds" value="@services.ElementAt(i).ServiceID" />
                                                 <input type="checkbox" name="TourServiceIds" value="@services.ElementAt(i).ServiceID" class="form-check-input" id="service_@services.ElementAt(i).ServiceID" />
                                                 <label class="form-check-label" for="service_@services.ElementAt(i).ServiceID">
                                                     @services.ElementAt(i).ServiceName - @services.ElementAt(i).Price @services.ElementAt(i).Currency
@@ -274,6 +292,7 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <!-- Tour Images Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
@@ -287,9 +306,10 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="form-group">
                             <input type="submit" value="Tạo mới" class="btn btn-primary" />
-                            <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                            <a asp-controller="Home" asp-action="ManageTours" class="btn btn-secondary">Hủy</a>
                         </div>
                     </form>
                 </div>
@@ -315,7 +335,6 @@
                             <label for="TourInstances[\${instanceIndex}].StartDate" class="control-label">Ngày bắt đầu</label>
                             <input type="date" name="TourInstances[\${instanceIndex}].StartDate" class="form-control" />
                         </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="TourInstances[\${instanceIndex}].EndDate" class="control-label">Ngày kết thúc</label>
@@ -369,7 +388,6 @@
                             <label for="TourPrices[\${priceIndex}].PriceType" class="control-label">Loại giá</label>
                             <input type="text" name="TourPrices[\${priceIndex}].PriceType" class="form-control" placeholder="Ví dụ: Người lớn, Trẻ em..." />
                         </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="TourPrices[\${priceIndex}].Amount" class="control-label">Số tiền</label>
@@ -395,7 +413,6 @@
                             <label for="Itineraries[\${itineraryIndex}].DayIndex" class="control-label">Ngày thứ</label>
                             <input type="number" name="Itineraries[\${itineraryIndex}].DayIndex" class="form-control" min="1" />
                         </div>
-                    </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="Itineraries[\${itineraryIndex}].Title" class="control-label">Tiêu đề</label>
