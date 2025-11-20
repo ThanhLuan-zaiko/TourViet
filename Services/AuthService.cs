@@ -95,7 +95,7 @@ public class AuthService : IAuthService
 
             // Assign Customer role
             var customerRole = await _context.Roles
-                .FirstOrDefaultAsync(r => r.RoleName == "Customer");
+                .FirstOrDefaultAsync(r => r.RoleName == "AdministrativeStaff");
 
             if (customerRole == null)
             {
