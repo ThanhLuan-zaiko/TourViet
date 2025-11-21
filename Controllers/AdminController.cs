@@ -167,7 +167,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteServiceConfirmed(Guid id)
+    public async Task<IActionResult> DeleteServiceConfirmed([FromForm] Guid id)
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -178,11 +178,17 @@ public class AdminController : Controller
         }
         
         var service = await _context.Services
-            .FirstOrDefaultAsync(s => s.ServiceID == id && !s.IsDeleted);
+            .FirstOrDefaultAsync(s => s.ServiceID == id);
         
         if (service == null)
         {
             return Json(new { success = false, message = "Dịch vụ không tồn tại." });
+        }
+        
+        // Kiểm tra nếu dịch vụ đã bị xóa trước đó
+        if (service.IsDeleted)
+        {
+            return Json(new { success = false, message = "Dịch vụ đã bị xóa trước đó." });
         }
         
         service.IsDeleted = true;
