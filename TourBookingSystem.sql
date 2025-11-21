@@ -458,6 +458,6 @@ select * from Tours;
 select * from TourInstances;
 select * from TourPrices;
 select * from Itineraries;
-select * from Services
+select * from Services;
 select * from TourServices;
 select * from TourImages;

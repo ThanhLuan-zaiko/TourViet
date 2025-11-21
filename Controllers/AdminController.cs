@@ -16,69 +16,180 @@ public class AdminController : Controller
         _context = context;
         _passwordHasher = passwordHasher;
     }
-
-    public async Task<IActionResult> AddAdministrativeStaffUsers()
+    
+    // Service Management Actions for AdministrativeStaff
+    public async Task<IActionResult> ManageServices()
     {
-        // Find the AdministrativeStaff role
-        var adminStaffRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "AdministrativeStaff");
-        if (adminStaffRole == null)
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
         {
-            return Content("AdministrativeStaff role not found in database.");
+            return RedirectToAction("Index", "Home");
         }
+        
+        var services = await _context.Services
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.ServiceName)
+            .ToListAsync();
+        
+        return View("../AdministrativeStaffPage/ManageServices", services);
+    }
 
-        // Create sample AdministrativeStaff users
-        var sampleUsers = new[]
+    [HttpGet]
+    public async Task<IActionResult> CreateService()
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
         {
-            new { Username = "adminstaff1", Email = "adminstaff1@tour.com", FullName = "John Tour Guide", Phone = "0987654321", Address = "123 Tour Street, HCMC" },
-            new { Username = "adminstaff2", Email = "adminstaff2@tour.com", FullName = "Jane Tour Guide", Phone = "0987654322", Address = "456 Travel Avenue, HN" },
-            new { Username = "adminstaff3", Email = "adminstaff3@tour.com", FullName = "Bob Tour Guide", Phone = "0987654323", Address = "789 Adventure Road, DN" }
-        };
+            return RedirectToAction("Index", "Home");
+        }
+        
+        await Task.Yield(); // To avoid CS1998 warning
+        return View("../AdministrativeStaffPage/CreateService");
+    }
 
-        var password = "Password123!";
-
-        foreach (var userData in sampleUsers)
+    [HttpPost]
+    public async Task<IActionResult> CreateService(Service service)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
         {
-            // Check if user already exists
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email && !u.IsDeleted);
-            if (existingUser != null)
+            return RedirectToAction("Index", "Home");
+        }
+        
+        if (ModelState.IsValid)
+        {
+            service.ServiceID = Guid.NewGuid();
+            service.CreatedAt = DateTime.UtcNow;
+            service.IsDeleted = false;
+            
+            _context.Services.Add(service);
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Dịch vụ đã được tạo thành công!";
+            return RedirectToAction("ManageServices");
+        }
+        
+        await Task.Yield(); // To avoid CS1998 warning
+        return View("../AdministrativeStaffPage/CreateService", service);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditService(Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        
+        var service = await _context.Services
+            .FirstOrDefaultAsync(s => s.ServiceID == id && !s.IsDeleted);
+        
+        if (service == null)
+        {
+            return NotFound();
+        }
+        
+        await Task.Yield(); // To avoid CS1998 warning
+        return View("../AdministrativeStaffPage/EditService", service);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> EditService(Service service)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        
+        if (ModelState.IsValid)
+        {
+            var existingService = await _context.Services
+                .FirstOrDefaultAsync(s => s.ServiceID == service.ServiceID && !s.IsDeleted);
+            
+            if (existingService == null)
             {
-                continue; // Skip if user already exists
+                return NotFound();
             }
-
-            // Hash the password
-            var (hash, salt) = _passwordHasher.HashPassword(password);
-
-            // Create new user
-            var user = new User
-            {
-                UserID = Guid.NewGuid(),
-                Username = userData.Username,
-                Email = userData.Email,
-                FullName = userData.FullName,
-                Phone = userData.Phone,
-                Address = userData.Address,
-                PasswordHash = hash,
-                PasswordSalt = salt,
-                PasswordAlgo = "SHA2_512+iter1000",
-                CreatedAt = DateTime.UtcNow,
-                IsDeleted = false
-            };
-
-            _context.Users.Add(user);
+            
+            existingService.ServiceName = service.ServiceName;
+            existingService.Code = service.Code;
+            existingService.Description = service.Description;
+            existingService.Price = service.Price;
+            existingService.Currency = service.Currency;
+            existingService.IsActive = service.IsActive;
+            existingService.IsTaxable = service.IsTaxable;
+            existingService.UpdatedAt = DateTime.UtcNow;
+            
             await _context.SaveChangesAsync();
-
-            // Assign the AdministrativeStaff role
-            var userRole = new UserRole
-            {
-                UserID = user.UserID,
-                RoleID = adminStaffRole.RoleID,
-                AssignedAt = DateTime.UtcNow
-            };
-
-            _context.UserRoles.Add(userRole);
-            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Dịch vụ đã được cập nhật thành công!";
+            return RedirectToAction("ManageServices");
         }
+        
+        await Task.Yield(); // To avoid CS1998 warning
+        return View("../AdministrativeStaffPage/EditService", service);
+    }
 
-        return Content("AdministrativeStaff users added successfully!");
+    [HttpGet]
+    public async Task<IActionResult> DeleteService(Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        
+        var service = await _context.Services
+            .FirstOrDefaultAsync(s => s.ServiceID == id && !s.IsDeleted);
+        
+        if (service == null)
+        {
+            return NotFound();
+        }
+        
+        await Task.Yield(); // To avoid CS1998 warning
+        return View("../AdministrativeStaffPage/DeleteService", service);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteServiceConfirmed(Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return Json(new { success = false, message = "Bạn không có quyền thực hiện hành động này." });
+        }
+        
+        var service = await _context.Services
+            .FirstOrDefaultAsync(s => s.ServiceID == id && !s.IsDeleted);
+        
+        if (service == null)
+        {
+            return Json(new { success = false, message = "Dịch vụ không tồn tại." });
+        }
+        
+        service.IsDeleted = true;
+        service.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.SaveChangesAsync();
+        
+        return Json(new { success = true, message = "Dịch vụ đã được xóa thành công!" });
     }
 }

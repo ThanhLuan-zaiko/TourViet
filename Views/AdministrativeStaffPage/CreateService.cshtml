@@ -1,0 +1,87 @@
+@{
+    ViewData["Title"] = "Tạo Dịch vụ Mới";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model TourViet.Models.Service
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Tạo Dịch vụ Mới</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin Dịch vụ</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateService" asp-controller="Admin" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ServiceName" class="form-label">Tên Dịch vụ</label>
+                                    <input asp-for="ServiceName" class="form-control" placeholder="Nhập tên dịch vụ" />
+                                    <span asp-validation-for="ServiceName" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label asp-for="Code" class="form-label">Mã Dịch vụ</label>
+                                    <input asp-for="Code" class="form-control" placeholder="Nhập mã dịch vụ (tùy chọn)" />
+                                    <span asp-validation-for="Code" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label asp-for="Price" class="form-label">Giá</label>
+                                    <input asp-for="Price" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label asp-for="Currency" class="form-label">Đơn vị tiền tệ</label>
+                                    <select asp-for="Currency" class="form-control">
+                                        <option value="VND">VND</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="GBP">GBP</option>
+                                    </select>
+                                    <span asp-validation-for="Currency" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Description" class="form-label">Mô tả</label>
+                                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Nhập mô tả chi tiết về dịch vụ"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label asp-for="IsActive" class="form-check-label">Dịch vụ đang hoạt động</label>
+                                    </div>
+                                
+                                <div class="form-group mb-3">
+                                    <div class="form-check">
+                                        <input asp-for="IsTaxable" class="form-check-input" type="checkbox" />
+                                        <label asp-for="IsTaxable" class="form-check-label">Dịch vụ chịu thuế</label>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="ManageServices" asp-controller="Admin" class="btn btn-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-primary">Tạo Dịch vụ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

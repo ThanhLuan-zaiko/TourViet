@@ -1,0 +1,210 @@
+@{
+    ViewData["Title"] = "Quản lý Dịch vụ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<TourViet.Models.Service>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Quản lý Dịch vụ</h1>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Danh sách Dịch vụ</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" asp-action="CreateService" asp-controller="Admin">Thêm mới</a>
+                            <a class="dropdown-item" href="#">Xuất dữ liệu</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="#">Xóa mục đã chọn</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a asp-action="CreateService" asp-controller="Admin" class="btn btn-primary">Thêm mới Dịch vụ</a>
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                @TempData["SuccessMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="servicesTable">
+                            <thead>
+                                <tr>
+                                    <th>Tên Dịch vụ</th>
+                                    <th>Mã</th>
+                                    <th>Mô tả</th>
+                                    <th>Giá</th>
+                                    <th>Đơn vị tiền tệ</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    @foreach (var service in Model)
+                                    {
+                                        <tr>
+                                            <td>@service.ServiceName</td>
+                                            <td>
+                                                @(string.IsNullOrEmpty(service.Code) ? "Chưa có mã" : service.Code)
+                                            </td>
+                                            <td>
+                                                @(string.IsNullOrEmpty(service.Description) ? "Chưa có mô tả" : service.Description)
+                                            </td>
+                                            <td>@service.Price.ToString("N2")</td>
+                                            <td>@service.Currency</td>
+                                            <td>
+                                                <span class="badge @(service.IsActive ? "bg-success" : "bg-warning")">
+                                                    @(service.IsActive ? "Hoạt động" : "Ngừng hoạt động")
+                                                </span>
+                                            </td>
+                                            <td>@service.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <a asp-action="EditService" asp-controller="Admin" asp-route-id="@service.ServiceID" class="btn btn-sm btn-primary">Sửa</a>
+                                                <button type="button" class="btn btn-sm btn-danger delete-service-btn" data-service-id="@service.ServiceID" data-service-name="@service.ServiceName">
+                                                    Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">Không có dữ liệu dịch vụ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa dịch vụ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa dịch vụ <strong id="serviceNameToDelete"></strong> không? Hành động này không thể hoàn tác.</p>
+                <input type="hidden" id="serviceIdToDelete" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa dịch vụ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables CSS and JS from CDN -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        // Auto-hide success alerts after 5 seconds
+        setTimeout(function() {
+            var alert = document.querySelector('.alert');
+            if (alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
+        
+        // Initialize DataTable for services table and handle delete buttons after document is ready
+        $(document).ready(function() {
+            // Initialize DataTable
+            if($.fn.DataTable) {
+                $('#servicesTable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+                    },
+                    "pageLength": 25,
+                    "responsive": true
+                });
+            }
+            
+            // Handle delete button click
+            $(document).on('click', '.delete-service-btn', function() {
+                var serviceId = $(this).data('service-id');
+                var serviceName = $(this).data('service-name');
+                
+                $('#serviceIdToDelete').val(serviceId);
+                $('#serviceNameToDelete').text(serviceName);
+                
+                // Show the modal using jQuery
+                $('#deleteModal').modal('show');
+            });
+        });
+        
+        // Handle delete confirmation with AJAX
+        $('#confirmDeleteBtn').click(function() {
+            var serviceId = $('#serviceIdToDelete').val();
+            if(serviceId) {
+                // Get the CSRF token
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                
+                $.ajax({
+                    url: '@Url.Action("DeleteServiceConfirmed", "Admin")',
+                    type: 'POST',
+                    data: {
+                        id: serviceId,
+                        __RequestVerificationToken: token
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            // Show success message
+                            $('.alert').remove();
+                            $('#servicesTable').closest('.card-body').prepend(
+                                '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                response.message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                                '</div>'
+                            );
+                            
+                            // Remove the deleted row from the table
+                            $('#deleteModal').modal('hide');
+                            $(`button[data-service-id="${serviceId}"]`).closest('tr').remove();
+                            
+                            // Auto-hide success alert after 5 seconds
+                            setTimeout(function() {
+                                var alert = document.querySelector('.alert');
+                                if(alert) {
+                                    var bsAlert = new bootstrap.Alert(alert);
+                                    bsAlert.close();
+                                }
+                            }, 5000);
+                        } else {
+                            alert(response.message || 'Có lỗi xảy ra khi xóa dịch vụ.');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi xóa dịch vụ.');
+                    }
+                });
+            }
+        });
+    </script>
+}
