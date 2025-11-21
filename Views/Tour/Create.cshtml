@@ -24,170 +24,164 @@
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         
-                        <!-- Countries and Locations Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Quốc gia và Địa điểm</h6>
+                    <!-- Countries and Locations Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Quốc gia và Địa điểm</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="countryName" class="control-label">Quốc gia</label>
+                                <input type="text" id="countryName" class="form-control" placeholder="Vui lòng chọn quốc gia" readonly />
                             </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="CountryID" class="control-label">Quốc gia</label>
-                                    <select id="country" name="CountryID" class="form-control" required>
-                                        <option value="">-- Chọn quốc gia --</option>
-                                    </select>
-                                    <div class="invalid-feedback">Vui lòng chọn quốc gia.</div>
-                                </div>
                                 
-                                <div class="form-group">
-                                    <label for="city" class="control-label">Thành phố</label>
-                                    <input type="text" id="city" name="NewLocationCity" class="form-control" placeholder="Nhập tên thành phố..." />
-                                </div>
+                            <div class="form-group">
+                                <label for="city" class="control-label">Thành phố</label>
+                                <input type="text" id="city" name="NewLocationCity" class="form-control" placeholder="Vui lòng chọn thành phố" readonly />
+                            </div>
                                 
-                                <button type="button" id="searchCity" class="btn btn-info mb-3">Tìm thành phố</button>
+                            <div id="map" style="height: 400px; margin-top: 20px;"></div>
                                 
-                                <div id="map" style="height: 400px; margin-top: 20px;"></div>
+                            <div class="form-group">
+                                <label for="NewLocationName" class="control-label">Tên địa điểm</label>
+                                <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Tên địa điểm" readonly />
+                            </div>
                                 
-                                <div class="form-group">
-                                    <label for="NewLocationName" class="control-label">Địa điểm</label>
-                                    <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Nhập tên địa điểm mới" readonly />
-                                </div>
+                            <div class="form-group">
+                                <label for="NewLocationAddress" class="control-label">Địa chỉ cụ thể</label>
+                                <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" placeholder="Địa chỉ cụ thể" readonly />
+                            </div>
                                 
-                                <div class="form-group">
-                                    <label for="NewLocationAddress" class="control-label">Địa chỉ</label>
-                                    <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" placeholder="Nhập địa chỉ cụ thể" readonly />
-                                </div>
+                            <div class="form-group">
+                                <label for="NewLocationLatitude" class="control-label">Vĩ độ</label>
+                                <input type="number" id="NewLocationLatitude" name="NewLocationLatitude" class="form-control" placeholder="Vĩ độ" step="any" readonly />
+                            </div>
                                 
-                                <div class="form-group">
-                                    <label for="NewLocationLatitude" class="control-label">Vĩ độ</label>
-                                    <input type="number" id="NewLocationLatitude" name="NewLocationLatitude" class="form-control" placeholder="Nhập vĩ độ" step="any" readonly />
-                                </div>
+                            <div class="form-group">
+                                <label for="NewLocationLongitude" class="control-label">Kinh độ</label>
+                                <input type="number" id="NewLocationLongitude" name="NewLocationLongitude" class="form-control" placeholder="Kinh độ" step="any" readonly />
+                            </div>
                                 
-                                <div class="form-group">
-                                    <label for="NewLocationLongitude" class="control-label">Kinh độ</label>
-                                    <input type="number" id="NewLocationLongitude" name="NewLocationLongitude" class="form-control" placeholder="Nhập kinh độ" step="any" readonly />
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="NewLocationDescription" class="control-label">Mô tả địa điểm</label>
-                                    <textarea id="NewLocationDescription" name="NewLocationDescription" class="form-control" rows="2" placeholder="Nhập mô tả địa điểm"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label for="NewLocationDescription" class="control-label">Mô tả địa điểm</label>
+                                <textarea id="NewLocationDescription" name="NewLocationDescription" class="form-control" rows="2" placeholder="Nhập mô tả địa điểm"></textarea>
                             </div>
                         </div>
-                        <!-- Tours Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
-                            </div>
-                            <div class="card-body">
-                                <!-- Basic Tour Information -->
+                    </div>
+                    <!-- Tours Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Basic Tour Information -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="TourName" class="control-label">Tên Tour</label>
+                                        <input asp-for="TourName" class="form-control" />
+                                        <span asp-validation-for="TourName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
+                                        <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
+                                        <span asp-validation-for="Slug" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
+                                    <input asp-for="ShortDescription" class="form-control" />
+                                    <span asp-validation-for="ShortDescription" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
+                                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                                
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label asp-for="TourName" class="control-label">Tên Tour</label>
-                                            <input asp-for="TourName" class="form-control" />
-                                            <span asp-validation-for="TourName" class="text-danger"></span>
+                                            <label asp-for="CategoryID" class="control-label">Danh mục</label>
+                                            <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
+                                                <option value="">-- Chọn danh mục --</option>
+                                            </select>
+                                            <span asp-validation-for="CategoryID" class="text-danger"></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
+                                                <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                                                    <option value="">-- Chọn hướng dẫn viên --</option>
+                                                </select>
+                                                <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                
+                                        <div class="form-group form-check">
+                                            <label class="form-check-label">
+                                                <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
+                                            </label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
-                                            <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
-                                            <span asp-validation-for="Slug" class="text-danger"></span>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
-                                        <input asp-for="ShortDescription" class="form-control" />
-                                        <span asp-validation-for="ShortDescription" class="text-danger"></span>
-                                    </div>
-                                
-                                    <div class="form-group">
-                                        <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
-                                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                                        <span asp-validation-for="Description" class="text-danger"></span>
-                                    </div>
-                                
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+                    <!-- Tour Instances Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Lịch trình Tour</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="tour-instances-container">
+                                <div class="tour-instance-item mb-3">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label asp-for="CategoryID" class="control-label">Danh mục</label>
-                                                <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
-                                                    <option value="">-- Chọn danh mục --</option>
-                                                </select>
-                                                <span asp-validation-for="CategoryID" class="text-danger"></span>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
-                                                    <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
-                                                        <option value="">-- Chọn hướng dẫn viên --</option>
-                                                    </select>
-                                                    <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
-                                                </div>
-                                            </div>
-                                
-                                            <div class="form-group form-check">
-                                                <label class="form-check-label">
-                                                    <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
-                                                </label>
+                                                <label for="TourInstances[0].StartDate" class="control-label">Ngày bắt đầu</label>
+                                                <input type="date" name="TourInstances[0].StartDate" class="form-control" />
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <!-- Tour Instances Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Lịch trình Tour</h6>
-                            </div>
-                            <div class="card-body">
-                                <div id="tour-instances-container">
-                                    <div class="tour-instance-item mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="TourInstances[0].EndDate" class="control-label">Ngày kết thúc</label>
+                                                <input type="date" name="TourInstances[0].EndDate" class="form-control" />
+                                            </div>
+                                        </div>
+                                        
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="TourInstances[0].StartDate" class="control-label">Ngày bắt đầu</label>
-                                                    <input type="date" name="TourInstances[0].StartDate" class="form-control" />
+                                                    <label for="TourInstances[0].Capacity" class="control-label">Sức chứa</label>
+                                                    <input type="number" name="TourInstances[0].Capacity" class="form-control" min="0" />
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="TourInstances[0].EndDate" class="control-label">Ngày kết thúc</label>
-                                                    <input type="date" name="TourInstances[0].EndDate" class="form-control" />
+                                                    <label for="TourInstances[0].PriceBase" class="control-label">Giá cơ bản</label>
+                                                    <input type="number" name="TourInstances[0].PriceBase" class="form-control" min="0" step="0.01" />
                                                 </div>
                                             </div>
                                         
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="TourInstances[0].Capacity" class="control-label">Sức chứa</label>
-                                                            <input type="number" name="TourInstances[0].Capacity" class="form-control" min="0" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="TourInstances[0].PriceBase" class="control-label">Giá cơ bản</label>
-                                                            <input type="number" name="TourInstances[0].PriceBase" class="form-control" min="0" step="0.01" />
-                                                        </div>
-                                                    </div>
-                                        
-                                                    <div class="form-group">
-                                                        <label for="TourInstances[0].GuideID" class="control-label">Hướng dẫn viên</label>
-                                                        <select name="TourInstances[0].GuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
-                                                            <option value="">-- Chọn hướng dẫn viên --</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                
-                                                <button type="button" class="btn btn-secondary" id="add-instance">Thêm lịch trình</button>
+                                            <div class="form-group">
+                                                <label for="TourInstances[0].GuideID" class="control-label">Hướng dẫn viên</label>
+                                                <select name="TourInstances[0].GuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                                                    <option value="">-- Chọn hướng dẫn viên --</option>
+                                                </select>
                                             </div>
                                         </div>
+                                
+                                        <button type="button" class="btn btn-secondary" id="add-instance">Thêm lịch trình</button>
                                     </div>
                                 </div>
                             </div>
-                        
+                        </div>
                         <!-- Tour Prices Section -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
@@ -450,162 +444,6 @@
 
         let currentMarker = null;
 
-        // Load countries from server-side data instead of external API
-        // Get the country data from ViewBag that was passed from the controller
-        const serverCountries = @Html.Raw(Json.Serialize(countries));
-        const countrySelect = document.getElementById("country");
-        
-        // Populate the dropdown with server-side country data
-        serverCountries.forEach(country => {
-            let option = document.createElement("option");
-            option.value = country.countryID;  // Use the actual CountryID from database
-            option.textContent = country.countryName;
-            countrySelect.appendChild(option);
-        });
-        
-        // Sort options alphabetically by text content
-        const options = Array.from(countrySelect.options).slice(1); // Exclude first empty option
-        options.sort((a, b) => a.text.localeCompare(b.text));
-        // Clear existing options (except the first empty one) and re-add sorted ones
-        countrySelect.innerHTML = '<option value="">-- Chọn quốc gia --</option>';
-        options.forEach(option => countrySelect.appendChild(option));
-
-        // When country is selected → zoom to a default view for the country
-        document.getElementById("country").addEventListener("change", () => {
-          const selectedCountryId = document.getElementById("country").value;
-          if (selectedCountryId) {
-            // Find the country object from server data
-            const selectedCountry = serverCountries.find(country => country.countryID === selectedCountryId);
-            
-            if (selectedCountry) {
-              // For now, we'll use a default zoom for the selected country
-              // In a real implementation, you might want to have lat/lng coordinates stored in your database
-              // For demonstration purposes, we'll use some default coordinates for common countries
-              let lat = 20; // Default latitude
-              let lng = 0;  // Default longitude
-              
-              // Set default coordinates based on country name
-              switch(selectedCountry.countryName.toLowerCase()) {
-                case 'vietnam':
-                  lat = 16.1092;
-                  lng = 108.2772;
-                  break;
-                case 'united states':
-                case 'united states of america':
-                case 'usa':
-                  lat = 39.8283;
-                  lng = -98.5795;
-                  break;
-                case 'united kingdom':
-                case 'uk':
-                  lat = 55.3781;
-                  lng = -3.4360;
-                  break;
-                case 'france':
-                  lat = 46.2276;
-                  lng = 2.2137;
-                  break;
-                case 'germany':
-                  lat = 51.1657;
-                  lng = 10.4515;
-                  break;
-                case 'japan':
-                  lat = 36.2048;
-                  lng = 138.2529;
-                  break;
-                case 'china':
-                  lat = 35.8617;
-                  lng = 104.1954;
-                  break;
-                case 'india':
-                  lat = 20.5937;
-                  lng = 78.9629;
-                  break;
-                case 'brazil':
-                  lat = -14.2350;
-                  lng = -51.9253;
-                  break;
-                case 'russia':
-                  lat = 61.5240;
-                  lng = 105.3188;
-                  break;
-                default:
-                  // For other countries, we can try to use a general location
-                  // In a real implementation, you would have coordinates stored in your database
-                  break;
-              }
-
-              map.setView([lat, lng], 5);
-
-              if (currentMarker) {
-                map.removeLayer(currentMarker);
-              }
-
-              currentMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`${selectedCountry.countryName}`)
-                .openPopup();
-                
-              // Update latitude and longitude fields
-              document.getElementById("NewLocationLatitude").value = lat;
-              document.getElementById("NewLocationLongitude").value = lng;
-            }
-            
-            // The dropdown itself already contains the CountryID as its value
-            // No need for additional update since the dropdown has name="CountryID"
-          }
-        });
-
-        // When clicking search city button → call OSM Nominatim
-        document.getElementById("searchCity").addEventListener("click", () => {
-          const countrySelect = document.getElementById("country");
-          const cityInput = document.getElementById("city");
-          
-          if (!countrySelect.value || !cityInput.value) {
-            alert("Vui lòng chọn quốc gia và nhập tên thành phố");
-            return;
-          }
-
-          const selectedCountry = serverCountries.find(country => country.countryID === countrySelect.value);
-          const countryName = selectedCountry ? selectedCountry.countryName : '';
-          const city = cityInput.value;
-
-          fetch(`https://nominatim.openstreetmap.org/search?country=${countryName}&city=${city}&format=json`)
-            .then(res => res.json())
-            .then(results => {
-              if (results.length > 0) {
-                const place = results[0];
-                const lat = parseFloat(place.lat);
-                const lon = parseFloat(place.lon);
-
-                map.setView([lat, lon], 10);
-
-                if (currentMarker) {
-                  map.removeLayer(currentMarker);
-                }
-
-                currentMarker = L.marker([lat, lon]).addTo(map)
-                  .bindPopup(`${city}, ${countryName}<br>Kinh độ: ${lon}<br>Vĩ độ: ${lat}`)
-                  .openPopup();
-                  
-                // Update latitude and longitude fields
-                document.getElementById("NewLocationLatitude").value = lat;
-                document.getElementById("NewLocationLongitude").value = lon;
-                
-                // Also update the location name field
-                document.getElementById("NewLocationName").value = city;
-                
-                // The dropdown itself already contains the CountryID as its value
-                // No need for additional update since the dropdown has name="CountryID"
-              } else {
-                alert("Không tìm thấy thành phố này trong quốc gia đã chọn.");
-              }
-            })
-            .catch(error => {
-              console.error('Error searching for city:', error);
-              alert("Đã xảy ra lỗi khi tìm kiếm thành phố. Vui lòng thử lại.");
-            });
-        });
-        
         // Function to reverse geocode coordinates and update location fields
         function reverseGeocode(lat, lng) {
             fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
@@ -636,54 +474,9 @@
                         }
                         document.getElementById("city").value = city;
                         
-                        // Find and update country field
+                        // Update country field
                         if (address.country) {
-                            // Look for the country in the serverCountries array
-                            // Try exact match first
-                            let matchingCountry = serverCountries.find(country =>
-                                country.countryName.toLowerCase() === address.country.toLowerCase() ||
-                                country.iso2?.toLowerCase() === address.country_code?.toLowerCase() ||
-                                country.iso3?.toLowerCase() === address.country_code?.toLowerCase()
-                            );
-                            
-                            // If no exact match, try partial match
-                            if (!matchingCountry) {
-                                matchingCountry = serverCountries.find(country =>
-                                    country.countryName.toLowerCase().includes(address.country.toLowerCase()) ||
-                                    address.country.toLowerCase().includes(country.countryName.toLowerCase())
-                                );
-                            }
-                            
-                            // If still no match, try with more flexible matching
-                            if (!matchingCountry) {
-                                matchingCountry = serverCountries.find(country => {
-                                    const countryNameLower = country.countryName.toLowerCase();
-                                    const addressCountryLower = address.country.toLowerCase();
-                                    // Check if either name is contained in the other
-                                    return countryNameLower.includes(addressCountryLower) ||
-                                           addressCountryLower.includes(countryNameLower) ||
-                                           // Check for common variations (e.g. "United States" vs "USA")
-                                           (countryNameLower.includes('united states') && (addressCountryLower.includes('united states') || addressCountryLower.includes('usa'))) ||
-                                           (countryNameLower.includes('united kingdom') && (addressCountryLower.includes('united kingdom') || addressCountryLower.includes('uk'))) ||
-                                           (countryNameLower.includes('russian') && addressCountryLower.includes('russia')) ||
-                                           (countryNameLower.includes('united arab emirates') && (addressCountryLower.includes('united arab emirates') || addressCountryLower.includes('uae'))) ||
-                                           (countryNameLower.includes('tanzania') && addressCountryLower.includes('tanzania united republic of')) ||
-                                           (countryNameLower.includes('bolivia') && addressCountryLower.includes('bolivia plurinational state of')) ||
-                                           (countryNameLower.includes('venezuela') && addressCountryLower.includes('venezuela')) ||
-                                           (countryNameLower.includes('iran') && addressCountryLower.includes('iran')) ||
-                                           (countryNameLower.includes('north korea') && addressCountryLower.includes('north korea')) ||
-                                           (countryNameLower.includes('south korea') && addressCountryLower.includes('south korea')) ||
-                                           (countryNameLower.includes('micronesia') && addressCountryLower.includes('micronesia')) ||
-                                           (countryNameLower.includes('moldova') && addressCountryLower.includes('moldova')) ||
-                                           (countryNameLower.includes('syria') && addressCountryLower.includes('syria')) ||
-                                           (countryNameLower.includes('viet nam') && addressCountryLower.includes('viet nam'))
-                                });
-                            }
-                            
-                            if (matchingCountry) {
-                                const countrySelect = document.getElementById("country");
-                                countrySelect.value = matchingCountry.countryID;
-                            }
+                            document.getElementById("countryName").value = address.country;
                         }
                     }
                 })
@@ -691,6 +484,14 @@
                     console.error('Error in reverse geocoding:', error);
                 });
         }
+
+        // Initialize reverse geocoding if there are already coordinates in the form
+        const initialLat = document.getElementById("NewLocationLatitude").value;
+        const initialLng = document.getElementById("NewLocationLongitude").value;
+        if (initialLat && initialLng) {
+            reverseGeocode(parseFloat(initialLat), parseFloat(initialLng));
+        }
+
         
         // Add click event to map for manual marker placement
         map.on('click', function(e) {
@@ -731,13 +532,6 @@
             });
         });
         
-        // Initialize reverse geocoding if there are already coordinates in the form
-        const initialLat = document.getElementById("NewLocationLatitude").value;
-        const initialLng = document.getElementById("NewLocationLongitude").value;
-        if (initialLat && initialLng) {
-            reverseGeocode(parseFloat(initialLat), parseFloat(initialLng));
-        }
-        
         // Form validation
         (function() {
           'use strict';
@@ -757,6 +551,9 @@
           }, false);
         })();
         });
+    
+        // Leaflet JS
+        // The script tag for Leaflet is included after the main script section
     </script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
