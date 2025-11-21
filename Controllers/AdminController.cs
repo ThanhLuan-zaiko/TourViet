@@ -47,12 +47,17 @@ public class AdminController : Controller
             return RedirectToAction("Index", "Home");
         }
         
-        await Task.Yield(); // To avoid CS1998 warning
-        return View("../AdministrativeStaffPage/CreateService");
+        var service = new Service
+        {
+            IsActive = true, // Mặc định chọn loại dịch vụ "đang hoạt động"
+            IsTaxable = false
+        };
+        
+        return View("../AdministrativeStaffPage/CreateService", service);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateService(Service service)
+    public async Task<IActionResult> CreateService(Service service, string serviceType)
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -67,6 +72,18 @@ public class AdminController : Controller
             service.ServiceID = Guid.NewGuid();
             service.CreatedAt = DateTime.UtcNow;
             service.IsDeleted = false;
+            
+            // Cập nhật giá trị IsActive và IsTaxable dựa trên serviceType
+            if (serviceType == "active")
+            {
+                service.IsActive = true;
+                service.IsTaxable = false;
+            }
+            else if (serviceType == "taxable")
+            {
+                service.IsActive = false;
+                service.IsTaxable = true;
+            }
             
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
@@ -103,7 +120,7 @@ public class AdminController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> EditService(Service service)
+    public async Task<IActionResult> EditService(Service service, string serviceType)
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -128,8 +145,19 @@ public class AdminController : Controller
             existingService.Description = service.Description;
             existingService.Price = service.Price;
             existingService.Currency = service.Currency;
-            existingService.IsActive = service.IsActive;
-            existingService.IsTaxable = service.IsTaxable;
+            
+            // Cập nhật giá trị IsActive và IsTaxable dựa trên serviceType
+            if (serviceType == "active")
+            {
+                existingService.IsActive = true;
+                existingService.IsTaxable = false;
+            }
+            else if (serviceType == "taxable")
+            {
+                existingService.IsActive = false;
+                existingService.IsTaxable = true;
+            }
+            
             existingService.UpdatedAt = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
