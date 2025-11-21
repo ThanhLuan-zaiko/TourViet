@@ -170,8 +170,11 @@
                     url: '@Url.Action("DeleteServiceConfirmed", "Admin")',
                     type: 'POST',
                     data: {
-                        id: serviceId,
-                        __RequestVerificationToken: token
+                        'id': serviceId,
+                        '__RequestVerificationToken': token
+                    },
+                    headers: {
+                        'RequestVerificationToken': token
                     },
                     success: function(response) {
                         if(response.success) {
@@ -200,8 +203,9 @@
                             alert(response.message || 'Có lỗi xảy ra khi xóa dịch vụ.');
                         }
                     },
-                    error: function() {
-                        alert('Có lỗi xảy ra khi xóa dịch vụ.');
+                    error: function(xhr, status, error) {
+                        console.log('AJAX Error Details:', xhr.responseText, status, error);
+                        alert('Có lỗi xảy ra khi xóa dịch vụ: ' + error);
                     }
                 });
             }

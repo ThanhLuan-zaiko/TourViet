@@ -177,25 +177,30 @@ public class AdminController : Controller
             return Json(new { success = false, message = "Bạn không có quyền thực hiện hành động này." });
         }
         
-        var service = await _context.Services
-            .FirstOrDefaultAsync(s => s.ServiceID == id);
-        
-        if (service == null)
+        try
         {
-            return Json(new { success = false, message = "Dịch vụ không tồn tại." });
+            // Xóa các bản ghi liên quan trong TourServices trước
+            await _context.TourServices
+                .Where(ts => ts.ServiceID == id)
+                .ExecuteDeleteAsync();
+            
+            // Sau đó xóa vật lý bản ghi Service
+            var rowsAffected = await _context.Services
+                .Where(s => s.ServiceID == id && !s.IsDeleted)
+                .ExecuteDeleteAsync();
+            
+            if (rowsAffected == 0)
+            {
+                return Json(new { success = false, message = "Dịch vụ không tồn tại hoặc đã bị xóa trước đó." });
+            }
+            
+            return Json(new { success = true, message = "Dịch vụ đã được xóa thành công!" });
         }
-        
-        // Kiểm tra nếu dịch vụ đã bị xóa trước đó
-        if (service.IsDeleted)
+        catch (Exception ex)
         {
-            return Json(new { success = false, message = "Dịch vụ đã bị xóa trước đó." });
+            // Ghi log lỗi nếu có
+            Console.WriteLine($"Error deleting service: {ex.Message}");
+            return Json(new { success = false, message = "Có lỗi xảy ra khi xóa dịch vụ." });
         }
-        
-        service.IsDeleted = true;
-        service.UpdatedAt = DateTime.UtcNow;
-        
-        await _context.SaveChangesAsync();
-        
-        return Json(new { success = true, message = "Dịch vụ đã được xóa thành công!" });
     }
 }
