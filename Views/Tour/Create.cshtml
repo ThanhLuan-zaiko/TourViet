@@ -51,12 +51,12 @@
                                 
                                 <div class="form-group">
                                     <label for="NewLocationName" class="control-label">Địa điểm</label>
-                                    <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Nhập tên địa điểm mới" />
+                                    <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Nhập tên địa điểm mới" readonly />
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="NewLocationAddress" class="control-label">Địa chỉ</label>
-                                    <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" placeholder="Nhập địa chỉ cụ thể" />
+                                    <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" placeholder="Nhập địa chỉ cụ thể" readonly />
                                 </div>
                                 
                                 <div class="form-group">
@@ -450,47 +450,108 @@
 
         let currentMarker = null;
 
-        // Load countries from REST Countries API
-        fetch("https://restcountries.com/v3.1/all?fields=name,latlng,capital")
-          .then(res => res.json())
-          .then(data => {
-            const countrySelect = document.getElementById("country");
-            data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-            data.forEach(country => {
-              let option = document.createElement("option");
-              option.value = JSON.stringify({
-                latlng: country.latlng,
-                name: country.name.common,
-                capital: country.capital ? country.capital[0] : "Không rõ"
-              });
-              option.textContent = country.name.common;
-              countrySelect.appendChild(option);
-            });
-          })
-          .catch(error => {
-            console.error('Error loading countries:', error);
-            alert("Đã xảy ra lỗi khi tải danh sách quốc gia. Vui lòng làm mới trang.");
-          });
+        // Load countries from server-side data instead of external API
+        // Get the country data from ViewBag that was passed from the controller
+        const serverCountries = @Html.Raw(Json.Serialize(countries));
+        const countrySelect = document.getElementById("country");
+        
+        // Populate the dropdown with server-side country data
+        serverCountries.forEach(country => {
+            let option = document.createElement("option");
+            option.value = country.countryID;  // Use the actual CountryID from database
+            option.textContent = country.countryName;
+            countrySelect.appendChild(option);
+        });
+        
+        // Sort options alphabetically by text content
+        const options = Array.from(countrySelect.options).slice(1); // Exclude first empty option
+        options.sort((a, b) => a.text.localeCompare(b.text));
+        // Clear existing options (except the first empty one) and re-add sorted ones
+        countrySelect.innerHTML = '<option value="">-- Chọn quốc gia --</option>';
+        options.forEach(option => countrySelect.appendChild(option));
 
-        // When country is selected → zoom to center coordinates and show marker
+        // When country is selected → zoom to a default view for the country
         document.getElementById("country").addEventListener("change", () => {
-          const countryData = JSON.parse(document.getElementById("country").value);
-          if (countryData && countryData.latlng) {
-            const [lat, lng] = countryData.latlng;
-
-            map.setView([lat, lng], 5);
-
-            if (currentMarker) {
-              map.removeLayer(currentMarker);
-            }
-
-            currentMarker = L.marker([lat, lng]).addTo(map)
-              .bindPopup(`${countryData.name}<br>Thủ đô: ${countryData.capital}`)
-              .openPopup();
+          const selectedCountryId = document.getElementById("country").value;
+          if (selectedCountryId) {
+            // Find the country object from server data
+            const selectedCountry = serverCountries.find(country => country.countryID === selectedCountryId);
+            
+            if (selectedCountry) {
+              // For now, we'll use a default zoom for the selected country
+              // In a real implementation, you might want to have lat/lng coordinates stored in your database
+              // For demonstration purposes, we'll use some default coordinates for common countries
+              let lat = 20; // Default latitude
+              let lng = 0;  // Default longitude
               
-            // Update latitude and longitude fields
-            document.getElementById("NewLocationLatitude").value = lat;
-            document.getElementById("NewLocationLongitude").value = lng;
+              // Set default coordinates based on country name
+              switch(selectedCountry.countryName.toLowerCase()) {
+                case 'vietnam':
+                  lat = 16.1092;
+                  lng = 108.2772;
+                  break;
+                case 'united states':
+                case 'united states of america':
+                case 'usa':
+                  lat = 39.8283;
+                  lng = -98.5795;
+                  break;
+                case 'united kingdom':
+                case 'uk':
+                  lat = 55.3781;
+                  lng = -3.4360;
+                  break;
+                case 'france':
+                  lat = 46.2276;
+                  lng = 2.2137;
+                  break;
+                case 'germany':
+                  lat = 51.1657;
+                  lng = 10.4515;
+                  break;
+                case 'japan':
+                  lat = 36.2048;
+                  lng = 138.2529;
+                  break;
+                case 'china':
+                  lat = 35.8617;
+                  lng = 104.1954;
+                  break;
+                case 'india':
+                  lat = 20.5937;
+                  lng = 78.9629;
+                  break;
+                case 'brazil':
+                  lat = -14.2350;
+                  lng = -51.9253;
+                  break;
+                case 'russia':
+                  lat = 61.5240;
+                  lng = 105.3188;
+                  break;
+                default:
+                  // For other countries, we can try to use a general location
+                  // In a real implementation, you would have coordinates stored in your database
+                  break;
+              }
+
+              map.setView([lat, lng], 5);
+
+              if (currentMarker) {
+                map.removeLayer(currentMarker);
+              }
+
+              currentMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`${selectedCountry.countryName}`)
+                .openPopup();
+                
+              // Update latitude and longitude fields
+              document.getElementById("NewLocationLatitude").value = lat;
+              document.getElementById("NewLocationLongitude").value = lng;
+            }
+            
+            // The dropdown itself already contains the CountryID as its value
+            // No need for additional update since the dropdown has name="CountryID"
           }
         });
 
@@ -504,11 +565,11 @@
             return;
           }
 
-          const countryData = JSON.parse(countrySelect.value);
-          const country = countryData.name;
+          const selectedCountry = serverCountries.find(country => country.countryID === countrySelect.value);
+          const countryName = selectedCountry ? selectedCountry.countryName : '';
           const city = cityInput.value;
 
-          fetch(`https://nominatim.openstreetmap.org/search?country=${country}&city=${city}&format=json`)
+          fetch(`https://nominatim.openstreetmap.org/search?country=${countryName}&city=${city}&format=json`)
             .then(res => res.json())
             .then(results => {
               if (results.length > 0) {
@@ -523,7 +584,7 @@
                 }
 
                 currentMarker = L.marker([lat, lon]).addTo(map)
-                  .bindPopup(`${city}, ${country}<br>Kinh độ: ${lon}<br>Vĩ độ: ${lat}`)
+                  .bindPopup(`${city}, ${countryName}<br>Kinh độ: ${lon}<br>Vĩ độ: ${lat}`)
                   .openPopup();
                   
                 // Update latitude and longitude fields
@@ -532,6 +593,9 @@
                 
                 // Also update the location name field
                 document.getElementById("NewLocationName").value = city;
+                
+                // The dropdown itself already contains the CountryID as its value
+                // No need for additional update since the dropdown has name="CountryID"
               } else {
                 alert("Không tìm thấy thành phố này trong quốc gia đã chọn.");
               }
@@ -541,6 +605,92 @@
               alert("Đã xảy ra lỗi khi tìm kiếm thành phố. Vui lòng thử lại.");
             });
         });
+        
+        // Function to reverse geocode coordinates and update location fields
+        function reverseGeocode(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.address) {
+                        // Update location name field with display name if available
+                        if (data.display_name) {
+                            document.getElementById("NewLocationName").value = data.display_name.split(',')[0].trim();
+                        }
+                        
+                        // Update address field with full address
+                        document.getElementById("NewLocationAddress").value = data.display_name || '';
+                        
+                        // Update city field - try different possible city fields
+                        const address = data.address;
+                        let city = '';
+                        if (address.city) {
+                            city = address.city;
+                        } else if (address.town) {
+                            city = address.town;
+                        } else if (address.village) {
+                            city = address.village;
+                        } else if (address.municipality) {
+                            city = address.municipality;
+                        } else if (address.county) {
+                            city = address.county;
+                        }
+                        document.getElementById("city").value = city;
+                        
+                        // Find and update country field
+                        if (address.country) {
+                            // Look for the country in the serverCountries array
+                            // Try exact match first
+                            let matchingCountry = serverCountries.find(country =>
+                                country.countryName.toLowerCase() === address.country.toLowerCase() ||
+                                country.iso2?.toLowerCase() === address.country_code?.toLowerCase() ||
+                                country.iso3?.toLowerCase() === address.country_code?.toLowerCase()
+                            );
+                            
+                            // If no exact match, try partial match
+                            if (!matchingCountry) {
+                                matchingCountry = serverCountries.find(country =>
+                                    country.countryName.toLowerCase().includes(address.country.toLowerCase()) ||
+                                    address.country.toLowerCase().includes(country.countryName.toLowerCase())
+                                );
+                            }
+                            
+                            // If still no match, try with more flexible matching
+                            if (!matchingCountry) {
+                                matchingCountry = serverCountries.find(country => {
+                                    const countryNameLower = country.countryName.toLowerCase();
+                                    const addressCountryLower = address.country.toLowerCase();
+                                    // Check if either name is contained in the other
+                                    return countryNameLower.includes(addressCountryLower) ||
+                                           addressCountryLower.includes(countryNameLower) ||
+                                           // Check for common variations (e.g. "United States" vs "USA")
+                                           (countryNameLower.includes('united states') && (addressCountryLower.includes('united states') || addressCountryLower.includes('usa'))) ||
+                                           (countryNameLower.includes('united kingdom') && (addressCountryLower.includes('united kingdom') || addressCountryLower.includes('uk'))) ||
+                                           (countryNameLower.includes('russian') && addressCountryLower.includes('russia')) ||
+                                           (countryNameLower.includes('united arab emirates') && (addressCountryLower.includes('united arab emirates') || addressCountryLower.includes('uae'))) ||
+                                           (countryNameLower.includes('tanzania') && addressCountryLower.includes('tanzania united republic of')) ||
+                                           (countryNameLower.includes('bolivia') && addressCountryLower.includes('bolivia plurinational state of')) ||
+                                           (countryNameLower.includes('venezuela') && addressCountryLower.includes('venezuela')) ||
+                                           (countryNameLower.includes('iran') && addressCountryLower.includes('iran')) ||
+                                           (countryNameLower.includes('north korea') && addressCountryLower.includes('north korea')) ||
+                                           (countryNameLower.includes('south korea') && addressCountryLower.includes('south korea')) ||
+                                           (countryNameLower.includes('micronesia') && addressCountryLower.includes('micronesia')) ||
+                                           (countryNameLower.includes('moldova') && addressCountryLower.includes('moldova')) ||
+                                           (countryNameLower.includes('syria') && addressCountryLower.includes('syria')) ||
+                                           (countryNameLower.includes('viet nam') && addressCountryLower.includes('viet nam'))
+                                });
+                            }
+                            
+                            if (matchingCountry) {
+                                const countrySelect = document.getElementById("country");
+                                countrySelect.value = matchingCountry.countryID;
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in reverse geocoding:', error);
+                });
+        }
         
         // Add click event to map for manual marker placement
         map.on('click', function(e) {
@@ -561,6 +711,9 @@
             document.getElementById("NewLocationLatitude").value = lat;
             document.getElementById("NewLocationLongitude").value = lng;
             
+            // Call reverse geocoding to update other fields
+            reverseGeocode(lat, lng);
+            
             // Add dragend event to update coordinates when marker is dragged
             currentMarker.on('dragend', function(event) {
                 const marker = event.target;
@@ -569,11 +722,21 @@
                 document.getElementById("NewLocationLatitude").value = position.lat;
                 document.getElementById("NewLocationLongitude").value = position.lng;
                 
+                // Call reverse geocoding to update other fields when marker is dragged
+                reverseGeocode(position.lat, position.lng);
+                
                 // Update popup with new coordinates
                 marker.bindPopup(`Tọa độ: ${position.lat}, ${position.lng}`)
                     .openPopup();
             });
         });
+        
+        // Initialize reverse geocoding if there are already coordinates in the form
+        const initialLat = document.getElementById("NewLocationLatitude").value;
+        const initialLng = document.getElementById("NewLocationLongitude").value;
+        if (initialLat && initialLng) {
+            reverseGeocode(parseFloat(initialLat), parseFloat(initialLng));
+        }
         
         // Form validation
         (function() {
