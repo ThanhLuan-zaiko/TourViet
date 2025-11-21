@@ -49,6 +49,10 @@
                                 
                                 <div id="map" style="height: 400px; margin-top: 20px;"></div>
                                 
+                                <div class="form-group">
+                                    <label for="NewLocationName" class="control-label">Địa điểm</label>
+                                    <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Nhập tên địa điểm mới" />
+                                </div>
                                 
                                 <div class="form-group">
                                     <label for="NewLocationAddress" class="control-label">Địa chỉ</label>
@@ -309,6 +313,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
         // Add more tour instances
         let instanceIndex = 1;
         document.getElementById('add-instance').addEventListener('click', function() {
@@ -461,6 +466,10 @@
               option.textContent = country.name.common;
               countrySelect.appendChild(option);
             });
+          })
+          .catch(error => {
+            console.error('Error loading countries:', error);
+            alert("Đã xảy ra lỗi khi tải danh sách quốc gia. Vui lòng làm mới trang.");
           });
 
         // When country is selected → zoom to center coordinates and show marker
@@ -584,25 +593,7 @@
             });
           }, false);
         })();
-        
-        // Form validation
-        (function() {
-          'use strict';
-          window.addEventListener('load', function() {
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.getElementsByClassName('needs-validation');
-            // Loop over them and prevent submission
-            var validation = Array.prototype.filter.call(forms, function(form) {
-              form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                  event.preventDefault();
-                  event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-              }, false);
-            });
-          }, false);
-        })();
+        });
     </script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
