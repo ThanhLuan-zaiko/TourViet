@@ -37,7 +37,7 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> CreateService()
+    public IActionResult CreateService()
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");

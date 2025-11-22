@@ -3,12 +3,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@model IEnumerable<TourViet.Models.Tour>
-
-@{
-    var tours = ViewBag.Tours as IEnumerable<TourViet.Models.Tour>;
-}
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -17,46 +11,42 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Danh sách Tour</h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                            <div class="dropdown-header">Tùy chọn:</div>
-                            <a class="dropdown-item" href="#">Thêm mới</a>
-                            <a class="dropdown-item" href="#">Xuất dữ liệu</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-danger" href="#">Xóa mục đã chọn</a>
-                        </div>
-                    </div>
+                </div>
                 <div class="card-body">
                    <div class="d-flex justify-content-between align-items-center mb-3">
-                       <a asp-controller="Tour" asp-action="Create" class="btn btn-primary">Thêm mới Tour</a>
-                       @if (TempData["SuccessMessage"] != null)
-                       {
-                           <div class="alert alert-success alert-dismissible fade show" role="alert">
-                               @TempData["SuccessMessage"]
-                               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                           </div>
-                       }
+                       <a asp-controller="Tour" asp-action="Create" class="btn btn-primary">
+                           <i class="fas fa-plus"></i> Thêm mới Tour
+                       </a>
+                       
+                       <div class="search-box" style="width: 300px;">
+                           <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm tour..." value="@ViewBag.Search">
+                       </div>
                    </div>
                    
+                   @if (TempData["SuccessMessage"] != null)
+                   {
+                       <div class="alert alert-success alert-dismissible fade show" role="alert">
+                           @TempData["SuccessMessage"]
+                           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                       </div>
+                   }
+                   
                    <div class="table-responsive">
-                       <table class="table table-bordered" id="toursTable">
-                           <thead>
+                       <table class="table table-bordered table-hover" id="toursTable">
+                           <thead class="table-light">
                                <tr>
                                    <th>Tên Tour</th>
                                    <th>Địa điểm</th>
                                    <th>Mô tả ngắn</th>
                                    <th>Trạng thái</th>
                                    <th>Ngày tạo</th>
-                                   <th>Hành động</th>
+                                   <th style="width: 250px;">Hành động</th>
                                </tr>
                            </thead>
-                           <tbody>
-                               @if (ViewBag.Tours != null && ViewBag.Tours.Any())
+                           <tbody id="tourTableBody">
+                               @if (ViewBag.Tours != null && ViewBag.Tours.Count > 0)
                                {
-                                   @foreach (var tour in ViewBag.Tours)
+                                   foreach (var tour in ViewBag.Tours)
                                    {
                                        <tr>
                                            <td>@tour.TourName</td>
@@ -73,9 +63,15 @@
                                            </td>
                                            <td>@tour.CreatedAt.ToString("dd/MM/yyyy")</td>
                                            <td>
-                                               <a asp-controller="Tour" asp-action="Details" asp-route-id="@tour.TourID" class="btn btn-sm btn-info">Xem</a>
-                                               <a asp-controller="Tour" asp-action="Edit" asp-route-id="@tour.TourID" class="btn btn-sm btn-primary">Sửa</a>
-                                               <a asp-controller="Tour" asp-action="Delete" asp-route-id="@tour.TourID" class="btn btn-sm btn-danger">Xóa</a>
+                                               <a asp-controller="Tour" asp-action="Details" asp-route-id="@tour.TourID" class="btn btn-sm btn-info">
+                                                   <i class="fas fa-eye"></i> Xem
+                                               </a>
+                                               <a asp-controller="Tour" asp-action="Edit" asp-route-id="@tour.TourID" class="btn btn-sm btn-primary">
+                                                   <i class="fas fa-edit"></i> Sửa
+                                               </a>
+                                               <button type="button" class="btn btn-sm btn-danger delete-tour-btn" data-tour-id="@tour.TourID" data-tour-name="@tour.TourName">
+                                                   <i class="fas fa-trash"></i> Xóa
+                                               </button>
                                            </td>
                                        </tr>
                                    }
@@ -89,19 +85,265 @@
                            </tbody>
                        </table>
                    </div>
+                   
+                   <!-- Pagination -->
+                   @if (ViewBag.TotalPages > 1)
+                   {
+                       <nav aria-label="Page navigation">
+                           <ul class="pagination justify-content-center" id="pagination">
+                               <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                                   <a class="page-link" href="#" data-page="@(ViewBag.CurrentPage - 1)">Trước</a>
+                               </li>
+                               
+                               @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                               {
+                                   <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                       <a class="page-link" href="#" data-page="@i">@i</a>
+                                   </li>
+                               }
+                               
+                               <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                                   <a class="page-link" href="#" data-page="@(ViewBag.CurrentPage + 1)">Sau</a>
+                               </li>
+                           </ul>
+                       </nav>
+                       
+                       <div class="text-center text-muted">
+                           Hiển thị trang @ViewBag.CurrentPage / @ViewBag.TotalPages (Tổng: @ViewBag.TotalItems tour)
+                       </div>
+                   }
                 </div>
             </div>
         </div>
    </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa tour <strong id="tourNameToDelete"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
 </div>
+
 <script>
-   // Auto-hide success alerts after 5 seconds
-   setTimeout(function() {
-       var alert = document.querySelector('.alert');
-       if (alert) {
-           var bsAlert = new bootstrap.Alert(alert);
-           bsAlert.close();
-       }
-   }, 5000);
+let currentPage = @ViewBag.CurrentPage;
+let currentSearch = "@ViewBag.Search";
+let searchTimeout;
+let tourIdToDelete = null;
+
+// Auto-hide success alerts after 5 seconds
+setTimeout(function() {
+    var alert = document.querySelector('.alert');
+    if (alert) {
+        var bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    }
+}, 5000);
+
+// Real-time search with debouncing
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentSearch = e.target.value;
+        currentPage = 1;
+        searchTours();
+    }, 500); // 500ms debounce
+});
+
+// Pagination click handler
+document.getElementById('pagination')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (e.target.tagName === 'A' && !e.target.parentElement.classList.contains('disabled')) {
+        const page = parseInt(e.target.getAttribute('data-page'));
+        if (page && page !== currentPage) {
+            currentPage = page;
+            searchTours();
+        }
+    }
+});
+
+// Delete button handler
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-tour-btn')) {
+        const btn = e.target.closest('.delete-tour-btn');
+        tourIdToDelete = btn.getAttribute('data-tour-id');
+        const tourName = btn.getAttribute('data-tour-name');
+        document.getElementById('tourNameToDelete').textContent = tourName;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+});
+
+// Confirm delete
+document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if (!tourIdToDelete) return;
+    
+    try {
+        const response = await fetch('/Home/DeleteTour', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: `id=${tourIdToDelete}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''}`
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            showAlert('success', result.message);
+            searchTours(); // Reload the list
+        } else {
+            showAlert('danger', result.message);
+        }
+    } catch (error) {
+        showAlert('danger', 'Có lỗi xảy ra khi xóa tour.');
+    }
+});
+
+// Search tours via AJAX
+async function searchTours() {
+    try {
+        const response = await fetch('/Home/SearchTours', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                search: currentSearch,
+                page: currentPage
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateTable(result.tours);
+            updatePagination(result.currentPage, result.totalPages, result.totalItems);
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
+
+// Update table with search results
+function updateTable(tours) {
+    const tbody = document.getElementById('tourTableBody');
+    
+    if (tours.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có dữ liệu tour</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = tours.map(tour => `
+        <tr>
+            <td>${tour.tourName}</td>
+            <td>${tour.locationName}</td>
+            <td>${tour.shortDescription}</td>
+            <td>
+                <span class="badge ${tour.isPublished ? 'bg-success' : 'bg-warning'}">
+                    ${tour.isPublished ? 'Đang hoạt động' : 'Chưa kích hoạt'}
+                </span>
+            </td>
+            <td>${tour.createdAt}</td>
+            <td>
+                <a href="/Tour/Details/${tour.tourID}" class="btn btn-sm btn-info">
+                    <i class="fas fa-eye"></i> Xem
+                </a>
+                <a href="/Tour/Edit/${tour.tourID}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i> Sửa
+                </a>
+                <button type="button" class="btn btn-sm btn-danger delete-tour-btn" data-tour-id="${tour.tourID}" data-tour-name="${tour.tourName}">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Update pagination
+function updatePagination(page, totalPages, totalItems) {
+    currentPage = page;
+    const paginationContainer = document.getElementById('pagination');
+    
+    if (!paginationContainer || totalPages <= 1) {
+        if (paginationContainer) {
+            paginationContainer.parentElement.parentElement.style.display = 'none';
+        }
+        return;
+    }
+    
+    paginationContainer.parentElement.parentElement.style.display = 'block';
+    
+    let html = `
+        <li class="page-item ${page === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${page - 1}">Trước</a>
+        </li>
+    `;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        html += `
+            <li class="page-item ${i === page ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+    
+    html += `
+        <li class="page-item ${page === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${page + 1}">Sau</a>
+        </li>
+    `;
+    
+    paginationContainer.innerHTML = html;
+    
+    // Update info text
+    const infoText = paginationContainer.parentElement.nextElementSibling;
+    if (infoText) {
+        infoText.textContent = `Hiển thị trang ${page} / ${totalPages} (Tổng: ${totalItems} tour)`;
+    }
+}
+
+// Show alert message
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const searchBox = document.querySelector('.search-box').parentElement;
+    searchBox.insertAdjacentHTML('afterend', alertHtml);
+    
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            new bootstrap.Alert(alert).close();
+        }
+    }, 5000);
+}
 </script>
+
+@* Add CSRF token for AJAX requests *@
+<form id="csrfForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
