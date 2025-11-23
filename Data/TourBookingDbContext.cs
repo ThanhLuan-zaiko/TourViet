@@ -85,6 +85,9 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
                 .WithMany(c => c.Locations)
                 .HasForeignKey(e => e.CountryID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(e => e.Latitude).HasPrecision(18, 6);
+            entity.Property(e => e.Longitude).HasPrecision(18, 6);
         });
         
         // Configure Country entity
@@ -93,7 +96,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
             entity.HasKey(e => e.CountryID);
             entity.HasIndex(e => e.CountryName).IsUnique();
             entity.HasIndex(e => e.ISO2).IsUnique();
-            entity.HasIndex(e => e.ISO3).IsUnique();
+            // ISO3 index removed - we don't have real ISO3 codes from reverse geocoding, allowing multiple NULLs
         });
         
         // Configure Category entity

@@ -5,110 +5,153 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800">
+                <i class="fas fa-info-circle text-primary me-2"></i>Chi tiết Tour
+            </h1>
+            <p class="text-muted mb-0">
+                <small>Thông tin đầy đủ về tour @Model.TourName</small>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Home" asp-action="ManageTours" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Quay lại
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.TourID" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i>Chỉnh sửa
+            </a>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-12">
-            <div class="mb-4">
-                <h1 class="h3">Chi tiết Tour</h1>
-            </div>
-
-            <!-- Basic Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Thông tin cơ bản</h6>
+        <!-- Left Column - Main Info -->
+        <div class="col-lg-8">
+            <!-- Basic Information Card -->
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản
+                    </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Tên Tour:</dt>
-                                <dd class="col-sm-8"><strong>@Model.TourName</strong></dd>
-
-                                <dt class="col-sm-4">Mã Tour (Slug):</dt>
-                                <dd class="col-sm-8"><code>@(Model.Slug ?? "Chưa có")</code></dd>
-
-                                <dt class="col-sm-4">Danh mục:</dt>
-                                <dd class="col-sm-8">
-                                    @if (Model.Category != null)
-                                    {
-                                        <span class="badge bg-info">@Model.Category.CategoryName</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Chưa phân loại</span>
-                                    }
-                                </dd>
-
-                                <dt class="col-sm-4">Địa điểm:</dt>
-                                <dd class="col-sm-8">
-                                    @if (Model.Location != null)
-                                    {
-                                        <strong>@Model.Location.LocationName</strong>
-                                        @if (Model.Location.City != null)
-                                        {
-                                            <span>, @Model.Location.City</span>
-                                        }
-                                        @if (Model.Location.Country != null)
-                                        {
-                                            <br /><small class="text-muted"><i class="fas fa-map-marker-alt"></i> @Model.Location.Country.CountryName</small>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Chưa có</span>
-                                    }
-                                </dd>
-                            </dl>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-tag text-primary me-1"></i>Tên Tour
+                            </label>
+                            <h5 class="mb-0">@Model.TourName</h5>
                         </div>
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Hướng dẫn viên mặc định:</dt>
-                                <dd class="col-sm-8">
-                                    @if (Model.DefaultGuide != null)
-                                    {
-                                        <i class="fas fa-user"></i> @Model.DefaultGuide.FullName
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Chưa có</span>
-                                    }
-                                </dd>
-
-                                <dt class="col-sm-4">Trạng thái:</dt>
-                                <dd class="col-sm-8">
-                                    <span class="badge @(Model.IsPublished ? "bg-success" : "bg-warning")">
-                                        @(Model.IsPublished ? "Đang hoạt động" : "Chưa kích hoạt")
-                                    </span>
-                                </dd>
-
-                                <dt class="col-sm-4">Ngày tạo:</dt>
-                                <dd class="col-sm-8">
-                                    <i class="fas fa-calendar-plus"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                                </dd>
-
-                                @if (Model.UpdatedAt.HasValue)
-                                {
-                                    <dt class="col-sm-4">Cập nhật lần cuối:</dt>
-                                    <dd class="col-sm-8">
-                                        <i class="fas fa-calendar-check"></i> @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
-                                    </dd>
-                                }
-                            </dl>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-code text-info me-1"></i>Mã Tour (Slug)
+                            </label>
+                            <p class="mb-0"><code class="bg-light px-2 py-1 rounded">@(Model.Slug ?? "Chưa có")</code></p>
                         </div>
                     </div>
-                    
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-folder text-warning me-1"></i>Danh mục
+                            </label>
+                            <p class="mb-0">
+                                @if (Model.Category != null)
+                                {
+                                    <span class="badge bg-info-soft text-info px-3 py-2">
+                                        <i class="fas fa-bookmark me-1"></i>@Model.Category.CategoryName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa phân loại</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>Địa điểm
+                            </label>
+                            <p class="mb-0">
+                                @if (Model.Location != null)
+                                {
+                                    <strong>@Model.Location.LocationName</strong>
+                                    @if (Model.Location.City != null)
+                                    {
+                                        <span>, @Model.Location.City</span>
+                                    }
+                                    @if (Model.Location.Country != null)
+                                    {
+                                        <br /><small class="text-muted"><i class="fas fa-globe me-1"></i>@Model.Location.Country.CountryName</small>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-user-tie text-success me-1"></i>Hướng dẫn viên mặc định
+                            </label>
+                            <p class="mb-0">
+                                @if (Model.DefaultGuide != null)
+                                {
+                                    <i class="fas fa-user-circle me-1"></i>@Model.DefaultGuide.FullName
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small mb-1">
+                                <i class="fas fa-toggle-on text-success me-1"></i>Trạng thái
+                            </label>
+                            <p class="mb-0">
+                                @if (Model.IsPublished)
+                                {
+                                    <span class="badge bg-success-soft text-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>Đang hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-soft text-warning px-3 py-2">
+                                        <i class="fas fa-pause-circle me-1"></i>Chưa kích hoạt
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
                     @if (!string.IsNullOrEmpty(Model.ShortDescription))
                     {
-                        <hr />
-                        <h6>Mô tả ngắn:</h6>
-                        <p>@Model.ShortDescription</p>
+                        <hr class="my-4" />
+                        <div>
+                            <label class="text-muted small mb-2">
+                                <i class="fas fa-align-left text-info me-1"></i>Mô tả ngắn
+                            </label>
+                            <p class="text-dark">@Model.ShortDescription</p>
+                        </div>
                     }
-                    
+
                     @if (!string.IsNullOrEmpty(Model.Description))
                     {
-                        <hr />
-                        <h6>Mô tả chi tiết:</h6>
-                        <p>@Model.Description</p>
+                        <hr class="my-4" />
+                        <div>
+                            <label class="text-muted small mb-2">
+                                <i class="fas fa-file-alt text-primary me-1"></i>Mô tả chi tiết
+                            </label>
+                            <p class="text-dark">@Model.Description</p>
+                        </div>
                     }
                 </div>
             </div>
@@ -116,21 +159,25 @@
             <!-- Tour Images -->
             @if (Model.TourImages != null && Model.TourImages.Any())
             {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Hình ảnh Tour</h6>
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-success text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-images me-2"></i>Hình Ảnh Tour
+                        </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
+                    <div class="card-body p-4">
+                        <div class="row g-3">
                             @foreach (var image in Model.TourImages.OrderBy(i => i.SortOrder))
                             {
-                                <div class="col-md-3 mb-3">
-                                    <div class="card">
-                                        <img src="@image.Url" class="card-img-top" alt="@image.AltText" style="height: 200px; object-fit: cover;">
-                                        <div class="card-body p-2">
+                                <div class="col-md-3">
+                                    <div class="card border-0 shadow-sm h-100 image-card">
+                                        <img src="@image.Url" class="card-img-top" alt="@image.AltText" style="height: 180px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0;">
+                                        <div class="card-body p-2 text-center">
                                             @if (image.IsPrimary)
                                             {
-                                                <span class="badge bg-primary">Ảnh chính</span>
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-star me-1"></i>Ảnh chính
+                                                </span>
                                             }
                                         </div>
                                     </div>
@@ -144,118 +191,83 @@
             <!-- Location Details -->
             @if (Model.Location != null)
             {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-map-marked-alt"></i> Thông tin địa điểm</h6>
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-info text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-map-marked-alt me-2"></i>Thông Tin Địa Điểm
+                        </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="row">
-                            <div class="col-md-6">
-                                <dl class="row">
-                                    <dt class="col-sm-4">Tên địa điểm:</dt>
-                                    <dd class="col-sm-8"><strong>@Model.Location.LocationName</strong></dd>
-
-                                    @if (!string.IsNullOrEmpty(Model.Location.City))
-                                    {
-                                        <dt class="col-sm-4">Thành phố:</dt>
-                                        <dd class="col-sm-8">@Model.Location.City</dd>
-                                    }
-
-                                    @if (Model.Location.Country != null)
-                                    {
-                                        <dt class="col-sm-4">Quốc gia:</dt>
-                                        <dd class="col-sm-8">
-                                            <i class="fas fa-flag"></i> @Model.Location.Country.CountryName
-                                            @if (!string.IsNullOrEmpty(Model.Location.Country.ISO2))
-                                            {
-                                                <span class="badge bg-secondary">@Model.Location.Country.ISO2</span>
-                                            }
-                                        </dd>
-                                    }
-
-                                    @if (!string.IsNullOrEmpty(Model.Location.Address))
-                                    {
-                                        <dt class="col-sm-4">Địa chỉ:</dt>
-                                        <dd class="col-sm-8">@Model.Location.Address</dd>
-                                    }
-                                </dl>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small mb-1">
+                                    <i class="fas fa-location-dot me-1"></i>Tên địa điểm
+                                </label>
+                                <p class="mb-0"><strong>@Model.Location.LocationName</strong></p>
                             </div>
-                            <div class="col-md-6">
-                                <dl class="row">
-                                    @if (Model.Location.Latitude.HasValue && Model.Location.Longitude.HasValue)
-                                    {
-                                        <dt class="col-sm-4">Tọa độ:</dt>
-                                        <dd class="col-sm-8">
-                                            <i class="fas fa-map-pin"></i> 
-                                            Lat: @Model.Location.Latitude.Value.ToString("F6"), 
-                                            Long: @Model.Location.Longitude.Value.ToString("F6")
-                                            <br />
-                                            <a href="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                <i class="fas fa-external-link-alt"></i> Xem trên bản đồ
-                                            </a>
-                                        </dd>
-                                    }
 
-                                    <dt class="col-sm-4">Ngày tạo:</dt>
-                                    <dd class="col-sm-8">@Model.Location.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                            @if (!string.IsNullOrEmpty(Model.Location.City))
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small mb-1">
+                                        <i class="fas fa-city me-1"></i>Thành phố
+                                    </label>
+                                    <p class="mb-0">@Model.Location.City</p>
+                                </div>
+                            }
 
-                                    @if (Model.Location.UpdatedAt.HasValue)
-                                    {
-                                        <dt class="col-sm-4">Cập nhật:</dt>
-                                        <dd class="col-sm-8">@Model.Location.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</dd>
-                                    }
-                                </dl>
-                            </div>
+                            @if (Model.Location.Country != null)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small mb-1">
+                                        <i class="fas fa-flag me-1"></i>Quốc gia
+                                    </label>
+                                    <p class="mb-0">
+                                        @Model.Location.Country.CountryName
+                                        @if (!string.IsNullOrEmpty(Model.Location.Country.ISO2))
+                                        {
+                                            <span class="badge bg-secondary ms-1">@Model.Location.Country.ISO2</span>
+                                        }
+                                    </p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Location.Address))
+                            {
+                                <div class="col-md-12 mb-3">
+                                    <label class="text-muted small mb-1">
+                                        <i class="fas fa-map-pin me-1"></i>Địa chỉ
+                                    </label>
+                                    <p class="mb-0">@Model.Location.Address</p>
+                                </div>
+                            }
+
+                            @if (Model.Location.Latitude.HasValue && Model.Location.Longitude.HasValue)
+                            {
+                                <div class="col-md-12">
+                                    <label class="text-muted small mb-1">
+                                        <i class="fas fa-map-location-dot me-1"></i>Tọa độ
+                                    </label>
+                                    <p class="mb-2">
+                                        Lat: @Model.Location.Latitude.Value.ToString("F6"), 
+                                        Long: @Model.Location.Longitude.Value.ToString("F6")
+                                    </p>
+                                    <a href="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude" 
+                                       target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i>Xem trên Google Maps
+                                    </a>
+                                </div>
+                            }
                         </div>
 
                         @if (!string.IsNullOrEmpty(Model.Location.Description))
                         {
-                            <hr />
-                            <h6>Mô tả địa điểm:</h6>
-                            <p>@Model.Location.Description</p>
+                            <hr class="my-3" />
+                            <div>
+                                <label class="text-muted small mb-2">Mô tả địa điểm</label>
+                                <p class="mb-0">@Model.Location.Description</p>
+                            </div>
                         }
-                    </div>
-                </div>
-            }
-
-            <!-- Tour Services -->
-            @if (Model.TourServices != null && Model.TourServices.Any())
-            {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Dịch vụ</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Dịch vụ</th>
-                                        <th>Giá</th>
-                                        <th>Bao gồm</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var ts in Model.TourServices.OrderBy(ts => ts.SortOrder))
-                                    {
-                                        <tr>
-                                            <td>@ts.Service.ServiceName</td>
-                                            <td>@((ts.PriceOverride ?? ts.Service.Price).ToString("N0")) @(ts.Currency ?? ts.Service.Currency)</td>
-                                            <td>
-                                                @if (ts.IsIncluded)
-                                                {
-                                                    <span class="badge bg-success">Bao gồm</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-warning">Tùy chọn</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
             }
@@ -263,18 +275,98 @@
             <!-- Itineraries -->
             @if (Model.Itineraries != null && Model.Itineraries.Any())
             {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Lịch trình chi tiết</h6>
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-warning text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-route me-2"></i>Lịch Trình Chi Tiết
+                        </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         @foreach (var itinerary in Model.Itineraries.OrderBy(i => i.DayIndex))
                         {
-                            <div class="mb-3">
-                                <h6 class="text-primary">Ngày @itinerary.DayIndex: @itinerary.Title</h6>
-                                <p>@itinerary.Description</p>
+                            <div class="mb-4 pb-3 @(itinerary != Model.Itineraries.OrderBy(i => i.DayIndex).Last() ? "border-bottom" : "")">
+                                <div class="d-flex align-items-start">
+                                    <div class="badge bg-primary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                                        @itinerary.DayIndex
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="text-primary mb-2">@itinerary.Title</h6>
+                                        <p class="text-muted mb-0">@itinerary.Description</p>
+                                    </div>
+                                </div>
                             </div>
                         }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Info Card -->
+            <div class="card shadow-sm mb-4 border-0 bg-light">
+                <div class="card-body p-4">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-clock me-2"></i>Thông Tin Thời Gian
+                    </h6>
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">
+                            <i class="far fa-calendar-plus me-1"></i>Ngày tạo
+                        </small>
+                        <strong>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div>
+                            <small class="text-muted d-block mb-1">
+                                <i class="far fa-calendar-check me-1"></i>Cập nhật lần cuối
+                            </small>
+                            <strong>@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Services Card -->
+            @if (Model.TourServices != null && Model.TourServices.Any())
+            {
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-success text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-concierge-bell me-2"></i>Dịch Vụ
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="list-group list-group-flush">
+                            @foreach (var ts in Model.TourServices.OrderBy(ts => ts.SortOrder))
+                            {
+                                <div class="list-group-item border-0 px-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block">@ts.Service.ServiceName</strong>
+                                            <small class="text-muted">
+                                                <i class="fas fa-money-bill-wave me-1"></i>
+                                                @((ts.PriceOverride ?? ts.Service.Price).ToString("N0")) @(ts.Currency ?? ts.Service.Currency)
+                                            </small>
+                                        </div>
+                                        <div>
+                                            @if (ts.IsIncluded)
+                                            {
+                                                <span class="badge bg-success-soft text-success">
+                                                    <i class="fas fa-check me-1"></i>Bao gồm
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning-soft text-warning">
+                                                    <i class="fas fa-plus me-1"></i>Tùy chọn
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             }
@@ -282,30 +374,20 @@
             <!-- Tour Prices -->
             @if (Model.TourPrices != null && Model.TourPrices.Any())
             {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Bảng giá</h6>
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-primary text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-dollar-sign me-2"></i>Bảng Giá
+                        </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Loại giá</th>
-                                        <th>Số tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var price in Model.TourPrices)
-                                    {
-                                        <tr>
-                                            <td>@price.PriceType</td>
-                                            <td>@price.Amount.ToString("N0") @price.Currency</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="card-body p-3">
+                        @foreach (var price in Model.TourPrices)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 @(price != Model.TourPrices.Last() ? "border-bottom" : "")">
+                                <span class="text-muted">@price.PriceType</span>
+                                <strong class="text-primary">@price.Amount.ToString("N0") @price.Currency</strong>
+                            </div>
+                        }
                     </div>
                 </div>
             }
@@ -313,55 +395,92 @@
             <!-- Tour Instances -->
             @if (Model.TourInstances != null && Model.TourInstances.Any())
             {
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Lịch khởi hành</h6>
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-gradient-info text-white py-3">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-calendar-days me-2"></i>Lịch Khởi Hành
+                        </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Ngày bắt đầu</th>
-                                        <th>Ngày kết thúc</th>
-                                        <th>Hướng dẫn viên</th>
-                                        <th>Sức chứa</th>
-                                        <th>Đã đặt</th>
-                                        <th>Giá cơ bản</th>
-                                        <th>Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
-                                    {
-                                        <tr>
-                                            <td>@instance.StartDate.ToString("dd/MM/yyyy")</td>
-                                            <td>@instance.EndDate.ToString("dd/MM/yyyy")</td>
-                                            <td>@(instance.Guide?.FullName ?? "Chưa có")</td>
-                                            <td>@instance.Capacity</td>
-                                            <td>@instance.SeatsBooked</td>
-                                            <td>@instance.PriceBase.ToString("N0") @instance.Currency</td>
-                                            <td>
-                                                <span class="badge bg-info">@instance.Status</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="card-body p-3">
+                        @foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate).Take(5))
+                        {
+                            <div class="mb-3 pb-3 @(instance != Model.TourInstances.OrderBy(i => i.StartDate).Take(5).Last() ? "border-bottom" : "")">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <small class="text-muted">
+                                        <i class="far fa-calendar me-1"></i>
+                                        @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy")
+                                    </small>
+                                    <span class="badge bg-info">@instance.Status</span>
+                                </div>
+                                <div class="small">
+                                    <div class="text-muted mb-1">
+                                        <i class="fas fa-user-tie me-1"></i>@(instance.Guide?.FullName ?? "Chưa có")
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">
+                                            <i class="fas fa-users me-1"></i>@instance.SeatsBooked/@instance.Capacity chỗ
+                                        </span>
+                                        <strong class="text-success">@instance.PriceBase.ToString("N0") @instance.Currency</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.TourInstances.Count() > 5)
+                        {
+                            <div class="text-center">
+                                <small class="text-muted">Và @(Model.TourInstances.Count() - 5) lịch khởi hành khác...</small>
+                            </div>
+                        }
                     </div>
                 </div>
             }
-
-            <!-- Action Buttons -->
-            <div class="d-flex justify-content-end gap-2 mb-4">
-                <a asp-controller="Home" asp-action="ManageTours" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Quay lại
-                </a>
-                <a asp-action="Edit" asp-route-id="@Model.TourID" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Chỉnh sửa
-                </a>
-            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .bg-success-soft {
+        background-color: #d4edda;
+    }
+    
+    .bg-warning-soft {
+        background-color: #fff3cd;
+    }
+    
+    .bg-info-soft {
+        background-color: #d1ecf1;
+    }
+    
+    .image-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+    }
+    
+    code {
+        font-size: 0.9rem;
+    }
+</style>

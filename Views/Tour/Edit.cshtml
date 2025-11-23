@@ -13,689 +13,692 @@
     var services = ViewBag.Services as IEnumerable<TourViet.Models.Service>;
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="h3 mb-4">Chỉnh sửa Tour</h1>
-            
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
-                    <input type="hidden" asp-for="TourID" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        
-                    <!-- Countries and Locations Section -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Quốc gia và Địa điểm</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="countryName" class="control-label">Quốc gia</label>
-                                <input type="text" id="countryName" name="NewCountryName" class="form-control" placeholder="Vui lòng chọn quốc gia" readonly />
-                            </div>
-                                
-                            <div class="form-group">
-                                <label for="city" class="control-label">Thành phố</label>
-                                <input type="text" id="city" name="NewLocationCity" class="form-control" placeholder="Vui lòng chọn thành phố" readonly />
-                            </div>
-                                
-                            <div id="map" style="height: 400px; margin-top: 20px;"></div>
-                                
-                            <div class="form-group">
-                                <label for="NewLocationName" class="control-label">Tên địa điểm</label>
-                                <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" placeholder="Tên địa điểm" readonly />
-                            </div>
-                                
-                            <div class="form-group">
-                                <label for="NewLocationAddress" class="control-label">Địa chỉ cụ thể</label>
-                                <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" placeholder="Địa chỉ cụ thể" readonly />
-                            </div>
-                                
-                            <div class="form-group">
-                                <label for="NewLocationLatitude" class="control-label">Vĩ độ</label>
-                                <input type="number" id="NewLocationLatitude" name="NewLocationLatitude" class="form-control" placeholder="Vĩ độ" step="any" readonly />
-                            </div>
-                                
-                            <div class="form-group">
-                                <label for="NewLocationLongitude" class="control-label">Kinh độ</label>
-                                <input type="number" id="NewLocationLongitude" name="NewLocationLongitude" class="form-control" placeholder="Kinh độ" step="any" readonly />
-                            </div>
-                                
-                            <div class="form-group">
-                                <label for="NewLocationDescription" class="control-label">Mô tả địa điểm</label>
-                                <textarea id="NewLocationDescription" name="NewLocationDescription" class="form-control" rows="2" placeholder="Nhập mô tả địa điểm"></textarea>
-                            </div>
-                        </div>
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800">
+                <i class="fas fa-edit text-primary me-2"></i>Chỉnh Sửa Tour
+            </h1>
+            <p class="text-muted mb-0">
+                <small>Cập nhật thông tin cho tour: @Model.TourName</small>
+            </p>
+        </div>
+        <a asp-controller="Home" asp-action="ManageTours" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="TourID" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        
+        <!-- Location & Map Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-info text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-map-marked-alt me-2"></i>Quốc Gia & Địa Điểm
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="countryName" class="form-label fw-bold">
+                            <i class="fas fa-globe text-primary me-1"></i>Quốc gia
+                        </label>
+                        <input type="text" id="countryName" name="NewCountryName" class="form-control" placeholder="Click vào bản đồ để chọn" readonly />
                     </div>
-                    <!-- Tours Section -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Thông tin Tour</h6>
-                        </div>
-                        <div class="card-body">
-                            <!-- Basic Tour Information -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label asp-for="TourName" class="control-label">Tên Tour</label>
-                                        <input asp-for="TourName" class="form-control" />
-                                        <span asp-validation-for="TourName" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label asp-for="Slug" class="control-label">Slug (Tùy chọn)</label>
-                                        <input asp-for="Slug" class="form-control" placeholder="Để trống để tự động tạo từ tên tour" />
-                                        <span asp-validation-for="Slug" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="ShortDescription" class="control-label">Mô tả ngắn</label>
-                                    <input asp-for="ShortDescription" class="form-control" />
-                                    <span asp-validation-for="ShortDescription" class="text-danger"></span>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
-                                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                                    <span asp-validation-for="Description" class="text-danger"></span>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label asp-for="CategoryID" class="control-label">Danh mục</label>
-                                            <select asp-for="CategoryID" class="form-control" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
-                                                <option value="">-- Chọn danh mục --</option>
-                                            </select>
-                                            <span asp-validation-for="CategoryID" class="text-danger"></span>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label asp-for="DefaultGuideID" class="control-label">Hướng dẫn viên mặc định</label>
-                                                <select asp-for="DefaultGuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
-                                                    <option value="">-- Chọn hướng dẫn viên --</option>
-                                                </select>
-                                                <span asp-validation-for="DefaultGuideID" class="text-danger"></span>
-                                            </div>
-                                        </div>
-                                
-                                        <div class="form-group form-check">
-                                            <label class="form-check-label">
-                                                <input class="form-check-input" asp-for="IsPublished" /> <strong>Đăng tour</strong> (Hiển thị công khai cho khách hàng)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>    
-                    <!-- Tour Instances Section -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Lịch trình Tour</h6>
-                        </div>
-                        <div class="card-body">
-                            <div id="tour-instances-container">
-                                @if (Model.TourInstances != null && Model.TourInstances.Any())
-                                {
-                                    int instIndex = 0;
-                                    foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
-                                    {
-                                        <div class="tour-instance-item mb-3 border p-3">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="TourInstances[@instIndex].StartDate" class="control-label">Ngày bắt đầu</label>
-                                                        <input type="date" name="TourInstances[@instIndex].StartDate" class="form-control" value="@instance.StartDate.ToString("yyyy-MM-dd")" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="TourInstances[@instIndex].EndDate" class="control-label">Ngày kết thúc</label>
-                                                        <input type="date" name="TourInstances[@instIndex].EndDate" class="form-control" value="@instance.EndDate.ToString("yyyy-MM-dd")" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="TourInstances[@instIndex].Capacity" class="control-label">Sức chứa</label>
-                                                        <input type="number" name="TourInstances[@instIndex].Capacity" class="form-control" min="0" value="@instance.Capacity" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="TourInstances[@instIndex].PriceBase" class="control-label">Giá cơ bản</label>
-                                                        <input type="number" name="TourInstances[@instIndex].PriceBase" class="form-control" min="0" step="0.01" value="@instance.PriceBase" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="TourInstances[@instIndex].GuideID" class="control-label">Hướng dẫn viên</label>
-                                                <select name="TourInstances[@instIndex].GuideID" class="form-control" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName", instance.GuideID) : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
-                                                    <option value="">-- Chọn hướng dẫn viên --</option>
-                                                </select>
-                                            </div>
-                                            <button type="button" class="btn btn-danger btn-sm remove-instance">Xóa lịch trình</button>
-                                        </div>
-                                        instIndex++;
-                                    }
-                                }
-                            </div>
-                            <button type="button" class="btn btn-secondary" id="add-instance">Thêm lịch trình mới</button>
-                        </div>
-                        <!-- Tour Prices Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Giá Tour</h6>
-                            </div>
-                            <div class="card-body">
-                                <div id="tour-prices-container">
-                                    @if (Model.TourPrices != null && Model.TourPrices.Any())
-                                    {
-                                        int priceIdx = 0;
-                                        foreach (var price in Model.TourPrices)
-                                        {
-                                            <div class="tour-price-item mb-3 border p-3">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="TourPrices[@priceIdx].PriceType" class="control-label">Loại giá</label>
-                                                            <input type="text" name="TourPrices[@priceIdx].PriceType" class="form-control" value="@price.PriceType" placeholder="Ví dụ: Người lớn, Trẻ em..." />
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="TourPrices[@priceIdx].Amount" class="control-label">Số tiền</label>
-                                                            <input type="number" name="TourPrices[@priceIdx].Amount" class="form-control" min="0" step="0.01" value="@price.Amount" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button" class="btn btn-danger btn-sm remove-price">Xóa giá</button>
-                                            </div>
-                                            priceIdx++;
-                                        }
-                                    }
-                                </div>
-                                <button type="button" class="btn btn-secondary" id="add-price">Thêm giá mới</button>
-                            </div>
-                        </div>
-                        </div>
-                        <!-- Itineraries Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Lịch trình chi tiết</h6>
-                            </div>
-                            <div class="card-body">
-                                <div id="itineraries-container">
-                                    @if (Model.Itineraries != null && Model.Itineraries.Any())
-                                    {
-                                        int itinIdx = 0;
-                                        foreach (var itinerary in Model.Itineraries.OrderBy(i => i.DayIndex))
-                                        {
-                                            <div class="itinerary-item mb-3 border p-3">
-                                                <div class="row">
-                                                    <div class="col-md-2">
-                                                        <div class="form-group">
-                                                            <label for="Itineraries[@itinIdx].DayIndex" class="control-label">Ngày thứ</label>
-                                                            <input type="number" name="Itineraries[@itinIdx].DayIndex" class="form-control" min="1" value="@itinerary.DayIndex" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="Itineraries[@itinIdx].Title" class="control-label">Tiêu đề</label>
-                                                            <input type="text" name="Itineraries[@itinIdx].Title" class="form-control" value="@itinerary.Title" placeholder="Tiêu đề cho ngày này" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="Itineraries[@itinIdx].Description" class="control-label">Mô tả</label>
-                                                            <textarea name="Itineraries[@itinIdx].Description" class="form-control" rows="2" placeholder="Mô tả chi tiết cho ngày này">@itinerary.Description</textarea>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button" class="btn btn-danger btn-sm remove-itinerary">Xóa ngày</button>
-                                            </div>
-                                            itinIdx++;
-                                        }
-                                    }
-                                </div>
-                                <button type="button" class="btn btn-secondary" id="add-itinerary">Thêm ngày mới</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Services Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Dịch vụ</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label class="control-label">Dịch vụ cho tour</label>
-                                    @if (services != null && services.Any())
-                                    {
-                                        @for (int i = 0; i < services.Count(); i++)
-                                        {
-                                            <div class="form-check">
-                                                <input type="checkbox" name="TourServiceIds" value="@services.ElementAt(i).ServiceID" class="form-check-input" id="service_@services.ElementAt(i).ServiceID" />
-                                                <label class="form-check-label" for="service_@services.ElementAt(i).ServiceID">
-                                                    @services.ElementAt(i).ServiceName - @services.ElementAt(i).Price @services.ElementAt(i).Currency
-                                                </label>
-                                            </div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <p>Không có dịch vụ nào. Vui lòng thêm dịch vụ trước.</p>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Current Images -->
-                        @if (Model.TourImages != null && Model.TourImages.Any())
-                        {
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Hình ảnh hiện tại</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        @foreach (var image in Model.TourImages.OrderBy(i => i.SortOrder))
-                                        {
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card">
-                                                    <img src="@image.Url" class="card-img-top" alt="Tour Image" style="height: 200px; object-fit: cover;" />
-                                                    <div class="card-body p-2">
-                                                        @if (image.IsPrimary)
-                                                        {
-                                                            <span class="badge bg-success">Ảnh chính</span>
-                                                        }
-                                                        <small class="text-muted d-block">Thứ tự: @image.SortOrder</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                    <p class="text-info"><i class="fas fa-info-circle"></i> Ảnh hiện tại sẽ được giữ lại. Upload ảnh mới để bổ sung thêm.</p>
-                                </div>
-                            </div>
-                        }
-                        
-                        <!-- Upload Images Section -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Hình ảnh Tour</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="files" class="control-label">Chọn hình ảnh</label>
-                                    <input type="file" name="files" id="files" class="form-control" multiple accept="image/*" />
-                                    <small class="form-text text-muted">Chọn nhiều hình ảnh để tải lên. Các hình ảnh sẽ được chuyển đổi sang định dạng WebP.</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <input type="submit" value="Cập nhật" class="btn btn-primary" />
-                            <a asp-controller="Home" asp-action="ManageTours" class="btn btn-secondary">Hủy</a>
-                        </div>
-                    </form>
+                    <div class="col-md-6">
+                        <label for="city" class="form-label fw-bold">
+                            <i class="fas fa-city text-info me-1"></i>Thành phố
+                        </label>
+                        <input type="text" id="city" name="NewLocationCity" class="form-control" placeholder="Tự động điền từ bản đồ" readonly />
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-map-location-dot text-danger me-1"></i>Chọn vị trí trên bản đồ
+                    </label>
+                    <div id="map" style="height: 400px; border-radius: 0.5rem; border: 2px solid #e3e6f0;"></div>
+                    <small class="text-muted mt-1 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Click vào bản đồ để thay đổi vị trí. Marker hiện tại hiển thị địa điểm đã chọn trước đó.
+                    </small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="NewLocationName" class="form-label fw-bold">
+                            <i class="fas fa-map-pin text-success me-1"></i>Tên địa điểm
+                        </label>
+                        <input type="text" id="NewLocationName" name="NewLocationName" class="form-control" readonly />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="NewLocationAddress" class="form-label fw-bold">
+                            <i class="fas fa-location-dot text-warning me-1"></i>Địa chỉ cụ thể
+                        </label>
+                        <input type="text" id="NewLocationAddress" name="NewLocationAddress" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="NewLocationLatitude" class="form-label fw-bold">Vĩ độ</label>
+                        <input type="number" id="NewLocationLatitude" name="NewLocationLatitude" class="form-control" step="any" readonly />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="NewLocationLongitude" class="form-label fw-bold">Kinh độ</label>
+                        <input type="number" id="NewLocationLongitude" name="NewLocationLongitude" class="form-control" step="any" readonly />
+                    </div>
+                </div>
+
+                <div>
+                    <label for="NewLocationDescription" class="form-label fw-bold">
+                        <i class="fas fa-align-left text-info me-1"></i>Mô tả địa điểm
+                    </label>
+                    <textarea id="NewLocationDescription" name="NewLocationDescription" class="form-control" rows="2"></textarea>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Tour Info Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-primary text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-info-circle me-2"></i>Thông Tin Tour
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TourName" class="form-label fw-bold">
+                            <i class="fas fa-tag text-primary me-1"></i>Tên Tour <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="TourName" class="form-control" />
+                        <span asp-validation-for="TourName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Slug" class="form-label fw-bold">
+                            <i class="fas fa-link text-info me-1"></i>Slug (URL thân thiện)
+                        </label>
+                        <input asp-for="Slug" class="form-control" />
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ShortDescription" class="form-label fw-bold">
+                        <i class="fas fa-align-left text-success me-1"></i>Mô tả ngắn
+                    </label>
+                    <input asp-for="ShortDescription" class="form-control" />
+                    <span asp-validation-for="ShortDescription" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">
+                        <i class="fas fa-file-alt text-warning me-1"></i>Mô tả chi tiết
+                    </label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CategoryID" class="form-label fw-bold">
+                            <i class="fas fa-folder text-warning me-1"></i>Danh mục
+                        </label>
+                        <select asp-for="CategoryID" class="form-select" asp-items="@(categories != null ? new SelectList(categories, "CategoryID", "CategoryName") : new SelectList(new List<TourViet.Models.Category>(), "CategoryID", "CategoryName"))">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <span asp-validation-for="CategoryID" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DefaultGuideID" class="form-label fw-bold">
+                            <i class="fas fa-user-tie text-success me-1"></i>Hướng dẫn viên mặc định
+                        </label>
+                        <select asp-for="DefaultGuideID" class="form-select" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName") : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                            <option value="">-- Chọn hướng dẫn viên --</option>
+                        </select>
+                        <span asp-validation-for="DefaultGuideID" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="form-check p-3 bg-light rounded">
+                    <input class="form-check-input" asp-for="IsPublished" />
+                    <label class="form-check-label fw-bold">
+                        <i class="fas fa-eye text-primary me-1"></i>Đăng tour công khai
+                        <small class="d-block text-muted fw-normal">Cho phép khách hàng xem và đặt tour này</small>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tour Instances Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-success text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-calendar-days me-2"></i>Lịch Khởi Hành
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <div id="tour-instances-container">
+                    @if (Model.TourInstances != null && Model.TourInstances.Any())
+                    {
+                        int instIndex = 0;
+                        foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
+                        {
+                            <div class="tour-instance-item mb-4 p-3 border rounded bg-light">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
+                                        <input type="date" name="TourInstances[@instIndex].StartDate" class="form-control" value="@instance.StartDate.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-calendar-xmark text-danger me-1"></i>Ngày kết thúc</label>
+                                        <input type="date" name="TourInstances[@instIndex].EndDate" class="form-control" value="@instance.EndDate.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-users text-info me-1"></i>Sức chứa</label>
+                                        <input type="number" name="TourInstances[@instIndex].Capacity" class="form-control" min="0" value="@instance.Capacity" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-dollar-sign text-warning me-1"></i>Giá cơ bản</label>
+                                        <input type="number" name="TourInstances[@instIndex].PriceBase" class="form-control" min="0" step="0.01" value="@instance.PriceBase" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-user-tie text-primary me-1"></i>Hướng dẫn viên</label>
+                                        <select name="TourInstances[@instIndex].GuideID" class="form-select" asp-items="@(guides != null ? new SelectList(guides, "UserID", "FullName", instance.GuideID) : new SelectList(new List<TourViet.Models.User>(), "UserID", "FullName"))">
+                                            <option value="">-- Chọn HDV --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger remove-instance"><i class="fas fa-trash me-1"></i>Xóa</button>
+                            </div>
+                            instIndex++;
+                        }
+                    }
+                </div>
+                <button type="button" class="btn btn-outline-success" id="add-instance">
+                    <i class="fas fa-plus me-1"></i>Thêm lịch khởi hành
+                </button>
+            </div>
+        </div>
+
+        <!-- Tour Prices Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-warning text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-dollar-sign me-2"></i>Bảng Giá Tour
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <div id="tour-prices-container">
+                    @if (Model.TourPrices != null && Model.TourPrices.Any())
+                    {
+                        int priceIdx = 0;
+                        foreach (var price in Model.TourPrices)
+                        {
+                            <div class="tour-price-item mb-3 p-3 border rounded bg-light">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-tag text-info me-1"></i>Loại giá</label>
+                                        <input type="text" name="TourPrices[@priceIdx].PriceType" class="form-control" value="@price.PriceType" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-money-bill-wave text-success me-1"></i>Số tiền</label>
+                                        <input type="number" name="TourPrices[@priceIdx].Amount" class="form-control" min="0" step="0.01" value="@price.Amount" />
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger remove-price"><i class="fas fa-trash me-1"></i>Xóa</button>
+                            </div>
+                            priceIdx++;
+                        }
+                    }
+                </div>
+                <button type="button" class="btn btn-outline-warning" id="add-price">
+                    <i class="fas fa-plus me-1"></i>Thêm loại giá
+                </button>
+            </div>
+        </div>
+
+        <!-- Itineraries Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-danger text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-route me-2"></i>Lịch Trình Chi Tiết
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <div id="itineraries-container">
+                    @if (Model.Itineraries != null && Model.Itineraries.Any())
+                    {
+                        int itinIdx = 0;
+                        foreach (var itinerary in Model.Itineraries.OrderBy(i => i.DayIndex))
+                        {
+                            <div class="itinerary-item mb-3 p-3 border rounded bg-light">
+                                <div class="row">
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
+                                        <input type="number" name="Itineraries[@itinIdx].DayIndex" class="form-control" min="1" value="@itinerary.DayIndex" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-heading text-info me-1"></i>Tiêu đề</label>
+                                        <input type="text" name="Itineraries[@itinIdx].Title" class="form-control" value="@itinerary.Title" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold"><i class="fas fa-align-left text-success me-1"></i>Mô tả</label>
+                                        <textarea name="Itineraries[@itinIdx].Description" class="form-control" rows="2">@itinerary.Description</textarea>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger remove-itinerary"><i class="fas fa-trash me-1"></i>Xóa</button>
+                            </div>
+                            itinIdx++;
+                        }
+                    }
+                </div>
+                <button type="button" class="btn btn-outline-danger" id="add-itinerary">
+                    <i class="fas fa-plus me-1"></i>Thêm ngày
+                </button>
+            </div>
+        </div>
+
+        <!-- Services Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-info text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-concierge-bell me-2"></i>Dịch Vụ Kèm Theo
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                @if (services != null && services.Any())
+                {
+                    <div class="row">
+                        @for (int i = 0; i < services.Count(); i++)
+                        {
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check p-2 bg-light rounded">
+                                    <input type="checkbox" name="TourServiceIds" value="@services.ElementAt(i).ServiceID" class="form-check-input" id="service_@services.ElementAt(i).ServiceID" />
+                                    <label class="form-check-label" for="service_@services.ElementAt(i).ServiceID">
+                                        <strong>@services.ElementAt(i).ServiceName</strong>
+                                        <small class="d-block text-muted">
+                                            <i class="fas fa-money-bill-wave me-1"></i>
+                                            @services.ElementAt(i).Price.ToString("N0") @services.ElementAt(i).Currency
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Chưa có dịch vụ nào.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Current Images Card -->
+        @if (Model.TourImages != null && Model.TourImages.Any())
+        {
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-gradient-success text-white py-3">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-images me-2"></i>Hình Ảnh Hiện Tại
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        @foreach (var image in Model.TourImages.OrderBy(i => i.SortOrder))
+                        {
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <img src="@image.Url" class="card-img-top" alt="Tour Image" style="height: 180px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0;">
+                                    <div class="card-body p-2 text-center">
+                                        @if (image.IsPrimary)
+                                        {
+                                            <span class="badge bg-primary"><i class="fas fa-star me-1"></i>Ảnh chính</span>
+                                        }
+                                        <small class="text-muted d-block mt-1">Thứ tự: @image.SortOrder</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Các ảnh hiện tại sẽ được giữ lại. Upload ảnh mới bên dưới để bổ sung.
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Upload New Images Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-warning text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-upload me-2"></i>Thêm Hình Ảnh Mới
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <label for="files" class="form-label fw-bold">
+                    <i class="fas fa-folder-open text-primary me-1"></i>Chọn hình ảnh
+                </label>
+                <input type="file" name="TourImageFiles" id="files" class="form-control" multiple accept="image/*" />
+                <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Chọn nhiều hình ảnh cùng lúc. Hình ảnh sẽ được chuyển đổi sang WebP.
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a asp-controller="Home" asp-action="ManageTours" class="btn btn-lg btn-light">
+                        <i class="fas fa-times me-2"></i>Hủy bỏ
+                    </a>
+                    <button type="submit" class="btn btn-lg btn-primary px-5">
+                        <i class="fas fa-save me-2"></i>Cập Nhật Tour
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
-@section Scripts {
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <!-- Leaflet JS - MUST load before map initialization -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
     
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+    }
+    
+    #map {
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+@section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     
-
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        // Pre-populate existing location data if available
-        @if (Model.Location != null)
-        {
-            <text>
-            // Set location fields
-            @if (Model.Location.Country != null)
+            // Pre-populate location data
+            @if (Model.Location != null)
             {
-                <text>document.getElementById("countryName").value = "@Html.Raw(Model.Location.Country.CountryName.Replace("\"", "\\\""))";</text>
+                @if (Model.Location.Country != null)
+                {
+                    <text>document.getElementById("countryName").value = "@Html.Raw(Model.Location.Country.CountryName.Replace("\"", "\\\""))";</text>
+                }
+                @if (!string.IsNullOrEmpty(Model.Location.City))
+                {
+                    <text>document.getElementById("city").value = "@Html.Raw(Model.Location.City.Replace("\"", "\\\""))";</text>
+                }
+                @if (!string.IsNullOrEmpty(Model.Location.LocationName))
+                {
+                    <text>document.getElementById("NewLocationName").value = "@Html.Raw(Model.Location.LocationName.Replace("\"", "\\\""))";</text>
+                }
+                @if (!string.IsNullOrEmpty(Model.Location.Address))
+                {
+                    <text>document.getElementById("NewLocationAddress").value = "@Html.Raw(Model.Location.Address.Replace("\"", "\\\""))";</text>
+                }
+                @if (Model.Location.Latitude.HasValue)
+                {
+                    <text>document.getElementById("NewLocationLatitude").value = @Model.Location.Latitude.Value;</text>
+                }
+                @if (Model.Location.Longitude.HasValue)
+                {
+                    <text>document.getElementById("NewLocationLongitude").value = @Model.Location.Longitude.Value;</text>
+                }
+                @if (!string.IsNullOrEmpty(Model.Location.Description))
+                {
+                    <text>document.getElementById("NewLocationDescription").value = "@Html.Raw(Model.Location.Description.Replace("\"", "\\\"").Replace("\n", "\\n"))";</text>
+                }
             }
-            @if (!string.IsNullOrEmpty(Model.Location.City))
-            {
-                <text>document.getElementById("city").value = "@Html.Raw(Model.Location.City.Replace("\"", "\\\""))";</text>
-            }
-            @if (!string.IsNullOrEmpty(Model.Location.LocationName))
-            {
-                <text>document.getElementById("NewLocationName").value = "@Html.Raw(Model.Location.LocationName.Replace("\"", "\\\""))";</text>
-            }
-            @if (!string.IsNullOrEmpty(Model.Location.Address))
-            {
-                <text>document.getElementById("NewLocationAddress").value = "@Html.Raw(Model.Location.Address.Replace("\"", "\\\""))";</text>
-            }
-            @if (Model.Location.Latitude.HasValue)
-            {
-                <text>document.getElementById("NewLocationLatitude").value = @Model.Location.Latitude.Value;</text>
-            }
-            @if (Model.Location.Longitude.HasValue)
-            {
-                <text>document.getElementById("NewLocationLongitude").value = @Model.Location.Longitude.Value;</text>
-            }
-            @if (!string.IsNullOrEmpty(Model.Location.Description))
-            {
-                <text>document.getElementById("NewLocationDescription").value = "@Html.Raw(Model.Location.Description.Replace("\"", "\\\"").Replace("\n", "\\n"))";</text>
-            }
-            </text>
-        }
 
-        // Declare variables FIRST before using them
-        let instanceIndex = 1;
-        let priceIndex = 1;
-        let itineraryIndex = 1;
+            // Pre-select services
+            @if (Model.TourServices != null && Model.TourServices.Any())
+            {
+                <text>
+                const selectedServices = [@Html.Raw(string.Join(",", Model.TourServices.Select(ts => "'" + ts.ServiceID + "'")))];
+                selectedServices.forEach(serviceId => {
+                    const checkbox = document.querySelector(`input[type="checkbox"][value="${serviceId}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                </text>
+            }
 
-        // Pre-select services
-        @if (Model.TourServices != null && Model.TourServices.Any())
-        {
-            <text>
-            const selectedServices = [@Html.Raw(string.Join(",", Model.TourServices.Select(ts => "'" + ts.ServiceID + "'")))];
-            selectedServices.forEach(serviceId => {
-                const checkbox = document.querySelector(`input[type="checkbox"][value="${serviceId}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-            </text>
-        }
+            // Set indices for dynamic forms
+            let instanceIndex = @(Model.TourInstances != null && Model.TourInstances.Any() ? Model.TourInstances.Count : 0);
+            let priceIndex = @(Model.TourPrices != null && Model.TourPrices.Any() ? Model.TourPrices.Count : 0);
+            let itineraryIndex = @(Model.Itineraries != null && Model.Itineraries.Any() ? Model.Itineraries.Count : 0);
 
-        // Update indices based on existing data
-        @if (Model.TourInstances != null && Model.TourInstances.Any())
-        {
-            <text>instanceIndex = @Model.TourInstances.Count;</text>
-        }
-        @if (Model.TourPrices != null && Model.TourPrices.Any())
-        {
-            <text>priceIndex = @Model.TourPrices.Count;</text>
-        }
-        @if (Model.Itineraries != null && Model.Itineraries.Any())
-        {
-            <text>itineraryIndex = @Model.Itineraries.Count;</text>
-        }
-
-        // Add more tour instances
-        document.getElementById('add-instance').addEventListener('click', function() {
-            const container = document.getElementById('tour-instances-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'tour-instance-item mb-3';
-            newItem.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourInstances[\${instanceIndex}].StartDate" class="control-label">Ngày bắt đầu</label>
+            // Add instances
+            document.getElementById('add-instance').addEventListener('click', function() {
+                const container = document.getElementById('tour-instances-container');
+                const newItem = document.createElement('div');
+                newItem.className = 'tour-instance-item mb-4 p-3 border rounded bg-light';
+                newItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
                             <input type="date" name="TourInstances[\${instanceIndex}].StartDate" class="form-control" />
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourInstances[\${instanceIndex}].EndDate" class="control-label">Ngày kết thúc</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-calendar-xmark text-danger me-1"></i>Ngày kết thúc</label>
                             <input type="date" name="TourInstances[\${instanceIndex}].EndDate" class="form-control" />
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourInstances[\${instanceIndex}].Capacity" class="control-label">Sức chứa</label>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-users text-info me-1"></i>Sức chứa</label>
                             <input type="number" name="TourInstances[\${instanceIndex}].Capacity" class="form-control" min="0" />
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourInstances[\${instanceIndex}].PriceBase" class="control-label">Giá cơ bản</label>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-dollar-sign text-warning me-1"></i>Giá cơ bản</label>
                             <input type="number" name="TourInstances[\${instanceIndex}].PriceBase" class="form-control" min="0" step="0.01" />
                         </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="TourInstances[\${instanceIndex}].GuideID" class="control-label">Hướng dẫn viên</label>
-                    <select name="TourInstances[\${instanceIndex}].GuideID" class="form-control">
-                        <option value="">-- Chọn hướng dẫn viên --</option>
-                        @if (guides != null)
-                        {
-                            foreach (var guide in guides)
-                            {
-                                <option value="@guide.UserID">@guide.FullName</option>
-                            }
-                        }
-                    </select>
-                </div>
-                
-                <button type="button" class="btn btn-danger remove-instance">Xóa lịch trình</button>
-            `;
-            container.appendChild(newItem);
-            instanceIndex++;
-        });
-        
-        // Add more tour prices
-        document.getElementById('add-price').addEventListener('click', function() {
-            const container = document.getElementById('tour-prices-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'tour-price-item mb-3';
-            newItem.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourPrices[\${priceIndex}].PriceType" class="control-label">Loại giá</label>
-                            <input type="text" name="TourPrices[\${priceIndex}].PriceType" class="form-control" placeholder="Ví dụ: Người lớn, Trẻ em..." />
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-user-tie text-primary me-1"></i>Hướng dẫn viên</label>
+                            <select name="TourInstances[\${instanceIndex}].GuideID" class="form-select">
+                                <option value="">-- Chọn HDV --</option>
+                                @if (guides != null)
+                                {
+                                    foreach (var guide in guides)
+                                    {
+                                        <option value="@guide.UserID">@guide.FullName</option>
+                                    }
+                                }
+                            </select>
                         </div>
-                    </div>    
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="TourPrices[\${priceIndex}].Amount" class="control-label">Số tiền</label>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger remove-instance"><i class="fas fa-trash me-1"></i>Xóa</button>
+                `;
+                container.appendChild(newItem);
+                instanceIndex++;
+            });
+
+            // Add prices
+            document.getElementById('add-price').addEventListener('click', function() {
+                const container = document.getElementById('tour-prices-container');
+                const newItem = document.createElement('div');
+                newItem.className = 'tour-price-item mb-3 p-3 border rounded bg-light';
+                newItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-tag text-info me-1"></i>Loại giá</label>
+                            <input type="text" name="TourPrices[\${priceIndex}].PriceType" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-money-bill-wave text-success me-1"></i>Số tiền</label>
                             <input type="number" name="TourPrices[\${priceIndex}].Amount" class="form-control" min="0" step="0.01" />
                         </div>
                     </div>
-                </div>
-                <button type="button" class="btn btn-danger remove-price">Xóa giá</button>
-            `;
-            container.appendChild(newItem);
-            priceIndex++;
-        });
-        
-        // Add more itineraries
-        document.getElementById('add-itinerary').addEventListener('click', function() {
-            const container = document.getElementById('itineraries-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'itinerary-item mb-3';
-            newItem.innerHTML = `
-                <div class="row">
-                    <div class="col-md-2">
-                        <div class="form-group">
-                            <label for="Itineraries[\${itineraryIndex}].DayIndex" class="control-label">Ngày thứ</label>
+                    <button type="button" class="btn btn-sm btn-danger remove-price"><i class="fas fa-trash me-1"></i>Xóa</button>
+                `;
+                container.appendChild(newItem);
+                priceIndex++;
+            });
+
+            // Add itineraries
+            document.getElementById('add-itinerary').addEventListener('click', function() {
+                const container = document.getElementById('itineraries-container');
+                const newItem = document.createElement('div');
+                newItem.className = 'itinerary-item mb-3 p-3 border rounded bg-light';
+                newItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
                             <input type="number" name="Itineraries[\${itineraryIndex}].DayIndex" class="form-control" min="1" />
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="Itineraries[\${itineraryIndex}].Title" class="control-label">Tiêu đề</label>
-                            <input type="text" name="Itineraries[\${itineraryIndex}].Title" class="form-control" placeholder="Tiêu đề cho ngày này" />
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-heading text-info me-1"></i>Tiêu đề</label>
+                            <input type="text" name="Itineraries[\${itineraryIndex}].Title" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-align-left text-success me-1"></i>Mô tả</label>
+                            <textarea name="Itineraries[\${itineraryIndex}].Description" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="Itineraries[\${itineraryIndex}].Description" class="control-label">Mô tả</label>
-                            <textarea name="Itineraries[\${itineraryIndex}].Description" class="form-control" rows="2" placeholder="Mô tả chi tiết cho ngày này"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-danger remove-itinerary">Xóa ngày</button>
-            `;
-            container.appendChild(newItem);
-            itineraryIndex++;
-        });
-        
-        // Event delegation for removing items
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-instance')) {
-                e.target.parentElement.remove();
-            }
-            else if (e.target.classList.contains('remove-price')) {
-                e.target.parentElement.remove();
-            }
-            else if (e.target.classList.contains('remove-itinerary')) {
-                e.target.parentElement.remove();
-            }
-        });
-        
-        // Initialize map
-        const map = L.map('map').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        let currentMarker = null;
-
-        // Function to reverse geocode coordinates and update location fields
-        function reverseGeocode(lat, lng) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.address) {
-                        // Update location name field with display name if available
-                        if (data.display_name) {
-                            document.getElementById("NewLocationName").value = data.display_name.split(',')[0].trim();
-                        }
-                        
-                        // Update address field with full address
-                        document.getElementById("NewLocationAddress").value = data.display_name || '';
-                        
-                        // Update city field - try different possible city fields
-                        const address = data.address;
-                        let city = '';
-                        if (address.city) {
-                            city = address.city;
-                        } else if (address.town) {
-                            city = address.town;
-                        } else if (address.village) {
-                            city = address.village;
-                        } else if (address.municipality) {
-                            city = address.municipality;
-                        } else if (address.county) {
-                            city = address.county;
-                        }
-                        document.getElementById("city").value = city;
-                        
-                        // Update country field
-                        if (address.country) {
-                            document.getElementById("countryName").value = address.country;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error in reverse geocoding:', error);
-                });
-        }
-
-        // Initialize reverse geocoding if there are already coordinates in the form
-        const initialLat = document.getElementById("NewLocationLatitude").value;
-        const initialLng = document.getElementById("NewLocationLongitude").value;
-        if (initialLat && initialLng) {
-            const lat = parseFloat(initialLat);
-            const lng = parseFloat(initialLng);
-            
-            // Add marker at existing location
-            currentMarker = L.marker([lat, lng], {draggable: true}).addTo(map)
-                .bindPopup(`Tọa độ: ${lat}, ${lng}`)
-                .openPopup();
-            
-            // Center map on existing location
-            map.setView([lat, lng], 13);
-            
-            // Add dragend event to marker
-            currentMarker.on('dragend', function(event) {
-                const marker = event.target;
-                const position = marker.getLatLng();
-                
-                document.getElementById("NewLocationLatitude").value = position.lat;
-                document.getElementById("NewLocationLongitude").value = position.lng;
-                
-                reverseGeocode(position.lat, position.lng);
-                
-                marker.bindPopup(`Tọa độ: ${position.lat}, ${position.lng}`)
-                    .openPopup();
+                    <button type="button" class="btn btn-sm btn-danger remove-itinerary"><i class="fas fa-trash me-1"></i>Xóa</button>
+                `;
+                container.appendChild(newItem);
+                itineraryIndex++;
             });
-            
-            // Call reverse geocode to populate fields
-            reverseGeocode(lat, lng);
-        }
 
-        
-        // Add click event to map for manual marker placement
-        map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            
-            // Remove existing marker if present
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            
-            // Add new marker at clicked location
-            currentMarker = L.marker([lat, lng], {draggable: true}).addTo(map)
-                .bindPopup(`Tọa độ: ${lat}, ${lng}`)
-                .openPopup();
-            
-            // Update latitude and longitude fields
-            document.getElementById("NewLocationLatitude").value = lat;
-            document.getElementById("NewLocationLongitude").value = lng;
-            
-            // Call reverse geocoding to update other fields
-            reverseGeocode(lat, lng);
-            
-            // Add dragend event to update coordinates when marker is dragged
-            currentMarker.on('dragend', function(event) {
-                const marker = event.target;
-                const position = marker.getLatLng();
-                
-                document.getElementById("NewLocationLatitude").value = position.lat;
-                document.getElementById("NewLocationLongitude").value = position.lng;
-                
-                // Call reverse geocoding to update other fields when marker is dragged
-                reverseGeocode(position.lat, position.lng);
-                
-                // Update popup with new coordinates
-                marker.bindPopup(`Tọa độ: ${position.lat}, ${position.lng}`)
-                    .openPopup();
-            });
-        });
-        
-        // Form validation
-        (function() {
-          'use strict';
-          window.addEventListener('load', function() {
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.getElementsByClassName('needs-validation');
-            // Loop over them and prevent submission
-            var validation = Array.prototype.filter.call(forms, function(form) {
-              form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                  event.preventDefault();
-                  event.stopPropagation();
+            // Remove items
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-instance') || e.target.parentElement.classList.contains('remove-instance')) {
+                    e.target.closest('.tour-instance-item').remove();
                 }
-                form.classList.add('was-validated');
-              }, false);
+                else if (e.target.classList.contains('remove-price') || e.target.parentElement.classList.contains('remove-price')) {
+                    e.target.closest('.tour-price-item').remove();
+                }
+                else if (e.target.classList.contains('remove-itinerary') || e.target.parentElement.classList.contains('remove-itinerary')) {
+                    e.target.closest('.itinerary-item').remove();
+                }
             });
-          }, false);
-        })();
+
+            // Initialize map
+            const map = L.map('map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            let currentMarker = null;
+
+            function reverseGeocode(lat, lng) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            if (data.display_name) {
+                                document.getElementById("NewLocationName").value = data.display_name.split(',')[0].trim();
+                            }
+                            document.getElementById("NewLocationAddress").value = data.display_name || '';
+                            
+                            const address = data.address;
+                            let city = address.city || address.town || address.village || address.municipality || address.county || '';
+                            document.getElementById("city").value = city;
+                            
+                            if (address.country) {
+                                document.getElementById("countryName").value = address.country;
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Reverse geocoding error:', error));
+            }
+
+            // Load existing marker if coordinates exist
+            const initialLat = document.getElementById("NewLocationLatitude").value;
+            const initialLng = document.getElementById("NewLocationLongitude").value;
+            if (initialLat && initialLng) {
+                const lat = parseFloat(initialLat);
+                const lng = parseFloat(initialLng);
+                
+                currentMarker = L.marker([lat, lng], {draggable: true}).addTo(map)
+                    .bindPopup(`Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+                    .openPopup();
+                
+                map.setView([lat, lng], 13);
+                
+                currentMarker.on('dragend', function(event) {
+                    const marker = event.target;
+                    const position = marker.getLatLng();
+                    
+                    document.getElementById("NewLocationLatitude").value = position.lat;
+                    document.getElementById("NewLocationLongitude").value = position.lng;
+                    
+                    reverseGeocode(position.lat, position.lng);
+                    
+                    marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
+                });
+            }
+
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                
+                currentMarker = L.marker([lat, lng], {draggable: true}).addTo(map)
+                    .bindPopup(`Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+                    .openPopup();
+                
+                document.getElementById("NewLocationLatitude").value = lat;
+                document.getElementById("NewLocationLongitude").value = lng;
+                
+                reverseGeocode(lat, lng);
+                
+                currentMarker.on('dragend', function(event) {
+                    const marker = event.target;
+                    const position = marker.getLatLng();
+                    
+                    document.getElementById("NewLocationLatitude").value = position.lat;
+                    document.getElementById("NewLocationLongitude").value = position.lng;
+                    
+                    reverseGeocode(position.lat, position.lng);
+                    
+                    marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
+                });
+            });
         });
     </script>
 }

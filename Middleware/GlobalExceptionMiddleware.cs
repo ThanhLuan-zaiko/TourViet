@@ -1,59 +1,37 @@
-using System.Net;
-using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
-namespace TourViet.Middleware;
-
-public class GlobalExceptionMiddleware
+namespace TourViet.Middleware
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionMiddleware> _logger;
-    private readonly IWebHostEnvironment _env;
-
-    public GlobalExceptionMiddleware(
-        RequestDelegate next,
-        ILogger<GlobalExceptionMiddleware> logger,
-        IWebHostEnvironment env)
+    /// <summary>
+    /// Global exception handling middleware. Catches any unhandled exception, logs it and returns a generic error response.
+    /// </summary>
+    public class GlobalExceptionMiddleware
     {
-        _next = next;
-        _logger = logger;
-        _env = env;
-    }
+        private readonly RequestDelegate _next;
+        private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
+        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
         {
-            await _next(context);
+            _next = next;
+            _logger = logger;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unhandled exception occurred");
-            await HandleExceptionAsync(context, ex);
-        }
-    }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-        var response = new
+        public async Task InvokeAsync(HttpContext context)
         {
-            error = new
+            try
             {
-                message = _env.IsDevelopment() 
-                    ? exception.Message 
-                    : "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-                details = _env.IsDevelopment() ? exception.StackTrace : null
+                await _next(context);
             }
-        };
-
-        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        await context.Response.WriteAsync(json);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception caught by GlobalExceptionMiddleware");
+                // Simple generic response – you can customize to return a view if desired
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync("An unexpected error occurred. Please try again later.");
+            }
+        }
     }
 }
-

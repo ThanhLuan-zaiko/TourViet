@@ -1,6 +1,7 @@
 using TourViet.Extensions;
 using TourViet.Middleware;
 using TourViet.Services;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,13 +42,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Serve files from Uploads folder
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
-    RequestPath = "/Uploads"
-});
+// Ensure required infrastructure (Uploads folder, legacy DB cleanup)
+app.UseInfrastructureSetup();
 
 app.UseRouting();
 

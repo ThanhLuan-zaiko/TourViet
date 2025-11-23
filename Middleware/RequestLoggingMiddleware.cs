@@ -1,44 +1,31 @@
-namespace TourViet.Middleware;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
-public class RequestLoggingMiddleware
+namespace TourViet.Middleware
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<RequestLoggingMiddleware> _logger;
-
-    public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+    /// <summary>
+    /// Simple request logging middleware that logs the HTTP method and path.
+    /// </summary>
+    public class RequestLoggingMiddleware
     {
-        _next = next;
-        _logger = logger;
-    }
+        private readonly RequestDelegate _next;
+        private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var startTime = DateTime.UtcNow;
-        var path = context.Request.Path;
-        var method = context.Request.Method;
-        var userId = context.Session.GetString("UserId") ?? "Anonymous";
-
-        try
+        public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
         {
-            await _next(context);
-            
-            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
-            var statusCode = context.Response.StatusCode;
-
-            _logger.LogInformation(
-                "Request: {Method} {Path} | User: {UserId} | Status: {StatusCode} | Duration: {Duration}ms",
-                method, path, userId, statusCode, duration);
+            _next = next;
+            _logger = logger;
         }
-        catch (Exception ex)
+
+        public async Task InvokeAsync(HttpContext context)
         {
-            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
-            
-            _logger.LogError(ex,
-                "Request failed: {Method} {Path} | User: {UserId} | Duration: {Duration}ms",
-                method, path, userId, duration);
-            
-            throw;
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Incoming request: {Method} {Path}", context.Request.Method, context.Request.Path);
+            await _next(context);
+            stopwatch.Stop();
+            _logger.LogInformation("Request completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
         }
     }
 }
-
