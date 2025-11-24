@@ -1,6 +1,7 @@
 using TourViet.Extensions;
 using TourViet.Middleware;
 using TourViet.Services;
+using TourViet.Services.Interfaces;
 using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,9 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IPasswordStrengthValidator, PasswordStrengthValidator>();
 builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITourService, TourService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();

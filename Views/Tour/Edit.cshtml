@@ -189,6 +189,7 @@
                         foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
                         {
                             <div class="tour-instance-item mb-4 p-3 border rounded bg-light">
+                                <input type="hidden" name="TourInstances[@instIndex].InstanceID" value="@instance.InstanceID" />
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
@@ -242,6 +243,7 @@
                         foreach (var price in Model.TourPrices)
                         {
                             <div class="tour-price-item mb-3 p-3 border rounded bg-light">
+                                <input type="hidden" name="TourPrices[@priceIdx].TourPriceID" value="@price.TourPriceID" />
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-tag text-info me-1"></i>Loại giá</label>
@@ -279,6 +281,7 @@
                         foreach (var itinerary in Model.Itineraries.OrderBy(i => i.DayIndex))
                         {
                             <div class="itinerary-item mb-3 p-3 border rounded bg-light">
+                                <input type="hidden" name="Itineraries[@itinIdx].ItineraryID" value="@itinerary.ItineraryID" />
                                 <div class="row">
                                     <div class="col-md-2 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
@@ -318,14 +321,17 @@
                     <div class="row">
                         @for (int i = 0; i < services.Count(); i++)
                         {
+                            var service = services.ElementAt(i);
+                            var isChecked = Model.TourServices?.Any(ts => ts.ServiceID == service.ServiceID) ?? false;
+                            
                             <div class="col-md-6 mb-2">
                                 <div class="form-check p-2 bg-light rounded">
-                                    <input type="checkbox" name="TourServiceIds" value="@services.ElementAt(i).ServiceID" class="form-check-input" id="service_@services.ElementAt(i).ServiceID" />
-                                    <label class="form-check-label" for="service_@services.ElementAt(i).ServiceID">
-                                        <strong>@services.ElementAt(i).ServiceName</strong>
+                                    <input type="checkbox" name="TourServiceIds" value="@service.ServiceID" class="form-check-input" id="service_@service.ServiceID" @(isChecked ? "checked" : "") />
+                                    <label class="form-check-label" for="service_@service.ServiceID">
+                                        <strong>@service.ServiceName</strong>
                                         <small class="d-block text-muted">
                                             <i class="fas fa-money-bill-wave me-1"></i>
-                                            @services.ElementAt(i).Price.ToString("N0") @services.ElementAt(i).Currency
+                                            @service.Price.ToString("N0") @service.Currency
                                         </small>
                                     </label>
                                 </div>
@@ -623,25 +629,100 @@
             let currentMarker = null;
 
             function reverseGeocode(lat, lng) {
-                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.address) {
-                            if (data.display_name) {
-                                document.getElementById("NewLocationName").value = data.display_name.split(',')[0].trim();
-                            }
-                            document.getElementById("NewLocationAddress").value = data.display_name || '';
-                            
-                            const address = data.address;
-                            let city = address.city || address.town || address.village || address.municipality || address.county || '';
-                            document.getElementById("city").value = city;
-                            
-                            if (address.country) {
-                                document.getElementById("countryName").value = address.country;
-                            }
+                // Show loading state
+                const nameField = document.getElementById("NewLocationName");
+                const addressField = document.getElementById("NewLocationAddress");
+                const cityField = document.getElementById("city");
+                const countryField = document.getElementById("countryName");
+                
+                nameField.value = "Đang tải...";
+                addressField.value = "Đang tải...";
+                cityField.value = "Đang tải...";
+                countryField.value = "Đang tải...";
+                
+                // Add delay to respect Nominatim usage policy (max 1 request per second)
+                setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+                        headers: {
+                            'User-Agent': 'TourViet-App/1.0'
                         }
                     })
-                    .catch(error => console.error('Reverse geocoding error:', error));
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            console.log('Reverse geocoding response:', data);
+                            
+                            if (data && data.address) {
+                                const address = data.address;
+                                
+                                // Set location name - try various fields
+                                let locationName = address.tourism || 
+                                                 address.amenity || 
+                                                 address.historic ||
+                                                 address.shop ||
+                                                 address.building ||
+                                                 address.road ||
+                                                 address.neighbourhood ||
+                                                 address.suburb ||
+                                                 address.village ||
+                                                 address.town ||
+                                                 address.city ||
+                                                 data.display_name?.split(',')[0]?.trim() ||
+                                                 'Địa điểm không tên';
+                                nameField.value = locationName;
+                                
+                                // Set full address
+                                addressField.value = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                                
+                                // Set city - try multiple address components
+                                let city = address.city || 
+                                          address.town || 
+                                          address.village || 
+                                          address.municipality || 
+                                          address.county ||
+                                          address.state ||
+                                          '';
+                                cityField.value = city;
+                                
+                                // Set country
+                                if (address.country) {
+                                    countryField.value = address.country;
+                                } else {
+                                    countryField.value = 'Không xác định';
+                                }
+                                
+                                console.log('Location fields updated:', {
+                                    name: locationName,
+                                    address: data.display_name,
+                                    city: city,
+                                    country: address.country
+                                });
+                            } else {
+                                // No address data - set coordinate-based values
+                                nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                                addressField.value = `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                                cityField.value = '';
+                                countryField.value = 'Không xác định';
+                                console.warn('No address data returned from geocoding');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Reverse geocoding error:', error);
+                            
+                            // Fallback values on error
+                            nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                            addressField.value = `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                            cityField.value = '';
+                            countryField.value = 'Không xác định';
+                            
+                            // Show user-friendly error
+                            alert('Không thể tự động điền địa chỉ. Vui lòng nhập thủ công hoặc thử lại.');
+                        });
+                }, 1000); // 1 second delay to respect API rate limits
             }
 
             // Load existing marker if coordinates exist

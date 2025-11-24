@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TourViet.Data;
 using TourViet.Models;
+using TourViet.Services.Interfaces;
 
 namespace TourViet.Controllers;
 
@@ -10,11 +11,16 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly TourBookingDbContext _context;
+    private readonly ITourService _tourService;
 
-    public HomeController(ILogger<HomeController> logger, TourBookingDbContext context)
+    public HomeController(
+        ILogger<HomeController> logger, 
+        TourBookingDbContext context,
+        ITourService tourService)
     {
         _logger = logger;
         _context = context;
+        _tourService = tourService;
     }
 
     public IActionResult Index()
@@ -92,18 +98,12 @@ public class HomeController : Controller
         
         try
         {
-            var tour = await _context.Tours.FindAsync(id);
+            var result = await _tourService.DeleteTourAsync(id);
             
-            if (tour == null || tour.IsDeleted)
+            if (!result)
             {
                 return Json(new { success = false, message = "Tour không tồn tại hoặc đã bị xóa." });
             }
-            
-            // Soft delete
-            tour.IsDeleted = true;
-            tour.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.SaveChangesAsync();
             
             return Json(new { success = true, message = "Tour đã được xóa thành công!" });
         }

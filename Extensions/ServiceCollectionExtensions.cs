@@ -25,7 +25,8 @@ public static class ServiceCollectionExtensions
     
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<ITourService, TourService>();
+
+        // ITourService is now registered in Program.cs with new implementation
         services.AddScoped<ITourInstanceService, TourInstanceService>();
         
         return services;
