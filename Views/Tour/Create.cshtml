@@ -344,13 +344,37 @@
                 </h6>
             </div>
             <div class="card-body p-4">
-                <label for="files" class="form-label fw-bold">
-                    <i class="fas fa-upload text-primary me-1"></i>Chọn hình ảnh
-                </label>
-                <input type="file" name="files" id="files" class="form-control" multiple accept="image/*" />
-                <div class="form-text">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Chọn nhiều hình ảnh cùng lúc. Hình ảnh sẽ tự động được chuyển đổi sang định dạng WebP.
+                <!-- Drag and Drop Zone -->
+                <div id="drop-zone" class="drop-zone mb-3">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                    <p class="mb-2"><strong>Kéo và thả hình ảnh vào đây</strong></p>
+                    <p class="text-muted mb-2">hoặc</p>
+                    <button type="button" id="select-files-btn" class="btn btn-sm btn-primary mb-2">
+                        <i class="fas fa-folder-open me-1"></i>Chọn từ máy tính
+                    </button>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Hỗ trợ: JPG, PNG, GIF, WebP. Tối đa 10MB/ảnh
+                    </p>
+                </div>
+                
+                <!-- Hidden file input -->
+                <input type="file" name="files" id="files" style="display: none;" multiple accept="image/*" />
+
+                <!-- Image Preview Grid -->
+                <div id="image-preview-container" class="image-preview-grid d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="fas fa-image me-2 text-success"></i>
+                            Đã chọn <span id="image-count" class="badge bg-success">0</span> ảnh
+                        </h6>
+                        <button type="button" id="clear-all-images" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i>Xóa tất cả
+                        </button>
+                    </div>
+                    <div id="image-preview-grid" class="row g-3">
+                        <!-- Preview thumbnails will be inserted here by JavaScript -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -369,6 +393,35 @@
             </div>
         </div>
     </form>
+    
+    <!-- Delete All Confirmation Modal -->
+    <div class="modal fade" id="deleteAllModal" tabindex="-1" aria-labelledby="deleteAllModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteAllModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa tất cả
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Bạn có chắc muốn xóa tất cả <strong><span id="delete-count">0</span> hình ảnh</strong> đã chọn?</p>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Các ảnh chỉ bị xóa khỏi preview, chưa upload lên server.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy bỏ
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete-all">
+                        <i class="fas fa-trash me-1"></i>Xóa tất cả
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -404,6 +457,121 @@
     
     #map {
         box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Drop Zone Styles */
+    .drop-zone {
+        border: 2px dashed #11998e;
+        border-radius: 0.5rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        background-color: #f8f9fc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        background-color: #e8f5f3;
+        border-color: #0a6953;
+        transform: scale(1.01);
+    }
+    
+    .drop-zone.drag-over {
+        box-shadow: 0 0.5rem 1rem rgba(17, 153, 142, 0.3);
+    }
+    
+    /* Image Preview Grid */
+    .image-preview-grid {
+        margin-top: 1.5rem;
+    }
+    
+    .preview-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .preview-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .preview-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .preview-item .preview-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.6) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .preview-item:hover .preview-overlay {
+        opacity: 1;
+    }
+    
+    .preview-item .btn-remove-preview {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        opacity: 1;
+        transition: all 0.3s ease;
+        z-index: 10;
+        background-color: rgba(220, 53, 69, 0.95) !important;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 24px;
+        font-weight: 300;
+        line-height: 1;
+        color: white !important;
+    }
+    
+    .preview-item .btn-remove-preview span {
+        color: white;
+        display: block;
+        margin-top: -2px;
+    }
+    
+    .preview-item:hover .btn-remove-preview {
+        background-color: rgba(220, 53, 69, 1) !important;
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+    }
+    
+    .preview-item .preview-info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        color: white;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .preview-item:hover .preview-info {
+        opacity: 1;
     }
 </style>
 
@@ -658,6 +826,212 @@
                     
                     marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
                 });
+            });
+
+            // ========== IMAGE UPLOAD FUNCTIONALITY ==========
+            
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('files');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewGrid = document.getElementById('image-preview-grid');
+            const imageCountSpan = document.getElementById('image-count');
+            const clearAllBtn = document.getElementById('clear-all-images');
+            
+            let selectedFiles = [];
+
+            // File validation
+            function isValidImageFile(file) {
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                
+                if (!validTypes.includes(file.type)) {
+                    alert(`File "${file.name}" không phải là hình ảnh hợp lệ.`);
+                    return false;
+                }
+                
+                if (file.size > maxSize) {
+                    alert(`File "${file.name}" quá lớn. Kích thước tối đa là 10MB.`);
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Handle files
+            function handleFiles(files) {
+                const validFiles = Array.from(files).filter(isValidImageFile);
+                
+                if (validFiles.length === 0) return;
+                
+                // Append to existing files
+                selectedFiles = [...selectedFiles, ...validFiles];
+                
+                renderPreviews();
+            }
+
+            // Render image previews
+            function renderPreviews() {
+                previewGrid.innerHTML = '';
+                
+                if (selectedFiles.length === 0) {
+                    previewContainer.classList.add('d-none');
+                    return;
+                }
+                
+                previewContainer.classList.remove('d-none');
+                imageCountSpan.textContent = selectedFiles.length;
+                
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3';
+                        col.setAttribute('data-index', index);
+                        
+                        const fileSize = (file.size / 1024).toFixed(1) + ' KB';
+                        
+                        col.innerHTML = `
+                            <div class="preview-item">
+                                <img src="${e.target.result}" alt="Preview">
+                                <div class="preview-overlay"></div>
+                                <button type="button" class="btn btn-remove-preview" data-index="${index}" title="Xóa ảnh">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                                <div class="preview-info">
+                                    <div class="text-truncate"><strong>${file.name}</strong></div>
+                                    <small>${fileSize}</small>
+                                </div>
+                            </div>
+                        `;
+                        
+                        previewGrid.appendChild(col);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Remove single preview
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-remove-preview')) {
+                    const index = parseInt(e.target.closest('.btn-remove-preview').dataset.index);
+                    selectedFiles.splice(index, 1);
+                    renderPreviews();
+                }
+            });
+
+            // Clear all images - show modal
+            clearAllBtn.addEventListener('click', function() {
+                // Update count in modal
+                document.getElementById('delete-count').textContent = selectedFiles.length;
+                
+                // Show modal
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteAllModal'));
+                deleteModal.show();
+            });
+            
+            // Confirm delete all in modal
+            document.getElementById('confirm-delete-all').addEventListener('click', function() {
+                selectedFiles = [];
+                renderPreviews();
+                
+                // Hide modal
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteAllModal'));
+                deleteModal.hide();
+            });
+
+            // Button to trigger file selection
+            const selectFilesBtn = document.getElementById('select-files-btn');
+            selectFilesBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // File input change handler
+            function onFileInputChange(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    const filesArray = Array.from(e.target.files);
+                    handleFiles(filesArray);
+                    
+                    // Clear value after processing to allow re-selecting
+                    setTimeout(() => {
+                        fileInput.value = '';
+                    }, 50);
+                }
+            }
+
+            // Attach change listener
+            fileInput.addEventListener('change', onFileInputChange, false);
+
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            }, false);
+
+            // Click on drop zone to trigger file input (but not on button)
+            dropZone.addEventListener('click', function(e) {
+                if (!e.target.closest('#select-files-btn')) {
+                    fileInput.click();
+                }
+            });
+
+            // Intercept form submit to add selected files
+            const tourForm = document.querySelector('form[action*="Create"]');
+            tourForm.addEventListener('submit', function(e) {
+                // Only intercept if we have selected files
+                if (selectedFiles.length > 0) {
+                    e.preventDefault();
+                    
+                    // Create FormData from the form
+                    const formData = new FormData(tourForm);
+                    
+                    // Remove the empty files input
+                    formData.delete('files');
+                    
+                    // Add all selected files
+                    selectedFiles.forEach(file => {
+                        formData.append('files', file);
+                    });
+                    
+                    // Submit via fetch
+                    fetch(tourForm.action, {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (response.ok) {
+                            // Redirect on success
+                            window.location.href = response.url || '/Home/ManageTours';
+                        } else {
+                            alert('Có lỗi xảy ra khi tạo tour.');
+                        }
+                    }).catch(error => {
+                        console.error('Submit error:', error);
+                        alert('Có lỗi xảy ra: ' + error.message);
+                    });
+                }
+                // If no selected files, form submits normally
             });
         });
     </script>

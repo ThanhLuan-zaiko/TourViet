@@ -353,6 +353,19 @@ namespace TourViet.Services
             return await _context.Tours.AnyAsync(t => t.TourID == id);
         }
 
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Tour>> GetPublishedToursAsync()
+        {
+            return await _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Include(t => t.Location)
+                .Include(t => t.Category)
+                .Include(t => t.TourImages)
+                .Include(t => t.TourPrices)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+        }
+
         #region Private Helper Methods
 
         private void DetachDtoEntities(TourUpdateDto tourDto)

@@ -51,5 +51,11 @@ namespace TourViet.Services.Interfaces
         /// <param name="id">The ID of the tour</param>
         /// <returns>True if the tour exists</returns>
         Task<bool> TourExistsAsync(Guid id);
+
+        /// <summary>
+        /// Gets all published tours for public display.
+        /// </summary>
+        /// <returns>Collection of published Tour entities with related data</returns>
+        Task<IEnumerable<Tour>> GetPublishedToursAsync();
     }
 }

@@ -94,14 +94,28 @@ namespace TourViet.Services
             if (image == null)
                 return false;
 
-            // Delete file from file system
+            // Try to delete file from file system
             var filePath = Path.Combine(UploadsBasePath, image.TourID.ToString(), image.FileName ?? "");
+            
             if (File.Exists(filePath))
             {
-                File.Delete(filePath);
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch (Exception ex)
+                {
+                    // Log warning but continue with database deletion
+                    Console.WriteLine($"Warning: Could not delete physical file {filePath}: {ex.Message}");
+                }
+            }
+            else
+            {
+                // File doesn't exist, log warning but continue
+                Console.WriteLine($"Warning: Physical file not found at {filePath}. Removing database record only.");
             }
 
-            // Remove from database
+            // Remove from database (even if file deletion failed to avoid orphan records)
             _context.TourImages.Remove(image);
             await _context.SaveChangesAsync();
 

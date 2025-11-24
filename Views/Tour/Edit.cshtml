@@ -350,55 +350,93 @@
         </div>
 
         <!-- Current Images Card -->
-        @if (Model.TourImages != null && Model.TourImages.Any())
-        {
-            <div class="card shadow-sm mb-4 border-0">
-                <div class="card-header bg-gradient-success text-white py-3">
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-gradient-success text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold">
                         <i class="fas fa-images me-2"></i>Hình Ảnh Hiện Tại
                     </h6>
+                    <span id="current-image-count" class="badge bg-white text-success">
+                        @(Model.TourImages?.Count ?? 0) ảnh
+                    </span>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
+            </div>
+            <div class="card-body p-4">
+                <div id="current-images-grid" class="row g-3">
+                    @if (Model.TourImages != null && Model.TourImages.Any())
+                    {
                         @foreach (var image in Model.TourImages.OrderBy(i => i.SortOrder))
                         {
-                            <div class="col-md-3">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <img src="@image.Url" class="card-img-top" alt="Tour Image" style="height: 180px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0;">
-                                    <div class="card-body p-2 text-center">
+                            <div class="col-md-3" data-image-id="@image.ImageID">
+                                <div class="preview-item">
+                                    <img src="@image.Url" alt="Tour Image">
+                                    <div class="preview-overlay"></div>
+                                    <button type="button" class="btn btn-delete-image" 
+                                            data-image-id="@image.ImageID" 
+                                            data-image-name="@image.FileName"
+                                            title="Xóa ảnh">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                    <div class="preview-info">
                                         @if (image.IsPrimary)
                                         {
-                                            <span class="badge bg-primary"><i class="fas fa-star me-1"></i>Ảnh chính</span>
+                                            <span class="badge bg-primary mb-1"><i class="fas fa-star me-1"></i>Ảnh chính</span>
                                         }
-                                        <small class="text-muted d-block mt-1">Thứ tự: @image.SortOrder</small>
+                                        <small class="d-block text-truncate">@image.FileName</small>
+                                        <small class="text-muted">Thứ tự: @image.SortOrder</small>
                                     </div>
                                 </div>
                             </div>
                         }
-                    </div>
-                    <div class="alert alert-info mt-3 mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Các ảnh hiện tại sẽ được giữ lại. Upload ảnh mới bên dưới để bổ sung.
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <div class="alert alert-info text-center mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Chưa có hình ảnh nào. Upload ảnh mới bên dưới.
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
-        }
+        </div>
 
         <!-- Upload New Images Card -->
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-gradient-warning text-white py-3">
                 <h6 class="m-0 font-weight-bold">
-                    <i class="fas fa-upload me-2"></i>Thêm Hình Ảnh Mới
+                    <i class="fas fa-upload me-2"></i>Upload Hình Ảnh Mới (Real-time)
                 </h6>
             </div>
             <div class="card-body p-4">
-                <label for="files" class="form-label fw-bold">
-                    <i class="fas fa-folder-open text-primary me-1"></i>Chọn hình ảnh
-                </label>
-                <input type="file" name="TourImageFiles" id="files" class="form-control" multiple accept="image/*" />
-                <div class="form-text">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Chọn nhiều hình ảnh cùng lúc. Hình ảnh sẽ được chuyển đổi sang WebP.
+                <!-- Drag and Drop Zone -->
+                <div id="edit-drop-zone" class="drop-zone mb-3">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                    <p class="mb-2"><strong>Kéo và thả hình ảnh vào đây</strong></p>
+                    <p class="text-muted mb-2">hoặc</p>
+                    <button type="button" id="edit-select-files-btn" class="btn btn-sm btn-warning mb-2">
+                        <i class="fas fa-folder-open me-1"></i>Chọn từ máy tính
+                    </button>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Upload ngay lập tức, không cần submit form. Hỗ trợ: JPG, PNG, GIF, WebP (max 10MB/ảnh)
+                    </p>
+                </div>
+                
+                <!-- Hidden file input -->
+                <input type="file" id="files" style="display: none;" multiple accept="image/*" />
+
+                <!-- Upload Progress -->
+                <div id="upload-progress" class="d-none mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-spinner fa-spin me-2"></i>Đang upload...</span>
+                        <span id="upload-status"></span>
+                    </div>
+                    <div class="progress">
+                        <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -417,6 +455,35 @@
             </div>
         </div>
     </form>
+    
+    <!-- Delete Image Confirmation Modal -->
+    <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteImageModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa ảnh
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Bạn có chắc muốn xóa ảnh <strong id="delete-image-name"></strong>?</p>
+                    <p class="text-danger small mb-0">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        <strong>Cảnh báo:</strong> Hành động này sẽ xóa cả file vật lý và không thể hoàn tác!
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy bỏ
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete-image">
+                        <i class="fas fa-trash me-1"></i>Xóa ảnh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -452,6 +519,130 @@
     
     #map {
         box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Drop Zone Styles */
+    .drop-zone {
+        border: 2px dashed #f093fb;
+        border-radius: 0.5rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        background-color: #fffaf0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        background-color: #fff3e0;
+        border-color: #f5576c;
+        transform: scale(1.01);
+    }
+    
+    .drop-zone.drag-over {
+        box-shadow: 0 0.5rem 1rem rgba(240, 147, 251, 0.3);
+    }
+    
+    /* Image Preview Styles */
+    .preview-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .preview-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .preview-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .preview-item .preview-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.6) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .preview-item:hover .preview-overlay {
+        opacity: 1;
+    }
+    
+    .preview-item .btn-delete-image {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        opacity: 1;
+        transition: all 0.3s ease;
+        z-index: 10;
+        background-color: rgba(220, 53, 69, 0.95) !important;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 24px;
+        font-weight: 300;
+        line-height: 1;
+        color: white !important;
+    }
+    
+    .preview-item .btn-delete-image span {
+        color: white;
+        display: block;
+        margin-top: -2px;
+    }
+    
+    .preview-item:hover .btn-delete-image {
+        background-color: rgba(220, 53, 69, 1) !important;
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+    }
+    
+    .preview-item .preview-info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        color: white;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .preview-item:hover .preview-info {
+        opacity: 1;
+    }
+    
+    /* Fade out animation for deleted images */
+    @@keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+    }
+    
+    .deleting {
+        animation: fadeOut 0.3s ease-out forwards;
     }
 </style>
 
@@ -779,6 +970,298 @@
                     
                     marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
                 });
+            });
+
+            // ========== REAL-TIME IMAGE MANAGEMENT ==========
+            
+            const tourId = '@Model.TourID';
+            const dropZone = document.getElementById('edit-drop-zone');
+            const fileInput = document.getElementById('files');
+            const uploadProgress = document.getElementById('upload-progress');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const uploadStatus = document.getElementById('upload-status');
+            const currentImagesGrid = document.getElementById('current-images-grid');
+            const imageCountSpan = document.getElementById('current-image-count');
+
+            // Get CSRF token
+            function getAntiForgeryToken() {
+                return document.querySelector('input[name="__RequestVerificationToken"]').value;
+            }
+
+            // Button to trigger file selection
+            const editSelectFilesBtn = document.getElementById('edit-select-files-btn');
+            editSelectFilesBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // File validation
+            function isValidImageFile(file) {
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                
+                if (!validTypes.includes(file.type)) {
+                    alert(`File "${file.name}" không phải là hình ảnh hợp lệ.`);
+                    return false;
+                }
+                
+                if (file.size > maxSize) {
+                    alert(`File "${file.name}" quá lớn. Kích thước tối đa là 10MB.`);
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Upload images via AJAX
+            async function uploadImages(files) {
+                const validFiles = Array.from(files).filter(isValidImageFile);
+                
+                if (validFiles.length === 0) return;
+                
+                const formData = new FormData();
+                formData.append('tourId', tourId);
+                formData.append('__RequestVerificationToken', getAntiForgeryToken());
+                
+                validFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                // Show progress
+                uploadProgress.classList.remove('d-none');
+                progressBar.style.width = '0%';
+                uploadStatus.textContent = `Đang upload ${validFiles.length} ảnh...`;
+                
+                try {
+                    const response = await fetch('/TourImage/Upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        progressBar.style.width = '100%';
+                        uploadStatus.textContent = result.message;
+                        
+                        // Add new images to UI
+                        result.images.forEach(image => {
+                            addImageToGrid(image);
+                        });
+                        
+                        // Update image count
+                        updateImageCount();
+                        
+                        // Hide progress after delay
+                        setTimeout(() => {
+                            uploadProgress.classList.add('d-none');
+                            progressBar.style.width = '0%';
+                        }, 2000);
+                        
+                        // Show success alert
+                        showAlert('success', result.message);
+                    } else {
+                        uploadProgress.classList.add('d-none');
+                        showAlert('danger', result.message || 'Có lỗi xảy ra khi upload ảnh.');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    uploadProgress.classList.add('d-none');
+                    showAlert('danger', 'Có lỗi xảy ra khi upload ảnh: ' + error.message);
+                }
+            }
+
+            // Add image to grid
+            function addImageToGrid(image) {
+                // Remove "no images" message if exists
+                const noImagesAlert = currentImagesGrid.querySelector('.alert-info');
+                if (noImagesAlert) {
+                    noImagesAlert.closest('.col-12').remove();
+                }
+                
+                const col = document.createElement('div');
+                col.className = 'col-md-3';
+                col.setAttribute('data-image-id', image.imageId);
+                
+                col.innerHTML = `
+                    <div class="preview-item">
+                        <img src="${image.url}" alt="Tour Image">
+                        <div class="preview-overlay"></div>
+                        <button type="button" class="btn btn-delete-image" 
+                                data-image-id="${image.imageId}" 
+                                data-image-name="${image.fileName}"
+                                title="Xóa ảnh">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <div class="preview-info">
+                            <small class="d-block text-truncate">${image.fileName}</small>
+                            <small class="text-muted">Thứ tự: ${image.sortOrder}</small>
+                        </div>
+                    </div>
+                `;
+                
+                currentImagesGrid.appendChild(col);
+            }
+
+            // Delete image via AJAX
+            let pendingDeleteImageId = null;
+            let pendingDeleteImageName = null;
+            
+            async function deleteImage(imageId, imageName) {
+                // Store for confirmation
+                pendingDeleteImageId = imageId;
+                pendingDeleteImageName = imageName;
+                
+                // Update modal content
+                document.getElementById('delete-image-name').textContent = imageName;
+                
+                // Show modal
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteImageModal'));
+                deleteModal.show();
+            }
+            
+            // Confirm delete in modal
+            document.getElementById('confirm-delete-image').addEventListener('click', async function() {
+                if (!pendingDeleteImageId) return;
+                
+                const imageId = pendingDeleteImageId;
+                const imageCol = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (!imageCol) return;
+                
+                // Add deleting animation
+                imageCol.querySelector('.preview-item').classList.add('deleting');
+                
+                // Hide modal
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteImageModal'));
+                deleteModal.hide();
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('imageId', imageId);
+                    formData.append('__RequestVerificationToken', getAntiForgeryToken());
+                    
+                    const response = await fetch('/TourImage/Delete', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Wait for animation to complete
+                        setTimeout(() => {
+                            imageCol.remove();
+                            updateImageCount();
+                            
+                            // Show "no images" message if grid is empty
+                            if (currentImagesGrid.children.length === 0) {
+                                currentImagesGrid.innerHTML = `
+                                    <div class="col-12">
+                                        <div class="alert alert-info text-center mb-0">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Chưa có hình ảnh nào. Upload ảnh mới bên dưới.
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                        
+                        showAlert('success', result.message);
+                    } else {
+                        imageCol.querySelector('.preview-item').classList.remove('deleting');
+                        showAlert('danger', result.message || 'Không thể xóa ảnh.');
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    imageCol.querySelector('.preview-item').classList.remove('deleting');
+                    showAlert('danger', 'Có lỗi xảy ra khi xóa ảnh: ' + error.message);
+                }
+                
+                // Clear pending
+                pendingDeleteImageId = null;
+                pendingDeleteImageName = null;
+            });
+
+            // Update image count
+            function updateImageCount() {
+                const count = currentImagesGrid.querySelectorAll('[data-image-id]').length;
+                imageCountSpan.textContent = count + ' ảnh';
+            }
+
+            // Show alert message
+            function showAlert(type, message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                // Insert at top of page
+                const container = document.querySelector('.container-fluid');
+                container.insertBefore(alertDiv, container.firstChild);
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+
+            // Event: File input change
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    const filesArray = Array.from(e.target.files);
+                    uploadImages(filesArray);
+                    
+                    // Clear value after processing to allow re-selecting
+                    setTimeout(() => {
+                        e.target.value = '';
+                    }, 50);
+                }
+            });
+
+            // Event: Delete button click
+            document.addEventListener('click', function(e) {
+                const deleteBtn = e.target.closest('.btn-delete-image');
+                if (deleteBtn) {
+                    const imageId = deleteBtn.getAttribute('data-image-id');
+                    const imageName = deleteBtn.getAttribute('data-image-name');
+                    deleteImage(imageId, imageName);
+                }
+            });
+
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, function() {
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    uploadImages(Array.from(files));
+                }
+            }, false);
+
+            // Click on drop zone to trigger file input (but not on button)
+            dropZone.addEventListener('click', function(e) {
+                if (!e.target.closest('#edit-select-files-btn')) {
+                    fileInput.click();
+                }
             });
         });
     </script>

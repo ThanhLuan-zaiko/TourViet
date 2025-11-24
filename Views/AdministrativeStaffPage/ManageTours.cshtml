@@ -304,7 +304,28 @@
             if($.fn.DataTable) {
                 table = $('#toursTable').DataTable({
                     "language": {
-                        "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+                        "decimal": "",
+                        "emptyTable": "Không có dữ liệu",
+                        "info": "Hiển thị _START_ đến _END_ trong _TOTAL_ bản ghi",
+                        "infoEmpty": "Hiển thị 0 đến 0 trong 0 bản ghi",
+                        "infoFiltered": "(lọc từ _MAX_ bản ghi)",
+                        "infoPostFix": "",
+                        "thousands": ",",
+                        "lengthMenu": "Hiển thị _MENU_ bản ghi",
+                        "loadingRecords": "Đang tải...",
+                        "processing": "Đang xử lý...",
+                        "search": "Tìm kiếm:",
+                        "zeroRecords": "Không tìm thấy bản ghi nào",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Sau",
+                            "previous": "Trước"
+                        },
+                        "aria": {
+                            "sortAscending": ": sắp xếp tăng dần",
+                            "sortDescending": ": sắp xếp giảm dần"
+                        }
                     },
                     "pageLength": 25,
                     "lengthMenu": [[25, 50, 75, 100], [25, 50, 75, 100]],

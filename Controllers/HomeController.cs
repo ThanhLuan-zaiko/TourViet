@@ -23,7 +23,7 @@ public class HomeController : Controller
         _tourService = tourService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         // Check if user is logged in and has AdministrativeStaff role
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
@@ -35,7 +35,8 @@ public class HomeController : Controller
             return RedirectToAction("StaffDashboard");
         }
         
-        return View();
+        var publishedTours = await _tourService.GetPublishedToursAsync();
+        return View(publishedTours);
     }
 
     public IActionResult Privacy()
