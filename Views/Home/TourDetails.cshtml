@@ -1,0 +1,1034 @@
+@model TourViet.Models.Tour
+
+@{
+    ViewData["Title"] = Model.TourName;
+    var mainImage = Model.TourImages?.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url ?? "/images/default-tour.jpg";
+    var totalDays = Model.Itineraries?.Count ?? 0;
+    var averageRating = Model.Reviews?.Any() == true ? Model.Reviews.Average(r => r.Rating) : 0;
+    var reviewCount = Model.Reviews?.Count ?? 0;
+    var minPrice = Model.TourPrices?.Any() == true ? Model.TourPrices.Min(p => p.Amount) : 0;
+}
+
+<!-- Hero Section -->
+<div class="position-relative hero-section">
+    <img src="@mainImage" class="hero-image w-100 object-fit-cover" alt="@Model.TourName">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb breadcrumb-light mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-white">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="#" class="text-white">Tours</a></li>
+                    <li class="breadcrumb-item text-white opacity-75">@Model.Category?.CategoryName</li>
+                </ol>
+            </nav>
+
+            <!-- Category Badge -->
+            <span class="badge bg-primary bg-gradient mb-3 px-3 py-2 rounded-pill fs-6" 
+                  @if (!string.IsNullOrEmpty(Model.Category?.Description))
+                  {
+                      <text>data-bs-toggle="tooltip" data-bs-placement="bottom" title="@Model.Category.Description"</text>
+                  }>
+                <i class="bi bi-tag-fill me-1"></i>@Model.Category?.CategoryName
+            </span>
+
+            <!-- Tour Title -->
+            <h1 class="display-3 fw-bold text-white mb-3">@Model.TourName</h1>
+
+            <!-- Quick Info -->
+            <div class="d-flex flex-wrap align-items-center gap-3 text-white mb-3">
+                <span class="d-flex align-items-center">
+                    <i class="bi bi-geo-alt-fill me-2 text-warning"></i>
+                    @Model.Location?.LocationName
+                    @if (Model.Location?.Country != null)
+                    {
+                        <span class="ms-1">, @Model.Location.Country.CountryName</span>
+                    }
+                </span>
+
+                @if (totalDays > 0)
+                {
+                    <span class="d-flex align-items-center">
+                        <i class="bi bi-calendar-range me-2 text-info"></i>
+                        @totalDays ngày @(totalDays - 1) đêm
+                    </span>
+                }
+
+                @if (reviewCount > 0)
+                {
+                    <span class="d-flex align-items-center">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="bi bi-star-fill @(i <= averageRating ? "text-warning" : "text-white opacity-25")"></i>
+                        }
+                        <span class="ms-2">(@reviewCount đánh giá)</span>
+                    </span>
+                }
+            </div>
+
+            <!-- Price Badge -->
+            @if (minPrice > 0)
+            {
+                <div class="price-badge">
+                    <span class="text-white-50 small">Từ</span>
+                    <span class="display-6 fw-bold text-white ms-2">@minPrice.ToString("N0") VND</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Cards -->
+<div class="container py-4">
+    <div class="row g-4 mb-5">
+        <!-- Duration Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3">
+                        <i class="bi bi-calendar-range fs-2"></i>
+                    </div>
+                    <h6 class="text-muted small mb-1">Thời gian</h6>
+                    <h4 class="fw-bold mb-0">@totalDays ngày @(totalDays - 1) đêm</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group Size Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-3">
+                        <i class="bi bi-people fs-2"></i>
+                    </div>
+                    <h6 class="text-muted small mb-1">Quy mô nhóm</h6>
+                    @if (Model.TourInstances?.Any() == true)
+                    {
+                        var maxCapacity = Model.TourInstances.Max(ti => ti.Capacity);
+                        <h4 class="fw-bold mb-0">Tối đa @maxCapacity người</h4>
+                    }
+                    else
+                    {
+                        <h4 class="fw-bold mb-0">Liên hệ</h4>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Guide Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-info bg-opacity-10 text-info rounded-circle mx-auto mb-3">
+                        <i class="bi bi-person-badge fs-2"></i>
+                    </div>
+                    <h6 class="text-muted small mb-1">Hướng dẫn viên</h6>
+                    @if (Model.DefaultGuide != null)
+                    {
+                        <h5 class="fw-bold mb-1">@Model.DefaultGuide.FullName</h5>
+                        @if (!string.IsNullOrEmpty(Model.DefaultGuide.Phone))
+                        {
+                            <small class="text-muted">
+                                <i class="bi bi-telephone me-1"></i>@Model.DefaultGuide.Phone
+                            </small>
+                        }
+                    }
+                    else
+                    {
+                        <h4 class="fw-bold mb-0">Sẽ thông báo</h4>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-3">
+                        <i class="bi bi-geo-alt fs-2"></i>
+                    </div>
+                    <h6 class="text-muted small mb-1">Điểm đến</h6>
+                    <h5 class="fw-bold mb-0">@Model.Location?.LocationName</h5>
+                    @if (Model.Location?.City != null)
+                    {
+                        <small class="text-muted">@Model.Location.City, @Model.Location.Country?.CountryName</small>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-5">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs nav-fill mb-4" id="tourTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="bi bi-info-circle me-2"></i>Tổng quan
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary" type="button" role="tab">
+                        <i class="bi bi-list-check me-2"></i>Lịch trình
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="departures-tab" data-bs-toggle="tab" data-bs-target="#departures" type="button" role="tab">
+                        <i class="bi bi-calendar-event me-2"></i>Ngày khởi hành
+                    </button>
+                </li>
+                @if (reviewCount > 0)
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                            <i class="bi bi-star me-2"></i>Đánh giá (@reviewCount)
+                        </button>
+                    </li>
+                }
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="tourTabContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h3 class="fw-bold mb-4">Giới thiệu</h3>
+                            <p class="lead text-muted mb-4">@Model.ShortDescription</p>
+                            <div class="tour-description">
+                                @Html.Raw(Model.Description?.Replace("\n", "<br>"))
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Details -->
+                    @if (Model.Location != null)
+                    {
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold mb-4">
+                                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>Thông tin địa điểm
+                                </h3>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-pin-map text-primary me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="mb-1">Địa điểm</h6>
+                                                <p class="text-muted mb-0">@Model.Location.LocationName</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.Location.City))
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-building text-primary me-3 mt-1"></i>
+                                                <div>
+                                                    <h6 class="mb-1">Thành phố</h6>
+                                                    <p class="text-muted mb-0">@Model.Location.City</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (Model.Location.Country != null)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-flag text-primary me-3 mt-1"></i>
+                                                <div>
+                                                    <h6 class="mb-1">Quốc gia</h6>
+                                                    <p class="text-muted mb-0">
+                                                        @Model.Location.Country.CountryName
+                                                        @if (!string.IsNullOrEmpty(Model.Location.Country.ISO2))
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">@Model.Location.Country.ISO2</span>
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Location.Address))
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-signpost text-primary me-3 mt-1"></i>
+                                                <div>
+                                                    <h6 class="mb-1">Địa chỉ</h6>
+                                                    <p class="text-muted mb-0">@Model.Location.Address</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.Location.Description))
+                                {
+                                    <div class="mt-4 pt-3 border-top">
+                                        <p class="text-muted mb-0">@Model.Location.Description</p>
+                                    </div>
+                                }
+                                
+                                <!-- Google Maps Embed -->
+                                @if (Model.Location.Latitude.HasValue && Model.Location.Longitude.HasValue)
+                                {
+                                    <div class="mt-4 pt-3 border-top">
+                                        <h5 class="fw-bold mb-3">
+                                            <i class="bi bi-map-fill text-primary me-2"></i>Xem trên bản đồ
+                                        </h5>
+                                        <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm mb-3">
+                                            <iframe 
+                                                src="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude&hl=vi&z=14&output=embed"
+                                                style="border:0;" 
+                                                allowfullscreen="" 
+                                                loading="lazy" 
+                                                referrerpolicy="no-referrer-when-downgrade">
+                                            </iframe>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude" 
+                                               target="_blank" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-geo-alt me-1"></i>Mở trong Google Maps
+                                            </a>
+                                            <a href="https://www.google.com/maps/dir/?api=1&destination=@Model.Location.Latitude,@Model.Location.Longitude" 
+                                               target="_blank" 
+                                               class="btn btn-outline-success btn-sm">
+                                                <i class="bi bi-signpost-2 me-1"></i>Chỉ đường
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Image Gallery Carousel -->
+                    @if (Model.TourImages != null && Model.TourImages.Count > 1)
+                    {
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <h3 class="fw-bold mb-4">
+                                    <i class="bi bi-images text-primary me-2"></i>Thư viện ảnh
+                                </h3>
+                                <div id="tourImageCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                                    <!-- Indicators -->
+                                    <div class="carousel-indicators">
+                                        @{
+                                            var imageIndex = 0;
+                                            foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
+                                            {
+                                                <button type="button" data-bs-target="#tourImageCarousel" data-bs-slide-to="@imageIndex" class="@(imageIndex == 0 ? "active" : "")" aria-label="Slide @(imageIndex + 1)"></button>
+                                                imageIndex++;
+                                            }
+                                        }
+                                    </div>
+
+                                    <!-- Slides -->
+                                    <div class="carousel-inner rounded-3">
+                                        @{
+                                            var slideIndex = 0;
+                                            foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
+                                            {
+                                                <div class="carousel-item @(slideIndex == 0 ? "active" : "")">
+                                                    <img src="@img.Url" class="d-block w-100 carousel-image" alt="@(img.AltText ?? $"Tour image {slideIndex + 1}")">
+                                                    @if (img.IsPrimary)
+                                                    {
+                                                        <div class="position-absolute top-0 end-0 m-3">
+                                                            <span class="badge bg-warning text-dark">
+                                                                <i class="bi bi-star-fill me-1"></i>Ảnh chính
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(img.AltText))
+                                                    {
+                                                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded-3 p-2">
+                                                            <p class="mb-0">@img.AltText</p>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                slideIndex++;
+                                            }
+                                        }
+                                    </div>
+
+                                    <!-- Controls -->
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#tourImageCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#tourImageCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+
+                                <!-- Thumbnail Navigation -->
+                                <div class="row g-2 mt-3">
+                                    @{
+                                        var thumbIndex = 0;
+                                        foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
+                                        {
+                                            <div class="col-2">
+                                                <img src="@img.Url" 
+                                                     class="img-thumbnail carousel-thumbnail @(thumbIndex == 0 ? "active" : "")" 
+                                                     data-bs-target="#tourImageCarousel" 
+                                                     data-bs-slide-to="@thumbIndex"
+                                                     alt="Thumbnail @(thumbIndex + 1)"
+                                                     style="cursor: pointer; height: 60px; object-fit: cover;">
+                                            </div>
+                                            thumbIndex++;
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Itinerary Tab -->
+                <div class="tab-pane fade" id="itinerary" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h3 class="fw-bold mb-4">
+                                <i class="bi bi-map text-primary me-2"></i>Lịch trình chi tiết
+                            </h3>
+                            @if (Model.Itineraries != null && Model.Itineraries.Any())
+                            {
+                                <div class="timeline">
+                                    @foreach (var item in Model.Itineraries.OrderBy(i => i.DayIndex))
+                                    {
+                                        <div class="timeline-item">
+                                            <div class="timeline-marker">
+                                                <div class="timeline-badge bg-primary">
+                                                    @item.DayIndex
+                                                </div>
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h5 class="fw-bold text-primary mb-2">
+                                                    Ngày @item.DayIndex: @item.Title
+                                                </h5>
+                                                <p class="text-muted mb-0">@item.Description</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
+                                    <p>Lịch trình chi tiết đang được cập nhật</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Departures Tab -->
+                <div class="tab-pane fade" id="departures" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h3 class="fw-bold mb-4">
+                                <i class="bi bi-calendar-check text-primary me-2"></i>Các ngày khởi hành
+                            </h3>
+                            @if (Model.TourInstances != null && Model.TourInstances.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Ngày bắt đầu</th>
+                                                <th>Ngày kết thúc</th>
+                                                <th>Thời gian</th>
+                                                <th>Hướng dẫn viên</th>
+                                                <th>Trạng thái</th>
+                                                <th>Chỗ trống</th>
+                                                <th>Giá từ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
+                                            {
+                                                var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
+                                                var duration = (instance.EndDate - instance.StartDate).Days + 1;
+                                                <tr>
+                                                    <td>@instance.StartDate.ToString("dd/MM/yyyy")</td>
+                                                    <td>@instance.EndDate.ToString("dd/MM/yyyy")</td>
+                                                    <td>@duration ngày</td>
+                                                    <td>@(instance.Guide?.FullName ?? "Chưa phân công")</td>
+                                                    <td>
+                                                        @if (instance.Status == "Open" && seatsAvailable > 0)
+                                                        {
+                                                            <span class="badge bg-success">Còn chỗ</span>
+                                                        }
+                                                        else if (seatsAvailable <= 0)
+                                                        {
+                                                            <span class="badge bg-danger">Hết chỗ</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">@instance.Status</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (seatsAvailable > 0)
+                                                        {
+                                                            <span class="text-success fw-bold">@seatsAvailable/@instance.Capacity</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-danger">0/@instance.Capacity</span>
+                                                        }
+                                                    </td>
+                                                    <td class="fw-bold text-primary">@instance.PriceBase.ToString("N0") VND</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pricing Details -->
+                                <div class="mt-4 pt-4 border-top">
+                                    <h5 class="fw-bold mb-3">Chi tiết giá</h5>
+                                    @if (Model.TourPrices != null && Model.TourPrices.Any())
+                                    {
+                                        <div class="row g-3">
+                                            @foreach (var price in Model.TourPrices.OrderBy(p => p.Amount))
+                                            {
+                                                <div class="col-md-4">
+                                                    <div class="card bg-light border-0">
+                                                        <div class="card-body text-center">
+                                                            <h6 class="text-muted mb-2">@price.PriceType</h6>
+                                                            <h4 class="text-primary fw-bold mb-0">@price.Amount.ToString("N0") @price.Currency</h4>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
+                                    <p>Hiện chưa có lịch khởi hành. Vui lòng liên hệ để biết thêm thông tin.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Tab -->
+                @if (reviewCount > 0)
+                {
+                    <div class="tab-pane fade" id="reviews" role="tabpanel">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="text-center me-4 pe-4 border-end">
+                                        <h2 class="display-4 fw-bold mb-0">@averageRating.ToString("0.0")</h2>
+                                        <div class="mb-2">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star-fill @(i <= averageRating ? "text-warning" : "text-muted opacity-25")"></i>
+                                            }
+                                        </div>
+                                        <small class="text-muted">@reviewCount đánh giá</small>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h4 class="fw-bold mb-3">Đánh giá từ khách hàng</h4>
+                                    </div>
+                                </div>
+
+                                <div class="reviews-list">
+                                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                                    {
+                                        <div class="review-item p-3 mb-3 bg-light rounded">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="avatar-circle bg-primary text-white me-3">
+                                                    @(review.User?.FullName?.Substring(0, 1).ToUpper() ?? "U")
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">@(review.User?.FullName ?? "Khách hàng")</h6>
+                                                    <div class="small">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            <i class="bi bi-star-fill @(i <= review.Rating ? "text-warning" : "text-muted opacity-25")"></i>
+                                                        }
+                                                        <span class="text-muted ms-2">@review.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(review.Comment))
+                                            {
+                                                <p class="text-muted mb-0 ms-5">@review.Comment</p>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Column - Sticky Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-sidebar">
+                <!-- Booking Card -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-ticket-perforated text-primary me-2"></i>Đặt tour ngay
+                        </h5>
+
+                        <!-- Price Display -->
+                        <div class="price-box bg-light rounded-3 p-3 mb-4">
+                            <small class="text-muted d-block mb-1">Giá từ</small>
+                            @if (minPrice > 0)
+                            {
+                                <h2 class="text-primary fw-bold mb-0">
+                                    @minPrice.ToString("N0") <small class="fs-6 text-muted">VND</small>
+                                </h2>
+                            }
+                            else
+                            {
+                                <h3 class="text-primary fw-bold mb-0">Liên hệ</h3>
+                            }
+                        </div>
+
+                        <!-- Tour Instance Selector -->
+                        @if (Model.TourInstances != null && Model.TourInstances.Any())
+                        {
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Chọn ngày khởi hành</label>
+                                <select class="form-select form-select-lg" id="instanceSelector">
+                                    <option value="">-- Chọn ngày --</option>
+                                    @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open").OrderBy(i => i.StartDate))
+                                    {
+                                        var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
+                                        if (seatsAvailable > 0)
+                                        {
+                                            <option value="@instance.InstanceID">
+                                                @instance.StartDate.ToString("dd/MM/yyyy") - @seatsAvailable chỗ trống
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+
+                        <!-- CTA Buttons -->
+                        <div class="d-grid gap-3 mb-4">
+                            <button class="btn btn-primary btn-lg rounded-pill shadow-sm" type="button">
+                                <i class="bi bi-cart-plus me-2"></i>Đặt tour ngay
+                            </button>
+                            <button class="btn btn-outline-primary btn-lg rounded-pill" type="button">
+                                <i class="bi bi-telephone me-2"></i>Liên hệ tư vấn
+                            </button>
+                        </div>
+
+                        <!-- Services -->
+                        @if (Model.TourServices != null && Model.TourServices.Any())
+                        {
+                            <hr class="my-4">
+
+                            <!-- Included Services -->
+                            @if (Model.TourServices.Any(s => s.IsIncluded))
+                            {
+                                <div class="mb-4">
+                                    <h6 class="fw-bold text-success mb-3">
+                                        <i class="bi bi-check-circle-fill me-2"></i>Bao gồm
+                                    </h6>
+                                    <ul class="list-unstyled small">
+                                        @foreach (var service in Model.TourServices.Where(s => s.IsIncluded).OrderBy(s => s.SortOrder))
+                                        {
+                                            <li class="mb-2 d-flex justify-content-between align-items-start">
+                                                <span>
+                                                    <i class="bi bi-check2 text-success me-2"></i>
+                                                    @service.Service?.ServiceName
+                                                </span>
+                                                @if ((service.PriceOverride ?? service.Service?.Price ?? 0) > 0)
+                                                {
+                                                    <small class="text-muted">
+                                                        @((service.PriceOverride ?? service.Service.Price).ToString("N0")) @(service.Currency ?? service.Service?.Currency)
+                                                    </small>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <!-- Optional Services (Add-ons) -->
+                            @if (Model.TourServices.Any(s => !s.IsIncluded))
+                            {
+                                <div class="mt-4">
+                                    <h6 class="fw-bold text-secondary mb-3">
+                                        <i class="bi bi-plus-circle-fill me-2"></i>Dịch vụ bổ sung (Tùy chọn)
+                                    </h6>
+                                    <div class="vstack gap-2">
+                                        @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s => s.SortOrder))
+                                        {
+                                            var price = service.PriceOverride ?? service.Service?.Price ?? 0;
+                                            <div class="form-check card border-0 bg-light p-2 rounded-3">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <input class="form-check-input me-3 mt-0 fs-5" type="checkbox" 
+                                                               name="SelectedServices" 
+                                                               value="@service.ServiceID" 
+                                                               id="svc_@service.ServiceID"
+                                                               data-price="@price">
+                                                        <label class="form-check-label fw-medium cursor-pointer" for="svc_@service.ServiceID">
+                                                            @service.Service?.ServiceName
+                                                        </label>
+                                                    </div>
+                                                    @if (price > 0)
+                                                    {
+                                                        <span class="badge bg-white text-dark border shadow-sm">
+                                                            +@price.ToString("N0") @(service.Currency ?? service.Service?.Currency)
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="form-text small mt-2 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>Tích chọn các dịch vụ bạn muốn đăng ký thêm.
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        <!-- Tour Meta -->
+                        <hr class="my-4">
+                        <div class="small text-muted">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Mã tour:</span>
+                                <span class="text-dark">@Model.TourID.ToString().Substring(0, 8).ToUpper()</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Slug))
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Slug (URL):</span>
+                                    <code class="text-dark small">@Model.Slug</code>
+                                </div>
+                            }
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Ngày tạo:</span>
+                                <span>@Model.CreatedAt.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <div class="d-flex justify-content-between">
+                                    <span>Cập nhật:</span>
+                                    <span>@Model.UpdatedAt.Value.ToString("dd/MM/yyyy")</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Card -->
+                <div class="card border-0 bg-primary bg-gradient text-white shadow">
+                    <div class="card-body p-4 text-center">
+                        <i class="bi bi-headset fs-1 mb-3 d-block"></i>
+                        <h5 class="fw-bold mb-3">Cần hỗ trợ?</h5>
+                        <p class="mb-3 opacity-75">Đội ngũ của chúng tôi sẵn sàng tư vấn 24/7</p>
+                        <div class="d-grid gap-2">
+                            <a href="tel:1900xxxx" class="btn btn-light btn-lg rounded-pill">
+                                <i class="bi bi-telephone-fill me-2"></i>1900 xxxx
+                            </a>
+                            <a href="mailto:info@tourviet.com" class="btn btn-outline-light btn-lg rounded-pill">
+                                <i class="bi bi-envelope-fill me-2"></i>Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hero Section */
+    .hero-section {
+        height: 60vh;
+        min-height: 400px;
+        overflow: hidden;
+    }
+
+    .hero-image {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    }
+
+    .hero-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 4rem 0;
+        z-index: 10;
+    }
+
+    .breadcrumb-light .breadcrumb-item + .breadcrumb-item::before {
+        color: rgba(255,255,255,0.7);
+    }
+
+    /* Quick Stats Cards */
+    .icon-box {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.15)!important;
+    }
+
+    /* Tabs */
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--bs-primary);
+        border-color: transparent;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--bs-primary);
+        background-color: transparent;
+        border-bottom: 3px solid var(--bs-primary);
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 60px;
+        padding-bottom: 2rem;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 40px;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--bs-primary) 0%, rgba(var(--bs-primary-rgb), 0.2) 100%);
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .timeline-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.1);
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border-left: 3px solid var(--bs-primary);
+    }
+
+    /* Carousel */
+    .carousel-image {
+        height: 500px;
+        object-fit: cover;
+    }
+
+    .carousel-thumbnail {
+        transition: all 0.3s ease;
+        opacity: 0.6;
+    }
+
+    .carousel-thumbnail:hover,
+    .carousel-thumbnail.active {
+        opacity: 1;
+        border-color: var(--bs-primary) !important;
+        border-width: 2px !important;
+    }
+
+    .carousel-fade .carousel-item {
+        opacity: 0;
+        transition: opacity 0.6s ease-in-out;
+    }
+
+    .carousel-fade .carousel-item.active {
+        opacity: 1;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        padding: 1rem;
+    }
+
+    /* Gallery - Legacy styles (keeping for backwards compatibility) */
+    .gallery-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem;
+    }
+
+    .gallery-image {
+        height: 200px;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    .gallery-image:hover {
+        transform: scale(1.05);
+    }
+
+    /* Sticky Sidebar */
+    .sticky-sidebar {
+        position: sticky;
+        top: 2rem;
+    }
+
+    /* Reviews */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 991px) {
+        .hero-content {
+            padding: 2rem 0;
+        }
+        
+        .display-3 {
+            font-size: 2.5rem;
+        }
+
+        .sticky-sidebar {
+            position: relative;
+            top: 0;
+        }
+    }
+
+
+    @@media (max-width: 767px) {
+        .hero-section {
+            height: 50vh;
+            min-height: 350px;
+        }
+
+        .display-3 {
+            font-size: 2rem;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Utilities */
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .price-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<script>
+    // Initialize Bootstrap tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Make thumbnail images clickable
+        var carouselEl = document.getElementById('tourImageCarousel');
+        if (carouselEl) {
+            var carousel = new bootstrap.Carousel(carouselEl);
+            
+            var thumbnails = document.querySelectorAll('.carousel-thumbnail');
+            thumbnails.forEach(function(thumb, index) {
+                thumb.addEventListener('click', function() {
+                    var slideTo = parseInt(this.getAttribute('data-bs-slide-to'));
+                    carousel.to(slideTo);
+                    
+                    // Update active thumbnail
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Update active thumbnail when carousel slides
+            carouselEl.addEventListener('slid.bs.carousel', function (e) {
+                var activeIndex = Array.from(e.target.querySelectorAll('.carousel-item')).indexOf(e.relatedTarget);
+                thumbnails.forEach((t, i) => {
+                    if (i === activeIndex) {
+                        t.classList.add('active');
+                    } else {
+                        t.classList.remove('active');
+                    }
+                });
+            });
+        }
+    });
+</script>
