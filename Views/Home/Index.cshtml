@@ -6,74 +6,20 @@
 <div class="container py-5">
     @if (Model != null && Model.Any())
     {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            @foreach (var tour in Model)
-            {
-                <div class="col">
-                    <div class="card h-100 shadow-sm border-0 hover-shadow transition-all">
-                        <div class="position-relative overflow-hidden" style="height: 200px;">
-                            @if (tour.TourImages != null && tour.TourImages.Any())
-                            {
-                                var mainImage = tour.TourImages.OrderBy(i => i.SortOrder).FirstOrDefault();
-                                <img src="@(mainImage?.Url ?? "/images/default-tour.jpg")" 
-                                     class="card-img-top w-100 h-100 object-fit-cover" 
-                                     alt="@tour.TourName">
-                            }
-                            else
-                            {
-                                <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
-                                    <i class="bi bi-image fs-1"></i>
-                                </div>
-                            }
-                            <div class="position-absolute top-0 end-0 m-2">
-                                <!-- Badge removed from here -->
-                            </div>
-                        </div>
-                        
-                        <div class="card-body d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="text-muted small">
-                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>
-                                    @(tour.Location?.LocationName ?? "Đang cập nhật")
-                                </div>
-                                <span class="badge bg-primary rounded-pill">
-                                    @tour.Category?.CategoryName
-                                </span>
-                            </div>
-                            
-                            <h5 class="card-title fw-bold mb-3">
-                                <a asp-controller="Home" asp-action="TourDetails" asp-route-id="@tour.TourID" class="text-decoration-none text-dark stretched-link">
-                                    @tour.TourName
-                                </a>
-                            </h5>
-                            
-                            <p class="card-text text-muted small flex-grow-1 line-clamp-3">
-                                @tour.ShortDescription
-                            </p>
-                            
-                            <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="text-muted small d-block">Giá từ</span>
-                                    <span class="fw-bold text-primary fs-5">
-                                        @if (tour.TourPrices != null && tour.TourPrices.Any())
-                                        {
-                                            var minPrice = tour.TourPrices.Min(p => p.Amount);
-                                            @minPrice.ToString("N0") <small>VND</small>
-                                        }
-                                        else
-                                        {
-                                            <span>Liên hệ</span>
-                                        }
-                                    </span>
-                                </div>
-                                <a asp-controller="Home" asp-action="TourDetails" asp-route-id="@tour.TourID" class="btn btn-outline-primary btn-sm rounded-pill px-3 position-relative z-index-2">
-                                    Chi tiết
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="tour-container">
+            <partial name="_TourListPartial" model="Model" />
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+        </div>
+
+        <!-- End of List Message -->
+        <div id="end-of-list" class="text-center py-4 d-none">
+            <p class="text-muted">Đã hiển thị hết danh sách tour.</p>
         </div>
     }
     else
@@ -106,3 +52,64 @@
         overflow: hidden;
     }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let page = 1;
+        const pageSize = 6;
+        let isLoading = false;
+        let hasMore = true;
+        
+        const container = document.getElementById('tour-container');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const endOfList = document.getElementById('end-of-list');
+
+        if (!container) return;
+
+        const loadMoreTours = async () => {
+            if (isLoading || !hasMore) return;
+            
+            isLoading = true;
+            loadingSpinner.classList.remove('d-none');
+
+            try {
+                page++;
+                const response = await fetch(`/Home/GetToursPartial?page=${page}&pageSize=${pageSize}`);
+                
+                if (response.status === 204) { // No Content
+                    hasMore = false;
+                    endOfList.classList.remove('d-none');
+                } else if (response.ok) {
+                    const html = await response.text();
+                    // Append new content
+                    container.insertAdjacentHTML('beforeend', html);
+                } else {
+                    console.error('Failed to load tours');
+                }
+            } catch (error) {
+                console.error('Error loading tours:', error);
+            } finally {
+                isLoading = false;
+                loadingSpinner.classList.add('d-none');
+            }
+        };
+
+        // Intersection Observer to detect when user scrolls to bottom
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && !isLoading) {
+                loadMoreTours();
+            }
+        }, {
+            root: null,
+            rootMargin: '100px', // Load 100px before reaching bottom
+            threshold: 0.1
+        });
+
+        // Observe the loading spinner (which is at the bottom)
+        observer.observe(loadingSpinner);
+        
+        // Also observe end of list just in case, though usually spinner is enough
+        // But since spinner is hidden when not loading, we need a sentinel or just observe the last element
+        // A better approach is to have a sentinel element
+    });
+</script>

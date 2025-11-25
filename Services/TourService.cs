@@ -366,6 +366,103 @@ namespace TourViet.Services
                 .ToListAsync();
         }
 
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Tour>> GetPublishedToursPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 6;
+
+            return await _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Include(t => t.Location)
+                .Include(t => t.Category)
+                .Include(t => t.TourImages)
+                .Include(t => t.TourPrices)
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Tour>> GetTrendingToursPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 6;
+
+            return await _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Where(t => t.TourInstances.Sum(ti => ti.Bookings.Count) >= 5)
+                .Include(t => t.Location)
+                .Include(t => t.Category)
+                .Include(t => t.TourImages)
+                .Include(t => t.TourPrices)
+                .OrderByDescending(t => t.TourInstances.Sum(ti => ti.Bookings.Count))
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Tour>> GetDomesticToursPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 6;
+
+            return await _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Where(t => t.Location != null && t.Location.Country != null && t.Location.Country.ISO2 == "VI")
+                .Include(t => t.Location)
+                    .ThenInclude(l => l!.Country)
+                .Include(t => t.Category)
+                .Include(t => t.TourImages)
+                .Include(t => t.TourPrices)
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Tour>> GetInternationalToursPagedAsync(int page, int pageSize, Guid? countryId = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 6;
+
+            var query = _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Where(t => t.Location != null && t.Location.Country != null && t.Location.Country.ISO2 != "VI");
+
+            // Apply country filter if specified
+            if (countryId.HasValue)
+            {
+                query = query.Where(t => t.Location!.CountryID == countryId.Value);
+            }
+
+            return await query
+                .Include(t => t.Location)
+                    .ThenInclude(l => l!.Country)
+                .Include(t => t.Category)
+                .Include(t => t.TourImages)
+                .Include(t => t.TourPrices)
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<Country>> GetInternationalCountriesAsync()
+        {
+            return await _context.Tours
+                .Where(t => !t.IsDeleted && t.IsPublished)
+                .Where(t => t.Location != null && t.Location.Country != null && t.Location.Country.ISO2 != "VI")
+                .Select(t => t.Location!.Country!)
+                .Distinct()
+                .OrderBy(c => c.CountryName)
+                .ToListAsync();
+        }
+
         #region Private Helper Methods
 
         private void DetachDtoEntities(TourUpdateDto tourDto)

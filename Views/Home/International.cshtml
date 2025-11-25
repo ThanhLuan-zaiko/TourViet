@@ -1,0 +1,273 @@
+@model IEnumerable<TourViet.Models.Tour>
+@{
+    ViewData["Title"] = "Du lịch nước ngoài";
+}
+
+<div class="container py-5">
+    <!-- Country Filter Bar -->
+    @if (ViewBag.Countries != null && ((IEnumerable<TourViet.Models.Country>)ViewBag.Countries).Any())
+    {
+        var countries = (IEnumerable<TourViet.Models.Country>)ViewBag.Countries;
+        var countriesList = countries.ToList();
+        var topCountries = countriesList.Take(5).ToList();
+        var remainingCountries = countriesList.Skip(5).ToList();
+        var hasMoreCountries = remainingCountries.Any();
+
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-muted fw-medium">
+                    <i class="bi bi-filter me-1"></i>Lọc theo quốc gia:
+                </span>
+                <span class="badge bg-light text-dark border">
+                    @countriesList.Count quốc gia
+                </span>
+            </div>
+            
+            <div class="d-flex align-items-start gap-2 flex-wrap">
+                <!-- All button -->
+                <button class="btn btn-sm btn-primary rounded-pill country-filter active" data-country-id="">
+                    <i class="bi bi-globe2 me-1"></i>Tất cả
+                </button>
+                
+                <!-- Top countries (always visible) -->
+                @foreach (var country in topCountries)
+                {
+                    <button class="btn btn-sm btn-outline-primary rounded-pill country-filter" data-country-id="@country.CountryID">
+                        @if (!string.IsNullOrEmpty(country.ISO2))
+                        {
+                            <span class="badge bg-secondary me-1">@country.ISO2</span>
+                        }
+                        @country.CountryName
+                    </button>
+                }
+                
+                <!-- Remaining countries (collapsible) -->
+                @if (hasMoreCountries)
+                {
+                    <div id="more-countries" class="collapse d-flex gap-2 flex-wrap">
+                        @foreach (var country in remainingCountries)
+                        {
+                            <button class="btn btn-sm btn-outline-primary rounded-pill country-filter" data-country-id="@country.CountryID">
+                                @if (!string.IsNullOrEmpty(country.ISO2))
+                                {
+                                    <span class="badge bg-secondary me-1">@country.ISO2</span>
+                                }
+                                @country.CountryName
+                            </button>
+                        }
+                    </div>
+                    
+                    <!-- Show More/Less button -->
+                    <button class="btn btn-sm btn-link text-decoration-none" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#more-countries" 
+                            id="toggle-countries-btn">
+                        <span class="show-more-text">
+                            <i class="bi bi-chevron-down me-1"></i>Xem thêm (@remainingCountries.Count)
+                        </span>
+                        <span class="show-less-text d-none">
+                            <i class="bi bi-chevron-up me-1"></i>Thu gọn
+                        </span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="tour-container">
+            <partial name="_TourListPartial" model="Model" />
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+        </div>
+
+        <!-- End of List Message -->
+        <div id="end-of-list" class="text-center py-4 d-none">
+            <p class="text-muted">Đã hiển thị hết danh sách tour quốc tế.</p>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5" id="empty-state">
+            <div class="mb-3">
+                <i class="bi bi-airplane fs-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">Chưa có tour quốc tế nào</h3>
+            <p>Hiện chưa có tour nào ra nước ngoài. Hãy quay lại sau nhé!</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill mt-3">
+                Khám phá tất cả tour
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    .object-fit-cover {
+        object-fit: cover;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .country-filter {
+        transition: all 0.2s ease;
+    }
+    .country-filter:hover {
+        transform: translateY(-2px);
+    }
+    .country-filter.active {
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let page = 1;
+        const pageSize = 6;
+        let isLoading = false;
+        let hasMore = true;
+        let currentCountryId = null; // Track current filter
+        
+        const container = document.getElementById('tour-container');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const endOfList = document.getElementById('end-of-list');
+        const emptyState = document.getElementById('empty-state');
+        const filterButtons = document.querySelectorAll('.country-filter');
+
+        if (!container) return;
+
+        // Build URL with countryId parameter
+        const buildUrl = (pageNum) => {
+            let url = `/Home/GetInternationalToursPartial?page=${pageNum}&pageSize=${pageSize}`;
+            if (currentCountryId) {
+                url += `&countryId=${currentCountryId}`;
+            }
+            return url;
+        };
+
+        const loadMoreTours = async () => {
+            if (isLoading || !hasMore) return;
+            
+            isLoading = true;
+            loadingSpinner.classList.remove('d-none');
+
+            try {
+                page++;
+                const response = await fetch(buildUrl(page));
+                
+                if (response.status === 204) {
+                    hasMore = false;
+                    endOfList.classList.remove('d-none');
+                } else if (response.ok) {
+                    const html = await response.text();
+                    container.insertAdjacentHTML('beforeend', html);
+                } else {
+                    console.error('Failed to load tours');
+                }
+            } catch (error) {
+                console.error('Error loading tours:', error);
+            } finally {
+                isLoading = false;
+                loadingSpinner.classList.add('d-none');
+            }
+        };
+
+        // Filter by country
+        const filterByCountry = async (countryId) => {
+            // Reset state
+            page = 1;
+            hasMore = true;
+            currentCountryId = countryId || null;
+            
+            // Clear existing tours
+            container.innerHTML = '';
+            endOfList.classList.add('d-none');
+            
+            // Show loading
+            isLoading = true;
+            loadingSpinner.classList.remove('d-none');
+
+            try {
+                const response = await fetch(buildUrl(1));
+                
+                if (response.status === 204) {
+                    // No tours found for this filter
+                    hasMore = false;
+                    container.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <i class="bi bi-search fs-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">Không tìm thấy tour nào</h4>
+                            <p class="text-muted">Hãy thử chọn quốc gia khác</p>
+                        </div>
+                    `;
+                } else if (response.ok) {
+                    const html = await response.text();
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error filtering tours:', error);
+            } finally {
+                isLoading = false;
+                loadingSpinner.classList.add('d-none');
+            }
+        };
+
+        // Country filter button click handlers
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active state
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Get country ID
+                const countryId = this.getAttribute('data-country-id');
+                filterByCountry(countryId);
+            });
+        });
+
+        // Intersection Observer for infinite scroll
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && !isLoading) {
+                loadMoreTours();
+            }
+        }, {
+            root: null,
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+
+        observer.observe(loadingSpinner);
+
+        // Toggle "Show More" / "Collapse" button text
+        const toggleBtn = document.getElementById('toggle-countries-btn');
+        const moreCountriesCollapse = document.getElementById('more-countries');
+        
+        if (toggleBtn && moreCountriesCollapse) {
+            moreCountriesCollapse.addEventListener('shown.bs.collapse', function () {
+                toggleBtn.querySelector('.show-more-text').classList.add('d-none');
+                toggleBtn.querySelector('.show-less-text').classList.remove('d-none');
+            });
+            
+            moreCountriesCollapse.addEventListener('hidden.bs.collapse', function () {
+                toggleBtn.querySelector('.show-more-text').classList.remove('d-none');
+                toggleBtn.querySelector('.show-less-text').classList.add('d-none');
+            });
+        }
+    });
+</script>

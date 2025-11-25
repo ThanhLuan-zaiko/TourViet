@@ -57,5 +57,44 @@ namespace TourViet.Services.Interfaces
         /// </summary>
         /// <returns>Collection of published Tour entities with related data</returns>
         Task<IEnumerable<Tour>> GetPublishedToursAsync();
+
+        /// <summary>
+        /// Gets a paged list of published tours for public display.
+        /// </summary>
+        /// <param name="page">The page number (1-based)</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>Collection of published Tour entities for the requested page</returns>
+        Task<IEnumerable<Tour>> GetPublishedToursPagedAsync(int page, int pageSize);
+
+        /// <summary>
+        /// Gets a paged list of trending tours (booked >= 5 times).
+        /// </summary>
+        /// <param name="page">The page number (1-based)</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>Collection of trending Tour entities</returns>
+        Task<IEnumerable<Tour>> GetTrendingToursPagedAsync(int page, int pageSize);
+
+        /// <summary>
+        /// Gets a paged list of domestic tours (Vietnam only).
+        /// </summary>
+        /// <param name="page">The page number (1-based)</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <returns>Collection of domestic Tour entities</returns>
+        Task<IEnumerable<Tour>> GetDomesticToursPagedAsync(int page, int pageSize);
+
+        /// <summary>
+        /// Gets a paged list of international tours (non-Vietnam).
+        /// </summary>
+        /// <param name="page">The page number (1-based)</param>
+        /// <param name="pageSize">The number of items per page</param>
+        /// <param name="countryId">Optional country ID to filter by specific country</param>
+        /// <returns>Collection of international Tour entities</returns>
+        Task<IEnumerable<Tour>> GetInternationalToursPagedAsync(int page, int pageSize, Guid? countryId = null);
+
+        /// <summary>
+        /// Gets a list of countries that have international tours.
+        /// </summary>
+        /// <returns>Collection of Country entities (excluding Vietnam)</returns>
+        Task<IEnumerable<Country>> GetInternationalCountriesAsync();
     }
 }

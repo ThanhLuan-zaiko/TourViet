@@ -1,0 +1,116 @@
+@model IEnumerable<TourViet.Models.Tour>
+@{
+    ViewData["Title"] = "Tour Thịnh Hành";
+}
+
+<div class="container py-5">
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="tour-container">
+            <partial name="_TourListPartial" model="Model" />
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+        </div>
+
+        <!-- End of List Message -->
+        <div id="end-of-list" class="text-center py-4 d-none">
+            <p class="text-muted">Đã hiển thị hết danh sách tour thịnh hành.</p>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="bi bi-graph-up-arrow fs-1 text-muted"></i>
+            </div>
+            <h3 class="text-muted">Chưa có tour thịnh hành nào</h3>
+            <p>Hiện chưa có tour nào đạt mốc 5 lượt đặt. Hãy quay lại sau nhé!</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill mt-3">
+                Khám phá tất cả tour
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    .object-fit-cover {
+        object-fit: cover;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let page = 1;
+        const pageSize = 6;
+        let isLoading = false;
+        let hasMore = true;
+        
+        const container = document.getElementById('tour-container');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const endOfList = document.getElementById('end-of-list');
+
+        if (!container) return;
+
+        const loadMoreTours = async () => {
+            if (isLoading || !hasMore) return;
+            
+            isLoading = true;
+            loadingSpinner.classList.remove('d-none');
+
+            try {
+                page++;
+                // Changed URL to GetTrendingToursPartial
+                const response = await fetch(`/Home/GetTrendingToursPartial?page=${page}&pageSize=${pageSize}`);
+                
+                if (response.status === 204) { // No Content
+                    hasMore = false;
+                    endOfList.classList.remove('d-none');
+                } else if (response.ok) {
+                    const html = await response.text();
+                    // Append new content
+                    container.insertAdjacentHTML('beforeend', html);
+                } else {
+                    console.error('Failed to load tours');
+                }
+            } catch (error) {
+                console.error('Error loading tours:', error);
+            } finally {
+                isLoading = false;
+                loadingSpinner.classList.add('d-none');
+            }
+        };
+
+        // Intersection Observer to detect when user scrolls to bottom
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && !isLoading) {
+                loadMoreTours();
+            }
+        }, {
+            root: null,
+            rootMargin: '100px', // Load 100px before reaching bottom
+            threshold: 0.1
+        });
+
+        // Observe the loading spinner (which is at the bottom)
+        observer.observe(loadingSpinner);
+    });
+</script>

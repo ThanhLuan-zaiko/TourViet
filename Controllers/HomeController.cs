@@ -35,8 +35,86 @@ public class HomeController : Controller
             return RedirectToAction("StaffDashboard");
         }
         
-        var publishedTours = await _tourService.GetPublishedToursAsync();
+        // Initial load: Page 1, Size 6
+        var publishedTours = await _tourService.GetPublishedToursPagedAsync(1, 6);
         return View(publishedTours);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetToursPartial(int page = 1, int pageSize = 6)
+    {
+        var tours = await _tourService.GetPublishedToursPagedAsync(page, pageSize);
+        
+        if (tours == null || !tours.Any())
+        {
+            return NoContent();
+        }
+        
+        return PartialView("_TourListPartial", tours);
+    }
+
+    public async Task<IActionResult> Trending()
+    {
+        // Initial load: Page 1, Size 6
+        var trendingTours = await _tourService.GetTrendingToursPagedAsync(1, 6);
+        return View(trendingTours);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTrendingToursPartial(int page = 1, int pageSize = 6)
+    {
+        var tours = await _tourService.GetTrendingToursPagedAsync(page, pageSize);
+        
+        if (tours == null || !tours.Any())
+        {
+            return NoContent();
+        }
+        
+        return PartialView("_TourListPartial", tours);
+    }
+
+    public async Task<IActionResult> Domestic()
+    {
+        // Initial load: Page 1, Size 6
+        var domesticTours = await _tourService.GetDomesticToursPagedAsync(1, 6);
+        return View(domesticTours);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetDomesticToursPartial(int page = 1, int pageSize = 6)
+    {
+        var tours = await _tourService.GetDomesticToursPagedAsync(page, pageSize);
+        
+        if (tours == null || !tours.Any())
+        {
+            return NoContent();
+        }
+        
+        return PartialView("_TourListPartial", tours);
+    }
+
+    public async Task<IActionResult> International()
+    {
+        // Get list of available countries for filter
+        var countries = await _tourService.GetInternationalCountriesAsync();
+        ViewBag.Countries = countries;
+        
+        // Initial load: Page 1, Size 6, All countries
+        var internationalTours = await _tourService.GetInternationalToursPagedAsync(1, 6);
+        return View(internationalTours);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetInternationalToursPartial(int page = 1, int pageSize = 6, Guid? countryId = null)
+    {
+        var tours = await _tourService.GetInternationalToursPagedAsync(page, pageSize, countryId);
+        
+        if (tours == null || !tours.Any())
+        {
+            return NoContent();
+        }
+        
+        return PartialView("_TourListPartial", tours);
     }
 
     // GET: Home/TourDetails/5
