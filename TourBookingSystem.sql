@@ -290,6 +290,21 @@ CREATE CLUSTERED INDEX CX_Bookings_CreatedAt_BookingID ON dbo.Bookings (CreatedA
 CREATE NONCLUSTERED INDEX IX_Bookings_InstanceID ON dbo.Bookings(InstanceID);
 CREATE NONCLUSTERED INDEX IX_Bookings_UserID ON dbo.Bookings(UserID);
 
+CREATE TABLE dbo.BookingServices (
+      BookingServiceID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_BookingServices PRIMARY KEY DEFAULT NEWID(),
+      BookingID UNIQUEIDENTIFIER NOT NULL,
+      ServiceID UNIQUEIDENTIFIER NOT NULL,
+      Quantity INT NOT NULL DEFAULT 1 CHECK (Quantity >= 1),
+      PriceAtBooking DECIMAL(18,2) NOT NULL,
+      Currency NVARCHAR(10) NOT NULL DEFAULT N'VND',
+      CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+      CONSTRAINT FK_BookingServices_Bookings FOREIGN KEY (BookingID) REFERENCES dbo.Bookings(BookingID) ON DELETE CASCADE,
+      CONSTRAINT FK_BookingServices_Services FOREIGN KEY (ServiceID) REFERENCES dbo.Services(ServiceID)
+    );
+
+CREATE NONCLUSTERED INDEX IX_BookingServices_BookingID ON dbo.BookingServices(BookingID);
+CREATE NONCLUSTERED INDEX IX_BookingServices_ServiceID ON dbo.BookingServices(ServiceID);
+
 -- PromotionRules: chi tiết cách tính giảm (tách logic cho linh hoạt)
 CREATE TABLE dbo.PromotionRules (
   PromotionRuleID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PromotionRules PRIMARY KEY DEFAULT NEWID(),

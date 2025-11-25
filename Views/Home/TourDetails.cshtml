@@ -547,7 +547,7 @@
                                 </div>
 
                                 <div class="reviews-list">
-                                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                                    @foreach (var review in (Model.Reviews ?? Enumerable.Empty<TourViet.Models.Review>()).OrderByDescending(r => r.CreatedAt))
                                     {
                                         <div class="review-item p-3 mb-3 bg-light rounded">
                                             <div class="d-flex align-items-center mb-2">
@@ -608,8 +608,10 @@
                         @if (Model.TourInstances != null && Model.TourInstances.Any())
                         {
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">Chọn ngày khởi hành</label>
-                                <select class="form-select form-select-lg" id="instanceSelector">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-event text-primary me-2"></i>Chọn ngày khởi hành
+                                </label>
+                                <select class="form-select form-select-lg" id="instanceSelector" onchange="highlightBookingButton()">
                                     <option value="">-- Chọn ngày --</option>
                                     @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open").OrderBy(i => i.StartDate))
                                     {
@@ -622,12 +624,15 @@
                                         }
                                     }
                                 </select>
+                                <div class="form-text small text-muted mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>Lựa chọn của bạn sẽ được tự động điền vào form đặt tour
+                                </div>
                             </div>
                         }
 
                         <!-- CTA Buttons -->
                         <div class="d-grid gap-3 mb-4">
-                            <button class="btn btn-primary btn-lg rounded-pill shadow-sm" type="button">
+                            <button id="btnBookNow" class="btn btn-primary btn-lg rounded-pill shadow-sm" type="button" onclick="checkAuthAndShowBooking()">
                                 <i class="bi bi-cart-plus me-2"></i>Đặt tour ngay
                             </button>
                             <button class="btn btn-outline-primary btn-lg rounded-pill" type="button">
@@ -658,7 +663,7 @@
                                                 @if ((service.PriceOverride ?? service.Service?.Price ?? 0) > 0)
                                                 {
                                                     <small class="text-muted">
-                                                        @((service.PriceOverride ?? service.Service.Price).ToString("N0")) @(service.Currency ?? service.Service?.Currency)
+                                                        @((service.PriceOverride ?? service.Service?.Price ?? 0).ToString("N0")) @(service.Currency ?? service.Service?.Currency)
                                                     </small>
                                                 }
                                             </li>
@@ -685,7 +690,8 @@
                                                                name="SelectedServices" 
                                                                value="@service.ServiceID" 
                                                                id="svc_@service.ServiceID"
-                                                               data-price="@price">
+                                                               data-price="@price"
+                                                               onchange="highlightBookingButton()">
                                                         <label class="form-check-label fw-medium cursor-pointer" for="svc_@service.ServiceID">
                                                             @service.Service?.ServiceName
                                                         </label>
@@ -990,6 +996,628 @@
         padding: 0.75rem 1.5rem;
         border-radius: 50px;
         border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-focus="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary bg-gradient text-white border-0">
+                <h5 class="modal-title" id="loginModalLabel">
+                    <i class="bi bi-lock-fill me-2"></i>Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-person-circle text-primary mb-3" style="font-size: 4rem;"></i>
+                <h6 class="fw-bold mb-3">Vui lòng đăng nhập để đặt tour</h6>
+                <p class="text-muted mb-4">Bạn cần có tài khoản để thực hiện đặt tour. Nếu chưa có tài khoản, vui lòng đăng ký ngay!</p>
+                <div class="d-grid gap-2">
+                    <a href="/Account/Login?returnUrl=@Context.Request.Path" class="btn btn-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                    </a>
+                    <a href="/Account/Register" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>Đăng ký tài khoản mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" data-bs-focus="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h5 class="modal-title fw-bold" id="bookingModalLabel">
+                    <i class="bi bi-ticket-perforated-fill me-2"></i>Đặt tour: @Model.TourName
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Success Message (Hidden by default) -->
+                <div id="bookingSuccess" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Đặt tour thành công!</strong>
+                    <p class="mb-0 mt-2">Mã đặt tour của bạn: <strong id="bookingRefDisplay"></strong></p>
+                    <p class="mb-0 small">Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận.</p>
+                </div>
+
+                <!-- Error Message (Hidden by default) -->
+                <div id="bookingError" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Đặt tour thất bại!</strong>
+                    <p class="mb-0 mt-2" id="bookingErrorMessage"></p>
+                </div>
+
+                <form id="bookingForm">
+                    <!-- Tour Instance Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-calendar-event text-primary me-2"></i>Chọn ngày khởi hành
+                            <span class="text-danger">*</span>
+                        </label>
+                        @if (Model.TourInstances != null && Model.TourInstances.Any(i => i.Status == "Open"))
+                        {
+                            <select class="form-select form-select-lg" id="bookingInstanceId" required onchange="updatePriceCalculation()">
+                                <option value="">-- Vui lòng chọn ngày --</option>
+                                @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open").OrderBy(i => i.StartDate))
+                                {
+                                    var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
+                                    if (seatsAvailable > 0)
+                                    {
+                                        <option value="@instance.InstanceID" 
+                                                data-price="@instance.PriceBase.ToString(System.Globalization.CultureInfo.InvariantCulture)" 
+                                                data-currency="@instance.Currency"
+                                                data-seats-available="@seatsAvailable">
+                                            @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy") 
+                                            (@seatsAvailable chỗ trống) - @instance.PriceBase.ToString("N0") @instance.Currency
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Hiện chưa có lịch khởi hành. Vui lòng liên hệ để biết thêm thông tin.</p>
+                        }
+                    </div>
+
+                    <!-- Number of Seats -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="bookingSeats">
+                            <i class="bi bi-people-fill text-primary me-2"></i>Số lượng người
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control form-control-lg" id="bookingSeats" 
+                               min="1" value="1" required onchange="updatePriceCalculation()">
+                        <div class="form-text small">
+                            <i class="bi bi-info-circle me-1"></i>Chỗ trống: <strong id="seatsAvailableDisplay">Vui lòng chọn ngày khởi hành</strong>
+                        </div>
+                    </div>
+
+                    <!-- Optional Services -->
+                    @if (Model.TourServices != null && Model.TourServices.Any(s => !s.IsIncluded))
+                    {
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-plus-circle-fill text-secondary me-2"></i>Dịch vụ bổ sung (Tùy chọn)
+                            </label>
+                            <div class="card border-0 bg-light p-3">
+                                <div id="optionalServicesContainer" class="vstack gap-2">
+                                    @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s => s.SortOrder))
+                                    {
+                                        var price = service.PriceOverride ?? service.Service?.Price ?? 0;
+                                        <div class="form-check">
+                                            <input class="form-check-input booking-service-checkbox" type="checkbox" 
+                                                   value="@service.ServiceID" 
+                                                   id="booking_svc_@service.ServiceID"
+                                                   data-price="@price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   data-currency="@(service.Currency ?? service.Service?.Currency)"
+                                                   onchange="updatePriceCalculation()">
+                                            <label class="form-check-label w-100 d-flex justify-content-between align-items-center" 
+                                                   for="booking_svc_@service.ServiceID">
+                                                <span>@service.Service?.ServiceName</span>
+                                                @if (price > 0)
+                                                {
+                                                    <span class="badge bg-primary">
+                                                        +@price.ToString("N0") @(service.Currency ?? service.Service?.Currency)/người
+                                                    </span>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                                <small class="text-muted mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>Giá dịch vụ bổ sung áp dụng cho mỗi người.
+                                </small>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Price Summary -->
+                    <div class="card border-0 bg-gradient text-white shadow mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-calculator me-2"></i>Tổng chi phí
+                            </h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Giá cơ bản:</span>
+                                <span id="basePriceDisplay">0 VND</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Số người:</span>
+                                <span id="seatsDisplay">1</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 d-none" id="servicesRow">
+                                <span>Dịch vụ bổ sung:</span>
+                                <span id="servicesTotalDisplay">0 VND</span>
+                            </div>
+                            <hr class="border-white opacity-25 my-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fw-bold">Tổng cộng:</h5>
+                                <h4 class="mb-0 fw-bold" id="grandTotalDisplay">0 VND</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Requests -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="specialRequests">
+                            <i class="bi bi-chat-dots text-secondary me-2"></i>Yêu cầu đặc biệt (Tùy chọn)
+                        </label>
+                        <textarea class="form-control" id="specialRequests" rows="3" 
+                                  placeholder="Ví dụ: Cần giường đôi, ăn chay, ..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-light p-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-primary btn-lg px-4" id="btnSubmitBooking" onclick="submitBooking()">
+                    <span id="btnSubmitText">
+                        <i class="bi bi-check-circle-fill me-2"></i>Xác nhận đặt tour
+                    </span>
+                    <span id="btnSubmitLoading" class="d-none">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Đang xử lý...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Check authentication and show appropriate modal
+    async function checkAuthAndShowBooking() {
+        try {
+            const response = await fetch('/api/booking/check-auth');
+            const data = await response.json();
+            
+            if (data.isAuthenticated) {
+                // Reset form first before showing modal
+                resetBookingForm();
+                
+                // Show booking modal with proper options
+                const bookingModalEl = document.getElementById('bookingModal');
+                const bookingModal = new bootstrap.Modal(bookingModalEl, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                
+                // Wait for modal to be fully shown before any operations
+                bookingModalEl.addEventListener('shown.bs.modal', function onModalShown() {
+                    // Remove this listener after first trigger
+                    bookingModalEl.removeEventListener('shown.bs.modal', onModalShown);
+                    
+                    // Focus management is now handled by Bootstrap
+                    // Price calculation already done in resetBookingForm
+                }, { once: true });
+                
+                bookingModal.show();
+            } else {
+                // Show login modal
+                const loginModalEl = document.getElementById('loginModal');
+                const loginModal = new bootstrap.Modal(loginModalEl, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                loginModal.show();
+            }
+        } catch (error) {
+            console.error('Error checking authentication:', error);
+            alert('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+        }
+    }
+
+    // Reset booking form and sync with sidebar selections
+    function resetBookingForm() {
+        document.getElementById('bookingForm').reset();
+        document.getElementById('bookingSuccess').classList.add('d-none');
+        document.getElementById('bookingError').classList.add('d-none');
+        
+        // Sync tour instance from sidebar to modal
+        const sidebarInstanceSelector = document.getElementById('instanceSelector');
+        const modalInstanceSelector = document.getElementById('bookingInstanceId');
+        if (sidebarInstanceSelector && modalInstanceSelector && sidebarInstanceSelector.value) {
+            modalInstanceSelector.value = sidebarInstanceSelector.value;
+        }
+        
+        // Sync selected services from sidebar to modal
+        const sidebarServiceCheckboxes = document.querySelectorAll('input[name="SelectedServices"]:checked');
+        sidebarServiceCheckboxes.forEach(sidebarCheckbox => {
+            const serviceId = sidebarCheckbox.value;
+            const modalCheckbox = document.getElementById('booking_svc_' + serviceId);
+            if (modalCheckbox) {
+                modalCheckbox.checked = true;
+            }
+        });
+        
+        // Setup two-way sync listeners (modal → sidebar)
+        setupTwoWaySync();
+        
+        // Update price calculation with synced selections
+        updatePriceCalculation();
+    }
+    
+    // Setup two-way sync between modal and sidebar
+    function setupTwoWaySync() {
+        const modalInstanceSelector = document.getElementById('bookingInstanceId');
+        const sidebarInstanceSelector = document.getElementById('instanceSelector');
+        
+        // Sync instance changes from modal to sidebar
+        if (modalInstanceSelector && sidebarInstanceSelector) {
+            // Remove old listener if exists
+            modalInstanceSelector.removeEventListener('change', syncInstanceToSidebar);
+            // Add new listener
+            modalInstanceSelector.addEventListener('change', syncInstanceToSidebar);
+        }
+        
+        // Sync service changes from modal to sidebar
+        const modalServiceCheckboxes = document.querySelectorAll('.booking-service-checkbox');
+        modalServiceCheckboxes.forEach(modalCheckbox => {
+            // Remove old listener if exists
+            modalCheckbox.removeEventListener('change', syncServiceToSidebar);
+            // Add new listener
+            modalCheckbox.addEventListener('change', syncServiceToSidebar);
+        });
+    }
+    
+    // Sync instance selection from modal to sidebar
+    function syncInstanceToSidebar(event) {
+        const modalValue = event.target.value;
+        const sidebarInstanceSelector = document.getElementById('instanceSelector');
+        
+        if (sidebarInstanceSelector) {
+            sidebarInstanceSelector.value = modalValue;
+            
+            // Trigger visual feedback on sidebar
+            if (modalValue) {
+                highlightBookingButton();
+            }
+        }
+    }
+    
+    // Sync service checkbox from modal to sidebar
+    function syncServiceToSidebar(event) {
+        const modalCheckbox = event.target;
+        const serviceId = modalCheckbox.value;
+        const sidebarCheckbox = document.getElementById('svc_' + serviceId);
+        
+        if (sidebarCheckbox) {
+            sidebarCheckbox.checked = modalCheckbox.checked;
+            
+            // Trigger visual feedback on sidebar
+            if (modalCheckbox.checked) {
+                highlightBookingButton();
+            }
+        }
+    }
+
+    // Update price calculation
+    function updatePriceCalculation() {
+        try {
+            const instanceSelect = document.getElementById('bookingInstanceId');
+            const seatsInput = document.getElementById('bookingSeats');
+            
+            if (!instanceSelect || !seatsInput) {
+                console.error('Missing required elements:', { instanceSelect, seatsInput });
+                return;
+            }
+            
+            const selectedOption = instanceSelect.options[instanceSelect.selectedIndex];
+            
+            // Check if a valid tour instance is selected (not the placeholder option)
+            const hasValidInstance = instanceSelect.value && selectedOption && selectedOption.dataset;
+            
+            // Use 0 if data-price is missing or invalid
+            const basePrice = hasValidInstance ? (parseFloat(selectedOption.dataset.price) || 0) : 0;
+            const currency = hasValidInstance && selectedOption.dataset.currency ? selectedOption.dataset.currency : 'VND';
+            const seatsAvailable = hasValidInstance ? (parseInt(selectedOption.dataset.seatsAvailable) || 0) : 0;
+            let seats = parseInt(seatsInput.value);
+            
+            // Validate seats
+            if (isNaN(seats) || seats < 1) seats = 1;
+            
+            // Update seats available display
+            if (hasValidInstance) {
+                document.getElementById('seatsAvailableDisplay').textContent = `${seatsAvailable} chỗ`;
+                seatsInput.max = seatsAvailable;
+            } else {
+                document.getElementById('seatsAvailableDisplay').textContent = 'Vui lòng chọn ngày khởi hành';
+            }
+            
+            // Calculate base price
+            const basePriceTotal = basePrice * seats;
+            
+            // Calculate services total
+            let servicesTotal = 0;
+            const serviceCheckboxes = document.querySelectorAll('.booking-service-checkbox:checked');
+            
+            serviceCheckboxes.forEach(checkbox => {
+                // Get service currency from checkbox data attribute
+                const serviceCurrency = checkbox.dataset.currency || currency;
+                const servicePrice = parseFloat(checkbox.dataset.price) || 0;
+                servicesTotal += servicePrice * seats; // Services are per person
+            });
+            
+            // Update display
+            const basePriceDisplay = document.getElementById('basePriceDisplay');
+            const seatsDisplay = document.getElementById('seatsDisplay');
+            const servicesTotalDisplay = document.getElementById('servicesTotalDisplay');
+            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+            
+            if (!basePriceDisplay || !seatsDisplay || !servicesTotalDisplay || !grandTotalDisplay) {
+                console.error('Missing display elements:', {
+                    basePriceDisplay,
+                    seatsDisplay,
+                    servicesTotalDisplay,
+                    grandTotalDisplay
+                });
+                return;
+            }
+            
+            basePriceDisplay.textContent = `${basePrice.toLocaleString('vi-VN')} ${currency}`;
+            seatsDisplay.textContent = seats;
+            servicesTotalDisplay.textContent = `${servicesTotal.toLocaleString('vi-VN')} ${currency}`;
+            grandTotalDisplay.textContent = `${(basePriceTotal + servicesTotal).toLocaleString('vi-VN')} ${currency}`;
+            
+            // Show/hide services row - show if any services are selected, even if total is 0
+            const servicesRow = document.getElementById('servicesRow');
+            if (!servicesRow) {
+                console.error('Missing servicesRow element');
+                return;
+            }
+            
+            if (serviceCheckboxes.length > 0) {
+                servicesRow.classList.remove('d-none');
+            } else {
+                servicesRow.classList.add('d-none');
+            }
+        } catch (error) {
+            console.error('Error in updatePriceCalculation:', error);
+        }
+    }
+
+    // Submit booking
+    async function submitBooking() {
+        const form = document.getElementById('bookingForm');
+        const submitBtn = document.getElementById('btnSubmitBooking');
+        const submitText = document.getElementById('btnSubmitText');
+        const submitLoading = document.getElementById('btnSubmitLoading');
+        const successAlert = document.getElementById('bookingSuccess');
+        const errorAlert = document.getElementById('bookingError');
+        
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const instanceId = document.getElementById('bookingInstanceId').value;
+        const seats = parseInt(document.getElementById('bookingSeats').value);
+        const specialRequests = document.getElementById('specialRequests').value;
+        
+        if (!instanceId) {
+            showError('Vui lòng chọn ngày khởi hành.');
+            return;
+        }
+        
+        if (seats <= 0) {
+            showError('Số lượng người phải lớn hơn 0.');
+            return;
+        }
+        
+        // Get selected services
+        const selectedServices = [];
+        document.querySelectorAll('.booking-service-checkbox:checked').forEach(checkbox => {
+            selectedServices.push({
+                serviceID: checkbox.value,
+                quantity: 1
+            });
+        });
+        
+        // Prepare booking data
+        const bookingData = {
+            tourInstanceID: instanceId,
+            seats: seats,
+            selectedServices: selectedServices,
+            specialRequests: specialRequests
+        };
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitText.classList.add('d-none');
+        submitLoading.classList.remove('d-none');
+        successAlert.classList.add('d-none');
+        errorAlert.classList.add('d-none');
+        
+        try {
+            const response = await fetch('/api/booking/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookingData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                document.getElementById('bookingRefDisplay').textContent = data.bookingRef;
+                successAlert.classList.remove('d-none');
+                
+                // Scroll to top of modal to show success message
+                document.querySelector('#bookingModal .modal-body').scrollTop = 0;
+                
+                // Disable form after successful booking
+                form.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+                submitBtn.classList.add('d-none');
+                
+                // Reload page after 3 seconds to update booking status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                showError(data.message || 'Đã xảy ra lỗi khi đặt tour.');
+            }
+        } catch (error) {
+            console.error('Error submitting booking:', error);
+            showError('Đã xảy ra lỗi khi kết nối đến server. Vui lòng thử lại sau.');
+        } finally {
+            // Hide loading state
+            submitBtn.disabled = false;
+            submitText.classList.remove('d-none');
+            submitLoading.classList.add('d-none');
+        }
+    }
+
+    // Show error message
+    function showError(message) {
+        const errorAlert = document.getElementById('bookingError');
+        const errorMessage = document.getElementById('bookingErrorMessage');
+        
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
+        
+        // Scroll to top of modal to show error message
+        document.querySelector('#bookingModal .modal-body').scrollTop = 0;
+    }
+    
+    // Highlight booking button when user makes selections in sidebar
+    function highlightBookingButton() {
+        const bookButton = document.getElementById('btnBookNow');
+        const instanceSelector = document.getElementById('instanceSelector');
+        const selectedServices = document.querySelectorAll('input[name="SelectedServices"]:checked');
+        
+        if (bookButton) {
+            // Add pulse animation if instance is selected or services are checked
+            if ((instanceSelector && instanceSelector.value) || selectedServices.length > 0) {
+                bookButton.classList.add('btn-pulse');
+                
+                // Remove animation after 2 seconds
+                setTimeout(() => {
+                    bookButton.classList.remove('btn-pulse');
+                }, 2000);
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Modal animations */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+    }
+    
+    /* Hover effects for form elements */
+    .form-select:focus,
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    /* Button animations */
+    .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Alert animations */
+    .alert {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Price summary card gradient shimmer */
+    .bg-gradient {
+        background-size: 200% 200%;
+        animation: gradientShift 3s ease infinite;
+    }
+    
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100%50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Pulse animation for booking button */
+    .btn-pulse {
+        animation: pulse 1s ease-in-out 2;
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
+    }
+    
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(var(--bs-primary-rgb), 0);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
+        }
+    }
+    
+    /* Smooth transitions for selections */
+    #instanceSelector, 
+    input[name="SelectedServices"] {
+        transition: all 0.3s ease;
+    }
+    
+    #instanceSelector:focus,
+    input[name="SelectedServices"]:checked {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
     }
 </style>
 

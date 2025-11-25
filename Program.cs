@@ -31,6 +31,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITourService, TourService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
@@ -58,6 +59,7 @@ app.UseSession();
 app.UseMiddleware<GlobalExceptionMiddleware>(); // Should be first to catch all exceptions
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<AuthenticationMiddleware>();
+app.UseBookingAuthorization(); // Booking-specific authorization
 
 app.UseAuthorization();
 

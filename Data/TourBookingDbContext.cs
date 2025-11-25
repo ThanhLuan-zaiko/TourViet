@@ -21,6 +21,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
     public DbSet<Service> Services { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Booking> Bookings { get; set; }
+    public DbSet<Models.BookingService> BookingServices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -193,6 +194,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
                 .OnDelete(DeleteBehavior.Restrict);
         });
         
+        
         // Configure Booking entity
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -205,6 +207,20 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Configure BookingService entity
+        modelBuilder.Entity<Models.BookingService>(entity =>
+        {
+            entity.HasKey(e => e.BookingServiceID);
+            entity.HasOne(e => e.Booking)
+                .WithMany()
+                .HasForeignKey(e => e.BookingID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Service)
+                .WithMany()
+                .HasForeignKey(e => e.ServiceID)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

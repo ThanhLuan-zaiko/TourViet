@@ -12,15 +12,18 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly TourBookingDbContext _context;
     private readonly ITourService _tourService;
+    private readonly IBookingService _bookingService;
 
     public HomeController(
         ILogger<HomeController> logger, 
         TourBookingDbContext context,
-        ITourService tourService)
+        ITourService tourService,
+        IBookingService bookingService)
     {
         _logger = logger;
         _context = context;
         _tourService = tourService;
+        _bookingService = bookingService;
     }
 
     public async Task<IActionResult> Index()
@@ -224,7 +227,7 @@ public class HomeController : Controller
         }
     }
 
-    public IActionResult ManageBookings()
+    public async Task<IActionResult> ManageBookings()
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -234,7 +237,95 @@ public class HomeController : Controller
             return RedirectToAction("Index");
         }
         
-        return View("../AdministrativeStaffPage/ManageBookings");
+        // Fetch all bookings with complete details
+        var bookingsDto = await _bookingService.GetAllBookingsAsync();
+        
+        // Transform to ViewModel
+        var bookings = bookingsDto.Select(b => new TourViet.ViewModels.BookingViewModel
+        {
+            BookingID = b.BookingID,
+            BookingRef = b.BookingRef,
+            Status = b.Status,
+            StatusBadgeClass = GetStatusBadgeClass(b.Status),
+            StatusIcon = GetStatusIcon(b.Status),
+            CreatedAt = b.BookingDate,
+            FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+            
+            // Customer
+            UserID = b.UserID,
+            CustomerName = b.CustomerName,
+            CustomerEmail = b.CustomerEmail,
+            CustomerPhone = b.CustomerPhone,
+            CustomerAddress = b.CustomerAddress,
+            CustomerInitials = string.IsNullOrEmpty(b.CustomerName) ? "U" : b.CustomerName.Substring(0, 1).ToUpper(),
+            
+            // Tour
+            TourID = b.TourID,
+            TourName = b.TourName,
+            TourCategory = b.TourCategory ?? "N/A",
+            
+            // Instance
+            InstanceID = b.InstanceID,
+            StartDate = b.StartDate,
+            EndDate = b.EndDate,
+            FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
+            FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
+            DurationDays = b.DurationDays,
+            GuideName = b.GuideName,
+            
+            // Location
+            LocationName = b.LocationName,
+            City = b.City,
+            Country = b.Country,
+            
+            // Pricing
+            Seats = b.Seats,
+            BasePrice = b.PriceBase,
+            BasePriceTotal = b.PriceBase * b.Seats,
+            ServicesTotal = b.ServicesTotal,
+            TotalAmount = b.TotalAmount,
+            Currency = b.Currency,
+            FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
+            
+            // Services
+            BookedServices = b.BookedServices.Select(s => new TourViet.ViewModels.BookedServiceViewModel
+            {
+                ServiceID = s.ServiceID,
+                ServiceName = s.ServiceName,
+                Quantity = s.Quantity,
+                PriceAtBooking = s.PriceAtBooking,
+                SubTotal = s.SubTotal,
+                Currency = s.Currency,
+                FormattedSubTotal = $"{s.SubTotal.ToString("N0")} {s.Currency}"
+            }).ToList(),
+            ServicesCount = b.BookedServices.Count
+        }).ToList();
+        
+        return View("../AdministrativeStaffPage/ManageBookings", bookings);
+    }
+    
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "confirmed" => "bg-success",
+            "cancelled" => "bg-danger",
+            "completed" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+    
+    private string GetStatusIcon(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bi-clock",
+            "confirmed" => "bi-check-circle",
+            "cancelled" => "bi-x-circle",
+            "completed" => "bi-star-fill",
+            _ => "bi-circle"
+        };
     }
 
     public IActionResult TourSchedule()
