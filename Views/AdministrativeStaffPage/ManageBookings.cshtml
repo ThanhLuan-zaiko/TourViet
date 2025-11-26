@@ -19,286 +19,415 @@
         </div>
     </div>
 
-    @if (Model == null || !Model.Any())
-    {
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-5 text-center">
-                <i class="bi bi-inbox text-muted mb-3" style="font-size: 4rem;"></i>
-                <h5 class="text-muted">Chưa có đặt tour nào</h5>
-                <p class="text-muted mb-0">Các đặt tour sẽ xuất hiện ở đây khi khách hàng đặt tour.</p>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <!-- Search and Filter Section -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <div class="d-flex align-items-center">
+                        <label for="entriesPerPage" class="me-2 mb-0 text-muted">
+                            <i class="bi bi-list-ol me-1"></i>Hiển thị:
+                        </label>
+                        <select id="entriesPerPage" class="form-select form-select-sm shadow-sm" style="width: auto;">
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="75">75</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="ms-2 text-muted">bản ghi</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control border-start-0" 
+                               placeholder="Tìm kiếm theo mã, tên khách, tour..." aria-label="Search">
+                    </div>
+                </div>
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="bookingsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4 border-0">Mã đặt tour</th>
+                            <th class="border-0">Khách hàng</th>
+                            <th class="border-0">Tour</th>
+                            <th class="border-0">Ngày khởi hành</th>
+                            <th class="border-0">Số người</th>
+                            <th class="border-0">Tổng tiền</th>
+                            <th class="border-0">Trạng thái</th>
+                            <th class="text-center border-0">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model)
+                        {
                             <tr>
-                                <th class="px-4">Mã đặt tour</th>
-                                <th>Khách hàng</th>
-                                <th>Tour</th>
-                                <th>Ngày khởi hành</th>
-                                <th>Số người</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th class="text-center">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var booking in Model.OrderByDescending(b => b.CreatedAt))
-                            {
-                                <tr>
-                                    <td class="px-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-circle bg-primary bg-gradient text-white me-2" style="width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.9rem;">
-                                                @booking.CustomerInitials
-                                            </div>
-                                            <div>
-                                                <strong class="d-block">@booking.BookingRef</strong>
-                                                <small class="text-muted">@booking.FormattedCreatedAt</small>
-                                            </div>
+                                <td class="px-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary bg-gradient text-white me-2" style="width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.9rem;">
+                                            @booking.CustomerInitials
                                         </div>
-                                    </td>
-                                    <td>
                                         <div>
-                                            <strong class="d-block">@booking.CustomerName</strong>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-envelope me-1"></i>@booking.CustomerEmail
-                                            </small>
-                                            @if (!string.IsNullOrEmpty(booking.CustomerPhone))
-                                            {
-                                                <small class="text-muted d-block">
-                                                    <i class="bi bi-telephone me-1"></i>@booking.CustomerPhone
-                                                </small>
-                                            }
+                                            <strong class="d-block">@booking.BookingRef</strong>
+                                            <small class="text-muted" data-order="@booking.CreatedAt.Ticks">@booking.FormattedCreatedAt</small>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong class="d-block text-truncate" style="max-width: 200px;">@booking.TourName</strong>
-                                            <small class="text-muted">
-                                                <i class="bi bi-folder me-1"></i>@booking.TourCategory
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong class="d-block">@booking.FormattedStartDate</strong>
-                                            <small class="text-muted">@booking.DurationDays ngày</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark border">
-                                            <i class="bi bi-people-fill me-1"></i>@booking.Seats người
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <strong class="text-primary">@booking.FormattedTotalAmount</strong>
-                                        @if (booking.ServicesCount > 0)
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong class="d-block">@booking.CustomerName</strong>
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-envelope me-1"></i>@booking.CustomerEmail
+                                        </small>
+                                        @if (!string.IsNullOrEmpty(booking.CustomerPhone))
                                         {
-                                            <br />
-                                            <small class="text-muted">
-                                                +@booking.ServicesCount dịch vụ
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-telephone me-1"></i>@booking.CustomerPhone
                                             </small>
                                         }
-                                    </td>
-                                    <td>
-                                        <span class="badge @booking.StatusBadgeClass">
-                                            <i class="bi @booking.StatusIcon me-1"></i>@booking.Status
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#detailsModal@booking.BookingID"
-                                                    title="Xem chi tiết">
-                                                <i class="bi bi-eye"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong class="d-block text-truncate" style="max-width: 200px;">@booking.TourName</strong>
+                                        <small class="text-muted">
+                                            <i class="bi bi-folder me-1"></i>@booking.TourCategory
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong class="d-block" data-order="@booking.StartDate.Ticks">@booking.FormattedStartDate</strong>
+                                        <small class="text-muted">@booking.DurationDays ngày</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-people-fill me-1"></i>@booking.Seats người
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="text-primary">@booking.FormattedTotalAmount</strong>
+                                    @if (booking.ServicesCount > 0)
+                                    {
+                                        <br />
+                                        <small class="text-muted">
+                                            +@booking.ServicesCount dịch vụ
+                                        </small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @booking.StatusBadgeClass">
+                                        <i class="bi @booking.StatusIcon me-1"></i>@booking.Status
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#detailsModal@booking.BookingID"
+                                                title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        @if (booking.Status == "Pending")
+                                        {
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    onclick="updateBookingStatus('@booking.BookingID', 'Confirmed')"
+                                                    title="Xác nhận">
+                                                <i class="bi bi-check-circle"></i>
                                             </button>
-                                            @if (booking.Status == "Pending")
-                                            {
-                                                <button type="button" class="btn btn-outline-success" 
-                                                        onclick="updateBookingStatus('@booking.BookingID', 'Confirmed')"
-                                                        title="Xác nhận">
-                                                    <i class="bi bi-check-circle"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" 
-                                                        onclick="updateBookingStatus('@booking.BookingID', 'Cancelled')"
-                                                        title="Hủy">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="confirmCancel('@booking.BookingID', '@booking.BookingRef')"
+                                                    title="Hủy">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
 
-                                <!-- Details Modal for this booking -->
-                                <div class="modal fade" id="detailsModal@booking.BookingID" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                                        <div class="modal-content border-0 shadow-lg">
-                                            <div class="modal-header bg-gradient bg-primary text-white">
-                                                <h5 class="modal-title">
-                                                    <i class="bi bi-file-text me-2"></i>Chi tiết đặt tour: @booking.BookingRef
-                                                </h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <!-- Customer Information -->
-                                                <div class="card border-0 bg-light mb-3">
-                                                    <div class="card-body">
-                                                        <h6 class="fw-bold mb -3">
-                                                            <i class="bi bi-person-circle text-primary me-2"></i>Th ông tin khách hàng
-                                                        </h6>
-                                                        <div class="row">
-                                                            <div class="col-md-6 mb-2">
-                                                                <small class="text-muted d-block">Họ tên</small>
-                                                                <strong>@booking.CustomerName</strong>
-                                                            </div>
-                                                            <div class="col-md-6 mb-2">
-                                                                <small class="text-muted d-block">Email</small>
-                                                                <strong>@booking.CustomerEmail</strong>
-                                                            </div>
-                                                            @if (!string.IsNullOrEmpty(booking.CustomerPhone))
-                                                            {
-                                                                <div class="col-md-6 mb-2">
-                                                                    <small class="text-muted d-block">Điện thoại</small>
-                                                                    <strong>@booking.CustomerPhone</strong>
-                                                                </div>
-                                                            }
-                                                            @if (!string.IsNullOrEmpty(booking.CustomerAddress))
-                                                            {
-                                                                <div class="col-md-6 mb-2">
-                                                                    <small class="text-muted d-block">Địa chỉ</small>
-                                                                    <strong>@booking.CustomerAddress</strong>
-                                                                </div>
-                                                            }
+                            <!-- Details Modal for this booking -->
+                            <div class="modal fade" id="detailsModal@booking.BookingID" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                    <div class="modal-content border-0 shadow-lg">
+                                        <div class="modal-header bg-gradient bg-primary text-white">
+                                            <h5 class="modal-title">
+                                                <i class="bi bi-file-text me-2"></i>Chi tiết đặt tour: @booking.BookingRef
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <!-- Customer Information -->
+                                            <div class="card border-0 bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-3">
+                                                        <i class="bi bi-person-circle text-primary me-2"></i>Thông tin khách hàng
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-2">
+                                                            <small class="text-muted d-block">Họ tên</small>
+                                                            <strong>@booking.CustomerName</strong>
                                                         </div>
+                                                        <div class="col-md-6 mb-2">
+                                                            <small class="text-muted d-block">Email</small>
+                                                            <strong>@booking.CustomerEmail</strong>
+                                                        </div>
+                                                        @if (!string.IsNullOrEmpty(booking.CustomerPhone))
+                                                        {
+                                                            <div class="col-md-6 mb-2">
+                                                                <small class="text-muted d-block">Điện thoại</small>
+                                                                <strong>@booking.CustomerPhone</strong>
+                                                            </div>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(booking.CustomerAddress))
+                                                        {
+                                                            <div class="col-md-6 mb-2">
+                                                                <small class="text-muted d-block">Địa chỉ</small>
+                                                                <strong>@booking.CustomerAddress</strong>
+                                                            </div>
+                                                        }
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <!-- Tour Information -->
+                                            <!-- Tour Information -->
+                                            <div class="card border-0 bg-light mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-3">
+                                                        <i class="bi bi-geo-alt text-primary me-2"></i>Thông tin tour
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-12 mb-2">
+                                                            <small class="text-muted d-block">Tên tour</small>
+                                                            <strong>@booking.TourName</strong>
+                                                        </div>
+                                                        <div class="col-md-6 mb-2">
+                                                            <small class="text-muted d-block">Ngày khởi hành</small>
+                                                            <strong>@booking.FormattedStartDate - @booking.FormattedEndDate</strong>
+                                                        </div>
+                                                        <div class="col-md-6 mb-2">
+                                                            <small class="text-muted d-block">Thời gian</small>
+                                                            <strong>@booking.DurationDays ngày</strong>
+                                                        </div>
+                                                        @if (!string.IsNullOrEmpty(booking.GuideName))
+                                                        {
+                                                            <div class="col-md-6 mb-2">
+                                                                <small class="text-muted d-block">Hướng dẫn viên</small>
+                                                                <strong>@booking.GuideName</strong>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Special Requests -->
+                                            @if (!string.IsNullOrEmpty(booking.SpecialRequests))
+                                            {
                                                 <div class="card border-0 bg-light mb-3">
                                                     <div class="card-body">
                                                         <h6 class="fw-bold mb-3">
-                                                            <i class="bi bi-geo-alt text-primary me-2"></i>Thông tin tour
+                                                            <i class="bi bi-chat-quote text-primary me-2"></i>Yêu cầu đặc biệt
                                                         </h6>
-                                                        <div class="row">
-                                                            <div class="col-12 mb-2">
-                                                                <small class="text-muted d-block">Tên tour</small>
-                                                                <strong>@booking.TourName</strong>
-                                                            </div>
-                                                            <div class="col-md-6 mb-2">
-                                                                <small class="text-muted d-block">Ngày khởi hành</small>
-                                                                <strong>@booking.FormattedStartDate - @booking.FormattedEndDate</strong>
-                                                            </div>
-                                                            <div class="col-md-6 mb-2">
-                                                                <small class="text-muted d-block">Thời gian</small>
-                                                                <strong>@booking.DurationDays ngày</strong>
-                                                            </div>
-                                                            @if (!string.IsNullOrEmpty(booking.GuideName))
-                                                            {
-                                                                <div class="col-md-6 mb-2">
-                                                                    <small class="text-muted d-block">Hướng dẫn viên</small>
-                                                                    <strong>@booking.GuideName</strong>
-                                                                </div>
-                                                            }
-                                                        </div>
+                                                        <p class="mb-0 fst-italic">"@booking.SpecialRequests"</p>
                                                     </div>
                                                 </div>
+                                            }
 
-                                                <!-- Services -->
-                                                @if (booking.BookedServices != null && booking.BookedServices.Any())
-                                                {
-                                                    <div class="card border-0 bg-light mb-3">
-                                                        <div class="card-body">
-                                                            <h6 class="fw-bold mb-3">
-                                                                <i class="bi bi-plus-circle text-primary me-2"></i>Dịch vụ bổ sung
-                                                            </h6>
-                                                            <ul class="list-unstyled mb-0">
-                                                                @foreach (var service in booking.BookedServices)
-                                                                {
-                                                                    <li class="d-flex justify-content-between mb-2">
-                                                                        <span>@service.ServiceName (x@service.Quantity)</span>
-                                                                        <strong>@service.FormattedSubTotal</strong>
-                                                                    </li>
-                                                                }
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                }
-
-                                                <!-- Price Summary -->
-                                                <div class="card border-0 bg-primary bg-gradient text-white">
+                                            <!-- Services -->
+                                            @if (booking.BookedServices != null && booking.BookedServices.Any())
+                                            {
+                                                <div class="card border-0 bg-light mb-3">
                                                     <div class="card-body">
-                                                        <h6 class="fw-bold mb-3">Tổng chi phí</h6>
+                                                        <h6 class="fw-bold mb-3">
+                                                            <i class="bi bi-plus-circle text-primary me-2"></i>Dịch vụ bổ sung
+                                                        </h6>
+                                                        <ul class="list-unstyled mb-0">
+                                                            @foreach (var service in booking.BookedServices)
+                                                            {
+                                                                <li class="d-flex justify-content-between mb-2">
+                                                                    <span>@service.ServiceName (x@service.Quantity)</span>
+                                                                    <strong>@service.FormattedSubTotal</strong>
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            }
+
+                                            <!-- Price Summary -->
+                                            <div class="card border-0 bg-primary bg-gradient text-white">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-3">Tổng chi phí</h6>
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span>Giá cơ bản (@booking.Seats người)</span>
+                                                        <span>@booking.BasePriceTotal.ToString("N0") @booking.Currency</span>
+                                                    </div>
+                                                    @if (booking.ServicesTotal > 0)
+                                                    {
                                                         <div class="d-flex justify-content-between mb-2">
-                                                            <span>Giá cơ bản (@booking.Seats người)</span>
-                                                            <span>@booking.BasePriceTotal.ToString("N0") @booking.Currency</span>
+                                                            <span>Dịch vụ bổ sung</span>
+                                                            <span>@booking.ServicesTotal.ToString("N0") @booking.Currency</span>
                                                         </div>
-                                                        @if (booking.ServicesTotal > 0)
-                                                        {
-                                                            <div class="d-flex justify-content-between mb-2">
-                                                                <span>Dịch vụ bổ sung</span>
-                                                                <span>@booking.ServicesTotal.ToString("N0") @booking.Currency</span>
-                                                            </div>
-                                                        }
-                                                        <hr class="border-white opacity-25 my-2" />
-                                                        <div class="d-flex justify-content-between">
-                                                            <strong>Tổng cộng</strong>
-                                                            <h5 class="mb-0">@booking.FormattedTotalAmount</h5>
-                                                        </div>
+                                                    }
+                                                    <hr class="border-white opacity-25 my-2" />
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong>Tổng cộng</strong>
+                                                        <h5 class="mb-0">@booking.FormattedTotalAmount</h5>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                                         </div>
                                     </div>
                                 </div>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                            </div>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
-    }
+    </div>
 </div>
 
-<script>
-    async function updateBookingStatus(bookingId, newStatus) {
-        const confirmMessage = newStatus === 'Confirmed' 
-            ? 'Bạn có chắc chắn muốn xác nhận đặt tour này?'
-            : 'Bạn có chắc chắn muốn hủy đặt tour này?';
-        
-        if (!confirm(confirmMessage)) return;
-        
-        try {
-            const response = await fetch(`/api/booking/${bookingId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                alert(data.message);
-                window.location.reload();
-            } else {
-                alert('Lỗi: ' + data.message);
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận hủy đặt tour
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-3">Bạn có chắc chắn muốn hủy đặt tour <strong id="cancelBookingRef" class="text-primary"></strong>?</p>
+                <div class="alert alert-warning d-flex align-items-center mb-0">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <small>Hành động này sẽ giải phóng chỗ đã giữ và cập nhật trạng thái thành Đã hủy.</small>
+                </div>
+                <input type="hidden" id="cancelBookingId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Đóng
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                    <i class="bi bi-check-lg me-1"></i>Xác nhận hủy
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables CSS and JS from CDN -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var table;
+            if($.fn.DataTable) {
+                table = $('#bookingsTable').DataTable({
+                    "language": {
+                        "decimal": "",
+                        "emptyTable": "Không có dữ liệu",
+                        "info": "Hiển thị _START_ đến _END_ trong _TOTAL_ bản ghi",
+                        "infoEmpty": "Hiển thị 0 đến 0 trong 0 bản ghi",
+                        "infoFiltered": "(lọc từ _MAX_ bản ghi)",
+                        "infoPostFix": "",
+                        "thousands": ",",
+                        "lengthMenu": "Hiển thị _MENU_ bản ghi",
+                        "loadingRecords": "Đang tải...",
+                        "processing": "Đang xử lý...",
+                        "search": "Tìm kiếm:",
+                        "zeroRecords": "Không tìm thấy bản ghi nào",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Sau",
+                            "previous": "Trước"
+                        },
+                        "aria": {
+                            "sortAscending": ": sắp xếp tăng dần",
+                            "sortDescending": ": sắp xếp giảm dần"
+                        }
+                    },
+                    "pageLength": 25,
+                    "lengthMenu": [[25, 50, 75, 100], [25, 50, 75, 100]],
+                    "responsive": true,
+                    "dom": '<"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    "order": [[0, 'desc']] // Sort by BookingRef (or Date)
+                });
+                
+                // Custom search input
+                $('#searchInput').on('keyup', function() {
+                    table.search(this.value).draw();
+                });
+                
+                // Custom entries per page selector
+                $('#entriesPerPage').on('change', function() {
+                    table.page.len(parseInt(this.value)).draw();
+                });
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Đã xảy ra lỗi khi cập nhật trạng thái.');
+            
+            // Handle cancel confirmation
+            $('#confirmCancelBtn').click(function() {
+                var bookingId = $('#cancelBookingId').val();
+                if(bookingId) {
+                    updateBookingStatus(bookingId, 'Cancelled');
+                    $('#cancelModal').modal('hide');
+                }
+            });
+        });
+
+        function confirmCancel(bookingId, bookingRef) {
+            $('#cancelBookingId').val(bookingId);
+            $('#cancelBookingRef').text(bookingRef);
+            $('#cancelModal').modal('show');
         }
-    }
-</script>
+
+        async function updateBookingStatus(bookingId, newStatus) {
+            try {
+                const response = await fetch(`/api/booking/${bookingId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success alert
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show fixed-top m-3" role="alert" style="z-index: 1060;">
+                            <i class="bi bi-check-circle me-2"></i>${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`;
+                    $('body').append(alertHtml);
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi cập nhật trạng thái.');
+            }
+        }
+    </script>
+}
 
 <style>
     .table > :not(caption) > * > * {
@@ -311,8 +440,6 @@
     
     .table tbody tr:hover {
         background-color: rgba(var(--bs-primary-rgb), 0.05);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     
     .btn-group .btn {
@@ -320,6 +447,15 @@
     }
     
     .btn-group .btn:hover {
-        transform: scale(1.1);
+        transform: translateY(-2px);
+    }
+    
+    .input-group:focus-within .input-group-text {
+        border-color: #0d6efd;
+    }
+    
+    .input-group .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
     }
 </style>

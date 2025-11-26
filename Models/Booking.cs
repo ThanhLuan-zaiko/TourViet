@@ -38,6 +38,8 @@ public class Booking
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public string? SpecialRequests { get; set; }
+
     public DateTime? UpdatedAt { get; set; }
 
     // Navigation properties

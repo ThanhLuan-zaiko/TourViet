@@ -613,15 +613,12 @@
                                 </label>
                                 <select class="form-select form-select-lg" id="instanceSelector" onchange="highlightBookingButton()">
                                     <option value="">-- Chọn ngày --</option>
-                                    @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open").OrderBy(i => i.StartDate))
+                                    @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status == "SoldOut").OrderBy(i => i.StartDate))
                                     {
                                         var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
-                                        if (seatsAvailable > 0)
-                                        {
-                                            <option value="@instance.InstanceID">
-                                                @instance.StartDate.ToString("dd/MM/yyyy") - @seatsAvailable chỗ trống
-                                            </option>
-                                        }
+                                        <option value="@instance.InstanceID" data-seats-available="@seatsAvailable">
+                                            @instance.StartDate.ToString("dd/MM/yyyy") - @(seatsAvailable > 0 ? $"{seatsAvailable} chỗ trống" : "Hết chỗ")
+                                        </option>
                                     }
                                 </select>
                                 <div class="form-text small text-muted mt-2">
@@ -1026,6 +1023,29 @@
     </div>
 </div>
 
+<!-- Sold Out Modal -->
+<div class="modal fade" id="soldOutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-5 text-center">
+                <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle mx-auto mb-4" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-emoji-frown fs-1"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Rất tiếc, tour đã hết chỗ!</h4>
+                <p class="text-muted mb-4">Ngày khởi hành bạn chọn đã hết chỗ trống. Vui lòng chọn ngày khác hoặc liên hệ với chúng tôi để được hỗ trợ.</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary btn-lg rounded-pill" data-bs-dismiss="modal">
+                        <i class="bi bi-calendar-check me-2"></i>Chọn ngày khác
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg rounded-pill" data-bs-dismiss="modal">
+                        <i class="bi bi-telephone me-2"></i>Liên hệ tư vấn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Booking Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" data-bs-focus="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1063,19 +1083,16 @@
                         {
                             <select class="form-select form-select-lg" id="bookingInstanceId" required onchange="updatePriceCalculation()">
                                 <option value="">-- Vui lòng chọn ngày --</option>
-                                @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open").OrderBy(i => i.StartDate))
+                                @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status == "SoldOut").OrderBy(i => i.StartDate))
                                 {
                                     var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
-                                    if (seatsAvailable > 0)
-                                    {
-                                        <option value="@instance.InstanceID" 
-                                                data-price="@instance.PriceBase.ToString(System.Globalization.CultureInfo.InvariantCulture)" 
-                                                data-currency="@instance.Currency"
-                                                data-seats-available="@seatsAvailable">
-                                            @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy") 
-                                            (@seatsAvailable chỗ trống) - @instance.PriceBase.ToString("N0") @instance.Currency
-                                        </option>
-                                    }
+                                    <option value="@instance.InstanceID" 
+                                            data-price="@instance.PriceBase.ToString(System.Globalization.CultureInfo.InvariantCulture)" 
+                                            data-currency="@instance.Currency"
+                                            data-seats-available="@seatsAvailable">
+                                        @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy") 
+                                        (@(seatsAvailable > 0 ? $"{seatsAvailable} chỗ trống" : "Hết chỗ")) - @instance.PriceBase.ToString("N0") @instance.Currency
+                                    </option>
                                 }
                             </select>
                         }
@@ -1194,6 +1211,19 @@
 <script>
     // Check authentication and show appropriate modal
     async function checkAuthAndShowBooking() {
+        // Check for sold out instance
+        const sidebarInstanceSelector = document.getElementById('instanceSelector');
+        if (sidebarInstanceSelector && sidebarInstanceSelector.value) {
+            const selectedOption = sidebarInstanceSelector.options[sidebarInstanceSelector.selectedIndex];
+            const seatsAvailable = parseInt(selectedOption.getAttribute('data-seats-available') || '0');
+            
+            if (seatsAvailable <= 0) {
+                const soldOutModal = new bootstrap.Modal(document.getElementById('soldOutModal'));
+                soldOutModal.show();
+                return;
+            }
+        }
+
         try {
             const response = await fetch('/api/booking/check-auth');
             const data = await response.json();

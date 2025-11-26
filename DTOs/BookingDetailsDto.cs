@@ -9,6 +9,7 @@ public class BookingDetailsDto
     public int Seats { get; set; }
     public decimal TotalAmount { get; set; }
     public string Currency { get; set; } = string.Empty;
+    public string? SpecialRequests { get; set; }
     
     // Customer Info
     public Guid UserID { get; set; }
@@ -22,6 +23,8 @@ public class BookingDetailsDto
     public string TourName { get; set; } = string.Empty;
     public string? TourDescription { get; set; }
     public string? TourCategory { get; set; }
+    public string? TourImageUrl { get; set; }
+    public List<string> TourImages { get; set; } = new();
     
     // Instance Info
     public Guid InstanceID { get; set; }

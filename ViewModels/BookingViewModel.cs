@@ -24,6 +24,8 @@ public class BookingViewModel
     public string TourName { get; set; } = string.Empty;
     public string? TourSlug { get; set; }
     public string TourCategory { get; set; } = string.Empty;
+    public string? TourImageUrl { get; set; }
+    public List<string> TourImages { get; set; } = new();
     
     // Instance Info
     public Guid InstanceID { get; set; }
@@ -47,6 +49,7 @@ public class BookingViewModel
     public decimal TotalAmount { get; set; }
     public string Currency { get; set; } = "VND";
     public string FormattedTotalAmount { get; set; } = string.Empty;
+    public string? SpecialRequests { get; set; }
     
     // Services
     public List<BookedServiceViewModel> BookedServices { get; set; } = new();

@@ -997,9 +997,61 @@
                 }
             });
 
-            // Intercept form submit to add selected files
+            // Function to reindex array fields to ensure consecutive indices
+            function reindexArrayFields() {
+                // Reindex TourInstances
+                const instanceContainers = document.querySelectorAll('#tour-instances-container .tour-instance-item');
+                instanceContainers.forEach((container, newIndex) => {
+                    const inputs = container.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name && name.startsWith('TourInstances[')) {
+                            // Replace old index with new index
+                            const newName = name.replace(/TourInstances\[\d+\]/, `TourInstances[${newIndex}]`);
+                            input.setAttribute('name', newName);
+                        }
+                    });
+                });
+
+                // Reindex TourPrices
+                const priceContainers = document.querySelectorAll('#tour-prices-container .tour-price-item');
+                priceContainers.forEach((container, newIndex) => {
+                    const inputs = container.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name && name.startsWith('TourPrices[')) {
+                            const newName = name.replace(/TourPrices\[\d+\]/, `TourPrices[${newIndex}]`);
+                            input.setAttribute('name', newName);
+                        }
+                    });
+                });
+
+                // Reindex Itineraries
+                const itineraryContainers = document.querySelectorAll('#itineraries-container .itinerary-item');
+                itineraryContainers.forEach((container, newIndex) => {
+                    const inputs = container.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name && name.startsWith('Itineraries[')) {
+                            const newName = name.replace(/Itineraries\[\d+\]/, `Itineraries[${newIndex}]`);
+                            input.setAttribute('name', newName);
+                        }
+                    });
+                });
+
+                console.log('Array fields reindexed:', {
+                    instances: instanceContainers.length,
+                    prices: priceContainers.length,
+                    itineraries: itineraryContainers.length
+                });
+            }
+
+            // Intercept form submit to reindex arrays and add selected files
             const tourForm = document.querySelector('form[action*="Create"]');
             tourForm.addEventListener('submit', function(e) {
+                // CRITICAL: Reindex all array fields before submission to fix model binding
+                reindexArrayFields();
+
                 // Only intercept if we have selected files
                 if (selectedFiles.length > 0) {
                     e.preventDefault();
@@ -1031,7 +1083,7 @@
                         alert('Có lỗi xảy ra: ' + error.message);
                     });
                 }
-                // If no selected files, form submits normally
+                // If no selected files, form submits normally (after reindexing)
             });
         });
     </script>

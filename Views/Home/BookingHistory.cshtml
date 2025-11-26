@@ -1,0 +1,520 @@
+@model List<TourViet.ViewModels.BookingViewModel>
+
+@{
+    ViewData["Title"] = "Lịch sử đặt tour";
+    Layout = "_Layout";
+    var isLoggedIn = Context.Session.GetString("UserId") != null;
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Lịch sử đặt tour
+                </h1>
+                @if (isLoggedIn && Model != null)
+                {
+                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                        <i class="bi bi-list-check me-2"></i>@Model.Count tour đã đặt
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!isLoggedIn)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 4rem;"></i>
+                <h5 class="text-muted">Bạn cần đăng nhập</h5>
+                <p class="text-muted mb-4">Vui lòng đăng nhập để xem lịch sử đặt tour của bạn.</p>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary px-4">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 4rem;"></i>
+                <h5 class="text-muted">Bạn chưa đặt tour nào</h5>
+                <p class="text-muted mb-4">Hãy khám phá các tour hấp dẫn của chúng tôi và đặt ngay hôm nay!</p>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i>Khám phá tour
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <!-- Search and Filter Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <div class="d-flex align-items-center">
+                            <label for="entriesPerPage" class="me-2 mb-0 text-muted">
+                                <i class="bi bi-list-ol me-1"></i>Hiển thị:
+                            </label>
+                            <select id="entriesPerPage" class="form-select form-select-sm shadow-sm" style="width: auto;">
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="75">75</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="ms-2 text-muted">bản ghi</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" 
+                                   placeholder="Tìm kiếm theo mã tour, tên tour..." aria-label="Search">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="bookingHistoryTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 border-0">Mã đặt tour</th>
+                                <th class="border-0">Tour</th>
+                                <th class="border-0">Thời gian</th>
+                                <th class="border-0">Chi phí</th>
+                                <th class="border-0">Trạng thái</th>
+                                <th class="text-center border-0">Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td class="px-4">
+                                        <strong class="text-primary">@booking.BookingRef</strong>
+                                        <small class="text-muted d-block">Đặt ngày: @booking.FormattedCreatedAt</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(booking.TourImageUrl))
+                                            {
+                                                <img src="@booking.TourImageUrl" alt="@booking.TourName" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                            }
+                                            <div>
+                                                <strong class="d-block text-truncate" style="max-width: 200px;">@booking.TourName</strong>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt me-1"></i>@booking.LocationName
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong class="d-block" data-order="@booking.StartDate.Ticks">@booking.FormattedStartDate</strong>
+                                            <small class="text-muted">@booking.DurationDays ngày</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary">@booking.FormattedTotalAmount</strong>
+                                        <small class="text-muted d-block">@booking.Seats người</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @booking.StatusBadgeClass">
+                                            <i class="bi @booking.StatusIcon me-1"></i>@booking.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#detailsModal@booking.BookingID"
+                                                title="Xem chi tiết">
+                                            <i class="bi bi-eye me-1"></i>Xem
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modals (Placed outside the table for valid HTML) -->
+@if (Model != null)
+{
+    @foreach (var booking in Model)
+    {
+        <div class="modal fade" id="detailsModal@booking.BookingID" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-gradient bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-file-text me-2"></i>Chi tiết đặt tour: @booking.BookingRef
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <!-- Carousel Section -->
+                        @if (booking.TourImages != null && booking.TourImages.Any())
+                        {
+                            <div id="carouselBooking@booking.BookingID" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-indicators">
+                                    @for (int i = 0; i < booking.TourImages.Count; i++)
+                                    {
+                                        <button type="button" data-bs-target="#carouselBooking@booking.BookingID" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                                    }
+                                </div>
+                                <div class="carousel-inner">
+                                    @for (int i = 0; i < booking.TourImages.Count; i++)
+                                    {
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            <img src="@booking.TourImages[i]" class="d-block w-100" style="height: 300px; object-fit: cover;" alt="Tour Image @(i + 1)">
+                                        </div>
+                                    }
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselBooking@booking.BookingID" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselBooking@booking.BookingID" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(booking.TourImageUrl))
+                        {
+                             <img src="@booking.TourImageUrl" class="d-block w-100" style="height: 300px; object-fit: cover;" alt="@booking.TourName">
+                        }
+
+                        <div class="p-4">
+                            <!-- Status Banner -->
+                            <div class="alert @(booking.Status == "Confirmed" ? "alert-success" : (booking.Status == "Cancelled" ? "alert-danger" : "alert-warning")) mb-4 d-flex align-items-center shadow-sm">
+                                <i class="bi @booking.StatusIcon fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="alert-heading fw-bold mb-1">Trạng thái: @booking.Status</h6>
+                                    <p class="mb-0 small">
+                                        @if (booking.Status == "Pending") {
+                                            <span>Đơn đặt tour của bạn đang chờ xác nhận. Chúng tôi sẽ liên hệ sớm nhất.</span>
+                                        } else if (booking.Status == "Confirmed") {
+                                            <span>Đơn đặt tour đã được xác nhận. Chúc bạn có chuyến đi vui vẻ!</span>
+                                        } else if (booking.Status == "Cancelled") {
+                                            <span>Đơn đặt tour đã bị hủy.</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <!-- Left Column: Tour Info -->
+                                <div class="col-md-7">
+                                    <div class="card border-0 bg-light h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary">
+                                                <i class="bi bi-geo-alt me-2"></i>Thông tin chuyến đi
+                                            </h6>
+                                            
+                                            <h5 class="card-title text-dark mb-1">@booking.TourName</h5>
+                                            <p class="card-text small text-muted mb-3">@booking.TourCategory</p>
+                                            
+                                            <div class="row g-3 small">
+                                                <div class="col-6">
+                                                    <span class="text-muted d-block">Khởi hành:</span>
+                                                    <strong class="text-dark">@booking.FormattedStartDate</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span class="text-muted d-block">Kết thúc:</span>
+                                                    <strong class="text-dark">@booking.FormattedEndDate</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span class="text-muted d-block">Thời gian:</span>
+                                                    <strong class="text-dark">@booking.DurationDays ngày</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <span class="text-muted d-block">Nơi khởi hành:</span>
+                                                    <strong class="text-dark">@booking.City</strong>
+                                                </div>
+                                                <div class="col-12">
+                                                    <span class="text-muted d-block">Hướng dẫn viên:</span>
+                                                    <strong class="text-dark">@(string.IsNullOrEmpty(booking.GuideName) ? "Đang cập nhật" : booking.GuideName)</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right Column: Booking Details -->
+                                <div class="col-md-5">
+                                    <!-- Contact Info -->
+                                    <div class="card border-0 bg-light mb-3 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary">
+                                                <i class="bi bi-person-lines-fill me-2"></i>Liên hệ
+                                            </h6>
+                                            <ul class="list-unstyled small mb-0">
+                                                <li class="mb-2">
+                                                    <i class="bi bi-person me-2 text-muted"></i>@booking.CustomerName
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-envelope me-2 text-muted"></i>@booking.CustomerEmail
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-telephone me-2 text-muted"></i>@booking.CustomerPhone
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- Special Requests -->
+                                    @if (!string.IsNullOrEmpty(booking.SpecialRequests))
+                                    {
+                                        <div class="card border-0 bg-light mb-3 shadow-sm">
+                                            <div class="card-body">
+                                                <h6 class="fw-bold mb-2 border-bottom pb-2 text-primary">
+                                                    <i class="bi bi-chat-quote me-2"></i>Ghi chú
+                                                </h6>
+                                                <p class="mb-0 small fst-italic text-dark">"@booking.SpecialRequests"</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <!-- Payment & Services (Full Width) -->
+                                <div class="col-12">
+                                    <div class="card border-0 bg-white shadow-sm border-start border-4 border-primary">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold mb-3 text-primary">
+                                                <i class="bi bi-receipt me-2"></i>Chi tiết thanh toán
+                                            </h6>
+                                            
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>Giá tour cơ bản (@booking.Seats người)</span>
+                                                <strong>@booking.BasePriceTotal.ToString("N0") @booking.Currency</strong>
+                                            </div>
+
+                                            @if (booking.BookedServices != null && booking.BookedServices.Any())
+                                            {
+                                                <div class="my-3 p-3 bg-light rounded">
+                                                    <h6 class="small fw-bold text-muted mb-2">Dịch vụ bổ sung:</h6>
+                                                    @foreach (var service in booking.BookedServices)
+                                                    {
+                                                        <div class="d-flex justify-content-between small mb-1">
+                                                            <span>
+                                                                <i class="bi bi-check2-circle text-success me-1"></i>
+                                                                @service.ServiceName <span class="text-muted">(x@service.Quantity)</span>
+                                                            </span>
+                                                            <span>@service.FormattedSubTotal</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+
+                                            <hr class="my-3" />
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold fs-5 text-dark">Tổng cộng</span>
+                                                <span class="fw-bold fs-4 text-primary">@booking.FormattedTotalAmount</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-danger" onclick="generatePDF('@booking.BookingID')">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Tải hóa đơn PDF
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Invoice Template for PDF Generation -->
+        <div id="invoice-@booking.BookingID" class="d-none">
+            <div style="padding: 40px; font-family: 'Times New Roman', serif; color: #000; background: #fff;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                    <div>
+                        <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #0d6efd;">TOUR VIET</h1>
+                        <p style="margin: 5px 0 0; font-size: 14px;">Khám phá vẻ đẹp Việt Nam</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h2 style="margin: 0; font-size: 24px; text-transform: uppercase;">Hóa Đơn</h2>
+                        <p style="margin: 5px 0 0; font-size: 14px;">Mã đặt tour: <strong>@booking.BookingRef</strong></p>
+                        <p style="margin: 5px 0 0; font-size: 14px;">Ngày: @booking.FormattedCreatedAt</p>
+                    </div>
+                </div>
+
+                <!-- Info Section -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                    <div style="width: 48%;">
+                        <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Khách hàng</h3>
+                        <p style="margin: 0 0 5px;"><strong>@booking.CustomerName</strong></p>
+                        <p style="margin: 0 0 5px;">Email: @booking.CustomerEmail</p>
+                        <p style="margin: 0 0 5px;">SĐT: @booking.CustomerPhone</p>
+                    </div>
+                    <div style="width: 48%;">
+                        <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin Tour</h3>
+                        <p style="margin: 0 0 5px;"><strong>@booking.TourName</strong></p>
+                        <p style="margin: 0 0 5px;">Khởi hành: @booking.FormattedStartDate</p>
+                        <p style="margin: 0 0 5px;">Thời gian: @booking.DurationDays ngày</p>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Mô tả</th>
+                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Số lượng</th>
+                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Đơn giá</th>
+                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #dee2e6; padding: 12px;">
+                                <strong>Vé Tour Cơ Bản</strong>
+                                <br><small style="color: #6c757d;">@booking.TourName</small>
+                            </td>
+                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@booking.Seats</td>
+                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePrice.ToString("N0") @booking.Currency</td>
+                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePriceTotal.ToString("N0") @booking.Currency</td>
+                        </tr>
+                        @if (booking.BookedServices != null)
+                        {
+                            foreach (var service in booking.BookedServices)
+                            {
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 12px;">Dịch vụ: @service.ServiceName</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@service.Quantity</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.PriceAtBooking.ToString("N0") @service.Currency</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.FormattedSubTotal</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="border: 1px solid #dee2e6; padding: 12px; text-align: right; font-weight: bold;">Tổng cộng</td>
+                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right; font-weight: bold; color: #0d6efd;">@booking.FormattedTotalAmount</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- Footer -->
+                <div style="margin-top: 50px; text-align: center; color: #6c757d; font-size: 12px;">
+                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của Tour Viet!</p>
+                    <p>Đây là hóa đơn điện tử.</p>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <!-- DataTables CSS and JS from CDN -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if($.fn.DataTable) { // Check if DataTable is initialized
+                var table = $('#bookingHistoryTable').DataTable({
+                    "language": {
+                        "search": "Tìm kiếm:",
+                        "zeroRecords": "Không tìm thấy đơn đặt tour nào phù hợp",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Sau",
+                            "previous": "Trước"
+                        },
+                        "aria": {
+                            "sortAscending": ": sắp xếp tăng dần",
+                            "sortDescending": ": sắp xếp giảm dần"
+                        }
+                    },
+                    "pageLength": 25,
+                    "lengthMenu": [[25, 50, 75, 100], [25, 50, 75, 100]],
+                    "responsive": true,
+                    "dom": '<"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    "order": [[0, 'desc']] // Sort by BookingRef (or Date)
+                });
+                
+                // Custom search input
+                $('#searchInput').on('keyup', function() {
+                    table.search(this.value).draw();
+                });
+                
+                // Custom entries per page selector
+                $('#entriesPerPage').on('change', function() {
+                    table.page.len(parseInt(this.value)).draw();
+                });
+            }
+        });
+
+        function generatePDF(bookingId) {
+            // Get the element
+            var element = document.getElementById('invoice-' + bookingId);
+            
+            // Configure html2pdf options
+            var opt = {
+                margin:       10,
+                filename:     'HoaDon_TourViet_' + bookingId + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Temporarily remove d-none class to render
+            element.classList.remove('d-none');
+            
+            // Generate
+            html2pdf().set(opt).from(element).save().then(function() {
+                // Add d-none back
+                element.classList.add('d-none');
+            });
+        }
+    </script>
+}
+
+<style>
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .input-group:focus-within .input-group-text {
+        border-color: #0d6efd;
+    }
+    
+    .input-group .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>

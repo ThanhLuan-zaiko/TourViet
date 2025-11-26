@@ -62,6 +62,7 @@ public class BookingService : IBookingService
                 Seats = dto.Seats,
                 TotalAmount = priceCalculation.GrandTotal,
                 Currency = priceCalculation.Currency,
+                SpecialRequests = dto.SpecialRequests,
                 Status = "Pending", // Default status, admin can confirm later
                 CreatedAt = DateTime.UtcNow
             };
@@ -98,6 +99,13 @@ public class BookingService : IBookingService
 
             // 5. Update tour instance seats (hold seats until confirmed)
             tourInstance.SeatsHeld += dto.Seats;
+            
+            // Check if full
+            if (tourInstance.SeatsBooked + tourInstance.SeatsHeld >= tourInstance.Capacity)
+            {
+                tourInstance.Status = "SoldOut";
+            }
+            
             tourInstance.UpdatedAt = DateTime.UtcNow;
 
             // 6. Save all changes
@@ -153,17 +161,18 @@ public class BookingService : IBookingService
 
         var servicesTotal = bookedServices.Sum(s => s.SubTotal);
 
-        return new BookingDetailsDto
-        {
-            BookingID = booking.BookingID,
-            BookingRef = booking.BookingRef,
-            Status = booking.Status,
-            BookingDate = booking.CreatedAt,
-            Seats = booking.Seats,
-            TotalAmount = booking.TotalAmount,
-            Currency = booking.Currency,
+            return new BookingDetailsDto
+            {
+                BookingID = booking.BookingID,
+                BookingRef = booking.BookingRef,
+                Status = booking.Status,
+                BookingDate = booking.CreatedAt,
+                Seats = booking.Seats,
+                TotalAmount = booking.TotalAmount,
+                Currency = booking.Currency,
+                SpecialRequests = booking.SpecialRequests,
 
-            // Customer Info
+                // Customer Info
             UserID = booking.UserID,
             CustomerName = booking.User?.FullName ?? "N/A",
             CustomerEmail = booking.User?.Email ?? "",
@@ -175,6 +184,7 @@ public class BookingService : IBookingService
             TourName = booking.TourInstance.Tour.TourName,
             TourDescription = booking.TourInstance.Tour.Description,
             TourCategory = booking.TourInstance.Tour.Category?.CategoryName,
+            TourImageUrl = booking.TourInstance.Tour.TourImages?.FirstOrDefault(i => i.IsPrimary)?.Url ?? booking.TourInstance.Tour.TourImages?.FirstOrDefault()?.Url,
 
             // Instance Info
             InstanceID = booking.InstanceID,
@@ -202,6 +212,9 @@ public class BookingService : IBookingService
             .Include(b => b.TourInstance)
                 .ThenInclude(ti => ti.Tour)
                     .ThenInclude(t => t.Category)
+            .Include(b => b.TourInstance)
+                .ThenInclude(ti => ti.Tour)
+                    .ThenInclude(t => t.TourImages)
             .Include(b => b.TourInstance)
                 .ThenInclude(ti => ti.Tour)
                     .ThenInclude(t => t.Location)
@@ -240,6 +253,7 @@ public class BookingService : IBookingService
                 Seats = booking.Seats,
                 TotalAmount = booking.TotalAmount,
                 Currency = booking.Currency,
+                SpecialRequests = booking.SpecialRequests,
 
                 // Customer Info
                 UserID = booking.UserID,
@@ -253,6 +267,8 @@ public class BookingService : IBookingService
                 TourName = booking.TourInstance.Tour.TourName,
                 TourDescription = booking.TourInstance.Tour.Description,
                 TourCategory = booking.TourInstance.Tour.Category?.CategoryName,
+                TourImageUrl = booking.TourInstance.Tour.TourImages?.FirstOrDefault(i => i.IsPrimary)?.Url ?? booking.TourInstance.Tour.TourImages?.FirstOrDefault()?.Url,
+                TourImages = booking.TourInstance.Tour.TourImages?.Select(i => i.Url).ToList() ?? new List<string>(),
 
                 // Instance Info
                 InstanceID = booking.InstanceID,
@@ -317,6 +333,17 @@ public class BookingService : IBookingService
                 {
                     booking.TourInstance.SeatsBooked = Math.Max(0, booking.TourInstance.SeatsBooked - booking.Seats);
                 }
+            }
+
+            // Update status based on availability
+            if (booking.TourInstance.SeatsBooked + booking.TourInstance.SeatsHeld >= booking.TourInstance.Capacity)
+            {
+                booking.TourInstance.Status = "SoldOut";
+            }
+            else if (booking.TourInstance.Status == "SoldOut" && 
+                     booking.TourInstance.SeatsBooked + booking.TourInstance.SeatsHeld < booking.TourInstance.Capacity)
+            {
+                booking.TourInstance.Status = "Open";
             }
 
             booking.TourInstance.UpdatedAt = DateTime.UtcNow;

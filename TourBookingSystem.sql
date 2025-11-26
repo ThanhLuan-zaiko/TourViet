@@ -304,6 +304,7 @@ CREATE TABLE dbo.BookingServices (
 
 CREATE NONCLUSTERED INDEX IX_BookingServices_BookingID ON dbo.BookingServices(BookingID);
 CREATE NONCLUSTERED INDEX IX_BookingServices_ServiceID ON dbo.BookingServices(ServiceID);
+ALTER TABLE dbo.Bookings ADD SpecialRequests NVARCHAR(MAX) NULL;
 
 -- PromotionRules: chi tiết cách tính giảm (tách logic cho linh hoạt)
 CREATE TABLE dbo.PromotionRules (
@@ -477,3 +478,6 @@ select * from TourImages;
 
 select * from Services;
 select * from TourServices;
+
+select * from Bookings;
+select * from BookingServices;
