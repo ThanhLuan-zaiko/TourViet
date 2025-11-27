@@ -125,7 +125,9 @@ namespace TourViet.Controllers
 
             var locations = await _context.Locations.ToListAsync();
             var categories = await _context.Categories.ToListAsync();
-            var guides = await _context.Users.ToListAsync();
+            var guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             var countries = await _context.Countries.ToListAsync();
             var services = await _context.Services.ToListAsync();
 
@@ -276,7 +278,9 @@ namespace TourViet.Controllers
                 return NotFound();
             }
 
-            var guides = await _context.Users.ToListAsync();
+            var guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             ViewBag.Guides = guides;
 
             return View(new TourInstance { TourID = id.Value });
@@ -294,7 +298,9 @@ namespace TourViet.Controllers
                 return RedirectToAction(nameof(TourInstances), new { id = instance.TourID });
             }
 
-            var guides = await _context.Users.ToListAsync();
+            var guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             ViewBag.Guides = guides;
 
             return View(instance);
@@ -315,7 +321,9 @@ namespace TourViet.Controllers
                 return NotFound();
             }
 
-            var guides = await _context.Users.ToListAsync();
+            var guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             ViewBag.Guides = guides;
 
             return View(instance);
@@ -352,7 +360,9 @@ namespace TourViet.Controllers
                 return RedirectToAction(nameof(TourInstances), new { id = instance.TourID });
             }
 
-            var guides = await _context.Users.ToListAsync();
+            var guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             ViewBag.Guides = guides;
 
             return View(instance);
@@ -453,7 +463,9 @@ namespace TourViet.Controllers
                 .Include(l => l.Country)
                 .ToListAsync();
             ViewBag.Categories = await _context.Categories.ToListAsync();
-            ViewBag.Guides = await _context.Users.ToListAsync();
+            ViewBag.Guides = await _context.Users
+                .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName != "Customer"))
+                .ToListAsync();
             ViewBag.Countries = await _context.Countries.ToListAsync();
             ViewBag.Services = await _context.Services.ToListAsync();
         }
