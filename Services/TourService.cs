@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TourViet.Data;
 using TourViet.Models;
 using TourViet.Models.DTOs;
@@ -14,20 +15,25 @@ namespace TourViet.Services
         private readonly TourBookingDbContext _context;
         private readonly IImageService _imageService;
         private readonly ILocationService _locationService;
+        private readonly ILogger<TourService> _logger;
 
         public TourService(
             TourBookingDbContext context,
             IImageService imageService,
-            ILocationService locationService)
+            ILocationService locationService,
+            ILogger<TourService> logger)
         {
             _context = context;
             _imageService = imageService;
             _locationService = locationService;
+            _logger = logger;
         }
 
         /// <inheritdoc/>
         public async Task<Tour> CreateTourAsync(TourCreateDto tourDto, IFormFileCollection? imageFiles)
         {
+
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -137,6 +143,8 @@ namespace TourViet.Services
         /// <inheritdoc/>
         public async Task<Tour> UpdateTourAsync(Guid id, TourUpdateDto tourDto, IFormFileCollection? imageFiles)
         {
+
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {

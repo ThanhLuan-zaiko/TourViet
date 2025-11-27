@@ -243,7 +243,14 @@
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-tag text-info me-1"></i>Loại giá
                                 </label>
-                                <input type="text" name="TourPrices[0].PriceType" class="form-control" placeholder="Ví dụ: Người lớn, Trẻ em..." />
+                                <select name="TourPrices[0].PriceType" class="form-select">
+                                    <option value="">-- Chọn loại giá --</option>
+                                    <option value="Người lớn">Người lớn</option>
+                                    <option value="Trẻ em">Trẻ em</option>
+                                    <option value="Người cao tuổi">Người cao tuổi</option>
+                                    <option value="Sinh viên">Sinh viên</option>
+                                    <option value="Nhóm">Nhóm</option>
+                                </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">
@@ -386,7 +393,7 @@
                     <a asp-controller="Home" asp-action="ManageTours" class="btn btn-lg btn-light">
                         <i class="fas fa-times me-2"></i>Hủy bỏ
                     </a>
-                    <button type="submit" class="btn btn-lg btn-primary px-5">
+                    <button type="submit" id="create-tour-submit-btn" class="btn btn-lg btn-primary px-5">
                         <i class="fas fa-plus-circle me-2"></i>Tạo Tour Mới
                     </button>
                 </div>
@@ -583,36 +590,39 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
             // Add tour instances
-            let instanceIndex = 1;
             document.getElementById('add-instance').addEventListener('click', function() {
                 const container = document.getElementById('tour-instances-container');
+                // CRITICAL FIX: Count existing items instead of using increment counter
+                // This prevents index gaps when items are deleted
+                const nextIndex = container.querySelectorAll('.tour-instance-item').length;
+                
                 const newItem = document.createElement('div');
                 newItem.className = 'tour-instance-item mb-4 p-3 border rounded bg-light';
                 newItem.innerHTML = `
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
-                            <input type="date" name="TourInstances[\${instanceIndex}].StartDate" class="form-control" />
+                            <input type="date" name="TourInstances[${nextIndex}].StartDate" class="form-control" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-calendar-xmark text-danger me-1"></i>Ngày kết thúc</label>
-                            <input type="date" name="TourInstances[\${instanceIndex}].EndDate" class="form-control" />
+                            <input type="date" name="TourInstances[${nextIndex}].EndDate" class="form-control" />
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-users text-info me-1"></i>Sức chứa</label>
-                            <input type="number" name="TourInstances[\${instanceIndex}].Capacity" class="form-control" min="0" />
+                            <input type="number" name="TourInstances[${nextIndex}].Capacity" class="form-control" min="0" />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-dollar-sign text-warning me-1"></i>Giá cơ bản</label>
-                            <input type="number" name="TourInstances[\${instanceIndex}].PriceBase" class="form-control" min="0" step="0.01" />
+                            <input type="number" name="TourInstances[${nextIndex}].PriceBase" class="form-control" min="0" step="0.01" />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-user-tie text-primary me-1"></i>Hướng dẫn viên</label>
-                            <select name="TourInstances[\${instanceIndex}].GuideID" class="form-select">
+                            <select name="TourInstances[${nextIndex}].GuideID" class="form-select">
                                 <option value="">-- Chọn HDV --</option>
                                 @if (guides != null)
                                 {
@@ -624,60 +634,79 @@
                             </select>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-danger remove-instance"><i class="fas fa-trash me-1"></i>Xóa</button>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-danger remove-instance">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
                 `;
                 container.appendChild(newItem);
-                instanceIndex++;
             });
 
             // Add tour prices
-            let priceIndex = 1;
             document.getElementById('add-price').addEventListener('click', function() {
                 const container = document.getElementById('tour-prices-container');
+                // CRITICAL FIX: Count existing items
+                const nextIndex = container.querySelectorAll('.tour-price-item').length;
+                
                 const newItem = document.createElement('div');
                 newItem.className = 'tour-price-item mb-3 p-3 border rounded bg-light';
                 newItem.innerHTML = `
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold"><i class="fas fa-tag text-info me-1"></i>Loại giá</label>
-                            <input type="text" name="TourPrices[\${priceIndex}].PriceType" class="form-control" placeholder="VD: Người lớn" />
+                            <label class="form-label fw-bold"><i class="fas fa-tag text-primary me-1"></i>Loại giá</label>
+                            <select name="TourPrices[${nextIndex}].PriceType" class="form-select">
+                                <option value="Người lớn">Người lớn</option>
+                                <option value="Trẻ em">Trẻ em</option>
+                                <option value="Người cao tuổi">Người cao tuổi</option>
+                                <option value="Sinh viên">Sinh viên</option>
+                                <option value="Nhóm">Nhóm</option>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-money-bill-wave text-success me-1"></i>Số tiền</label>
-                            <input type="number" name="TourPrices[\${priceIndex}].Amount" class="form-control" min="0" step="0.01" />
+                            <input type="number" name="TourPrices[${nextIndex}].Amount" class="form-control" min="0" step="0.01" />
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-danger remove-price"><i class="fas fa-trash me-1"></i>Xóa</button>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-danger remove-price">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
                 `;
                 container.appendChild(newItem);
-                priceIndex++;
             });
 
             // Add itineraries
-            let itineraryIndex = 1;
             document.getElementById('add-itinerary').addEventListener('click', function() {
                 const container = document.getElementById('itineraries-container');
+                // CRITICAL FIX: Count existing items
+                const nextIndex = container.querySelectorAll('.itinerary-item').length;
+                
                 const newItem = document.createElement('div');
                 newItem.className = 'itinerary-item mb-3 p-3 border rounded bg-light';
                 newItem.innerHTML = `
                     <div class="row">
                         <div class="col-md-2 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
-                            <input type="number" name="Itineraries[\${itineraryIndex}].DayIndex" class="form-control" min="1" />
+                            <input type="number" name="Itineraries[${nextIndex}].DayIndex" class="form-control" min="1" />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-heading text-info me-1"></i>Tiêu đề</label>
-                            <input type="text" name="Itineraries[\${itineraryIndex}].Title" class="form-control" />
+                            <input type="text" name="Itineraries[${nextIndex}].Title" class="form-control" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-align-left text-success me-1"></i>Mô tả</label>
-                            <textarea name="Itineraries[\${itineraryIndex}].Description" class="form-control" rows="2"></textarea>
+                            <textarea name="Itineraries[${nextIndex}].Description" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-danger remove-itinerary"><i class="fas fa-trash me-1"></i>Xóa</button>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-danger remove-itinerary">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
                 `;
                 container.appendChild(newItem);
-                itineraryIndex++;
             });
 
             // Remove items
@@ -727,7 +756,7 @@
                             return res.json();
                         })
                         .then(data => {
-                            console.log('Reverse geocoding response:', data);
+
                             
                             if (data && data.address) {
                                 const address = data.address;
@@ -768,12 +797,7 @@
                                     countryField.value = 'Không xác định';
                                 }
                                 
-                                console.log('Location fields updated:', {
-                                    name: locationName,
-                                    address: data.display_name,
-                                    city: city,
-                                    country: address.country
-                                });
+
                             } else {
                                 // No address data - set coordinate-based values
                                 nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
@@ -999,92 +1023,85 @@
 
             // Function to reindex array fields to ensure consecutive indices
             function reindexArrayFields() {
+
+                
                 // Reindex TourInstances
                 const instanceContainers = document.querySelectorAll('#tour-instances-container .tour-instance-item');
+
                 instanceContainers.forEach((container, newIndex) => {
                     const inputs = container.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
                         const name = input.getAttribute('name');
                         if (name && name.startsWith('TourInstances[')) {
-                            // Replace old index with new index
+                            const oldName = name;
                             const newName = name.replace(/TourInstances\[\d+\]/, `TourInstances[${newIndex}]`);
                             input.setAttribute('name', newName);
+
                         }
                     });
                 });
 
                 // Reindex TourPrices
                 const priceContainers = document.querySelectorAll('#tour-prices-container .tour-price-item');
+
                 priceContainers.forEach((container, newIndex) => {
                     const inputs = container.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
                         const name = input.getAttribute('name');
                         if (name && name.startsWith('TourPrices[')) {
+                            const oldName = name;
                             const newName = name.replace(/TourPrices\[\d+\]/, `TourPrices[${newIndex}]`);
                             input.setAttribute('name', newName);
+
                         }
                     });
                 });
 
                 // Reindex Itineraries
                 const itineraryContainers = document.querySelectorAll('#itineraries-container .itinerary-item');
+
                 itineraryContainers.forEach((container, newIndex) => {
                     const inputs = container.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
                         const name = input.getAttribute('name');
                         if (name && name.startsWith('Itineraries[')) {
+                            const oldName = name;
                             const newName = name.replace(/Itineraries\[\d+\]/, `Itineraries[${newIndex}]`);
                             input.setAttribute('name', newName);
+
                         }
                     });
                 });
 
-                console.log('Array fields reindexed:', {
-                    instances: instanceContainers.length,
-                    prices: priceContainers.length,
-                    itineraries: itineraryContainers.length
-                });
+
             }
 
-            // Intercept form submit to reindex arrays and add selected files
-            const tourForm = document.querySelector('form[action*="Create"]');
-            tourForm.addEventListener('submit', function(e) {
-                // CRITICAL: Reindex all array fields before submission to fix model binding
-                reindexArrayFields();
-
-                // Only intercept if we have selected files
-                if (selectedFiles.length > 0) {
-                    e.preventDefault();
+            // Intercept form submit to reindex arrays and sync selected files
+            const tourForm = document.querySelector('form');
+            const submitBtn = document.getElementById('create-tour-submit-btn');
+            
+            // Attach both reindexing AND file handling to button CLICK
+            // This ensures they run BEFORE the form actually submits
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function(e) {
+                    // Step 1: Reindex array fields
+                    reindexArrayFields();
                     
-                    // Create FormData from the form
-                    const formData = new FormData(tourForm);
-                    
-                    // Remove the empty files input
-                    formData.delete('files');
-                    
-                    // Add all selected files
-                    selectedFiles.forEach(file => {
-                        formData.append('files', file);
-                    });
-                    
-                    // Submit via fetch
-                    fetch(tourForm.action, {
-                        method: 'POST',
-                        body: formData
-                    }).then(response => {
-                        if (response.ok) {
-                            // Redirect on success
-                            window.location.href = response.url || '/Home/ManageTours';
-                        } else {
-                            alert('Có lỗi xảy ra khi tạo tour.');
+                    // Step 2: Synchronize selected files to the input
+                    if (selectedFiles.length > 0) {
+                        try {
+                            const dataTransfer = new DataTransfer();
+                            selectedFiles.forEach(file => {
+                                dataTransfer.items.add(file);
+                            });
+                            fileInput.files = dataTransfer.files;
+                        } catch (error) {
+                            console.error('DataTransfer failed:', error);
+                            alert('Lỗi xử lý files. Vui lòng thử lại.');
                         }
-                    }).catch(error => {
-                        console.error('Submit error:', error);
-                        alert('Có lỗi xảy ra: ' + error.message);
-                    });
-                }
-                // If no selected files, form submits normally (after reindexing)
-            });
-        });
+                    }
+                });
+            }
+        })(); // End IIFE
     </script>
 }

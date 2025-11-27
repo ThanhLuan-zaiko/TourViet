@@ -11,13 +11,19 @@ namespace TourViet.Controllers
     {
         private readonly TourBookingDbContext _context;
         private readonly ITourService _tourService;
+        private readonly IImageService _imageService;
+        private readonly ILogger<TourController> _logger;
 
         public TourController(
             TourBookingDbContext context,
-            ITourService tourService)
+            ITourService tourService,
+            IImageService imageService,
+            ILogger<TourController> logger)
         {
             _context = context;
             _tourService = tourService;
+            _imageService = imageService;
+            _logger = logger;
         }
 
         // GET: Tour/Create
@@ -57,6 +63,7 @@ namespace TourViet.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating tour");
                 ModelState.AddModelError(string.Empty, $"Lỗi tạo tour: {ex.Message}");
                 
                 await LoadViewDataAsync();
@@ -387,6 +394,54 @@ namespace TourViet.Controllers
         private bool TourInstanceExists(Guid id)
         {
             return _context.TourInstances.Any(e => e.InstanceID == id);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadImages(Guid id, IFormFileCollection files)
+        {
+            try
+            {
+                if (files == null || files.Count == 0)
+                    return Json(new { success = false, message = "Không có file nào được chọn" });
+
+                var maxSortOrder = await _imageService.GetMaxSortOrderAsync(id);
+                var images = await _imageService.ProcessMultipleImagesAsync(id, files, maxSortOrder + 1);
+                
+                foreach (var img in images)
+                {
+                    _context.TourImages.Add(img);
+                }
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    images = images.Select(i => new { 
+                        id = i.ImageID, 
+                        url = i.Url, 
+                        fileName = i.FileName,
+                        isPrimary = i.IsPrimary,
+                        sortOrder = i.SortOrder
+                    }) 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteImage(Guid id)
+        {
+            try
+            {
+                var result = await _imageService.DeleteImageAsync(id);
+                return Json(new { success = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         /// <summary>
