@@ -1,3 +1,4 @@
+@model TourViet.ViewModels.DashboardStatisticsViewModel
 @{
     ViewData["Title"] = "Dashboard - Nhân viên hành chính";
     Layout = "_Layout";
@@ -17,7 +18,7 @@
                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                         Tổng số tour
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalTours</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="bi bi-briefcase fs-2 text-gray-300"></i>
@@ -35,7 +36,7 @@
                                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                         Tổng số đặt tour
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">56</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalBookings</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
@@ -51,9 +52,9 @@
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                        Khách hàng mới
+                                        Tổng khách hàng
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCustomers</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="bi bi-people fs-2 text-gray-300"></i>
@@ -71,7 +72,7 @@
                                     <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                         Tour sắp diễn ra
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.UpcomingTours</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="bi bi-clock fs-2 text-gray-300"></i>
@@ -81,79 +82,94 @@
                     </div>
                 </div>
             
+            <!-- Charts Section -->
             <div class="row">
-                <div class="col-lg-12 mb-4">
-                    <!-- Tabs -->
-                    <div class="card shadow mb-4">
+                <!-- Revenue Over Time Chart -->
+                <div class="col-xl-8 col-lg-7 mb-4">
+                    <div class="card shadow h-100">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold text-primary">Quản lý công việc</h6>
-                            <ul class="nav nav-tabs card-header-tabs">
-                                <li class="nav-item">
-                                    <a class="nav-link active" id="tasks-tab" data-bs-toggle="tab" href="#tasks">Công việc gần đây</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="tours-tab" data-bs-toggle="tab" href="#tours">Tour sắp diễn ra</a>
-                                </li>
-                            </ul>
+                            <h6 class="m-0 font-weight-bold text-primary">Doanh thu theo tháng</h6>
                         </div>
                         <div class="card-body">
-                            <div class="tab-content" id="myTabContent">
-                                <div class="tab-pane fade show active" id="tasks">
-                                    <p>Danh sách các công việc cần thực hiện</p>
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Kiểm tra thông tin tour mới
-                                            <span class="badge bg-primary rounded-pill">3</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Cập nhật lịch trình tour
-                                            <span class="badge bg-success rounded-pill">2</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Liên hệ khách hàng xác nhận
-                                            <span class="badge bg-info rounded-pill">5</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Báo cáo doanh thu tháng
-                                            <span class="badge bg-warning rounded-pill">1</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="tab-pane fade" id="tours">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Tour</th>
-                                                    <th>Ngày bắt đầu</th>
-                                                    <th>Khách hàng</th>
-                                                    <th>Trạng thái</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>Du lịch Đà Lạt</td>
-                                                    <td>20/11/2025</td>
-                                                    <td>Nguyễn Văn A</td>
-                                                    <td><span class="badge bg-success">Đã xác nhận</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Du lịch Nha Trang</td>
-                                                    <td>25/11/2025</td>
-                                                    <td>Trần Thị B</td>
-                                                    <td><span class="badge bg-warning">Chờ xác nhận</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Du lịch Phú Quốc</td>
-                                                    <td>02/12/2025</td>
-                                                    <td>Lê Văn C</td>
-                                                    <td><span class="badge bg-info">Đang chuẩn bị</span></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
+                            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings by Status Chart -->
+                <div class="col-xl-4 col-lg-5 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Đặt tour theo trạng thái</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="bookingStatusChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Top Tours Chart -->
+                <div class="col-xl-6 col-lg-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Top 5 Tour phổ biến</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="topToursChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tours by Category Chart -->
+                <div class="col-xl-6 col-lg-6 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Tour theo danh mục</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoriesChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Bookings Trend Chart -->
+                <div class="col-xl-8 col-lg-7 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">xu hướng đặt tour (30 ngày qua)</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="bookingTrendChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Growth Chart -->
+                <div class="col-xl-4 col-lg-5 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Tăng trưởng khách hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="customerGrowthChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Monthly Bookings Comparison Chart -->
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">So sánh đặt tour theo tháng</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="monthlyComparisonChart" style="max-height: 300px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -161,4 +177,322 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <script>
+        // Color palette for consistent styling
+        const colors = {
+            primary: 'rgb(78, 115, 223)',
+            success: 'rgb(28, 200, 138)',
+            info: 'rgb(54, 185, 204)',
+            warning: 'rgb(246, 194, 62)',
+            danger: 'rgb(231, 74, 59)',
+            secondary: 'rgb(133, 135, 150)',
+            purple: 'rgb(111, 66, 193)',
+            orange: 'rgb(253, 126, 20)',
+            pink: 'rgb(224, 102, 137)',
+            teal: 'rgb(32, 201, 151)'
+        };
+
+        // Chart.js defaults
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        Chart.defaults.color = '#858796';
+
+        // 1. Revenue Over Time Chart (Area)
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.MonthlyRevenue.Select(m => m.Month))),
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: @Html.Raw(Json.Serialize(Model.MonthlyRevenue.Select(m => m.Value))),
+                    borderColor: colors.primary,
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: colors.primary,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VND';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Bookings by Status Chart (Doughnut)
+        const bookingStatusCtx = document.getElementById('bookingStatusChart').getContext('2d');
+        const statusLabels = @Html.Raw(Json.Serialize(Model.BookingsByStatus.Keys));
+        const statusData = @Html.Raw(Json.Serialize(Model.BookingsByStatus.Values));
+        const statusColors = [colors.warning, colors.success, colors.danger, colors.info, colors.secondary];
+        
+        new Chart(bookingStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: statusColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Top Tours Chart (Horizontal Bar)
+        const topToursCtx = document.getElementById('topToursChart').getContext('2d');
+        new Chart(topToursCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.TopTours.Select(t => t.TourName))),
+                datasets: [{
+                    label: 'Số lượng đặt tour',
+                    data: @Html.Raw(Json.Serialize(Model.TopTours.Select(t => t.BookingCount))),
+                    backgroundColor: [
+                        colors.primary,
+                        colors.success,
+                        colors.info,
+                        colors.warning,
+                        colors.danger
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Đặt tour: ' + context.parsed.x;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. Tours by Category Chart (Pie)
+        const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+        const categoryLabels = @Html.Raw(Json.Serialize(Model.ToursByCategory.Keys));
+        const categoryData = @Html.Raw(Json.Serialize(Model.ToursByCategory.Values));
+        const categoryColors = [colors.primary, colors.success, colors.warning, colors.info, colors.danger, colors.purple, colors.orange, colors.pink, colors.teal];
+        
+        new Chart(categoriesCtx, {
+            type: 'pie',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryData,
+                    backgroundColor: categoryColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return label + ': ' + value + ' tour';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 5. Bookings Trend Chart (Area - Last 30 days)
+        const bookingTrendCtx = document.getElementById('bookingTrendChart').getContext('2d');
+        const dailyLabels = @Html.Raw(Json.Serialize(Model.DailyBookings.Select(d => d.Date.ToString("dd/MM"))));
+        const dailyData = @Html.Raw(Json.Serialize(Model.DailyBookings.Select(d => d.Count)));
+        
+        new Chart(bookingTrendCtx, {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: 'Số lượng đặt tour',
+                    data: dailyData,
+                    borderColor: colors.success,
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: colors.success,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 6. Customer Growth Chart (Line)
+        const customerGrowthCtx = document.getElementById('customerGrowthChart').getContext('2d');
+        new Chart(customerGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.CustomerGrowth.Select(m => m.Month))),
+                datasets: [{
+                    label: 'Khách hàng mới',
+                    data: @Html.Raw(Json.Serialize(Model.CustomerGrowth.Select(m => m.Count))),
+                    borderColor: colors.info,
+                    backgroundColor: 'rgba(54, 185, 204, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: colors.info,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 7. Monthly Bookings Comparison Chart (Bar)
+        const monthlyComparisonCtx = document.getElementById('monthlyComparisonChart').getContext('2d');
+        new Chart(monthlyComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.MonthlyBookings.Select(m => m.Month))),
+                datasets: [{
+                    label: 'Số lượng đặt tour',
+                    data: @Html.Raw(Json.Serialize(Model.MonthlyBookings.Select(m => m.Count))),
+                    backgroundColor: colors.primary,
+                    borderWidth: 0,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
 </div>

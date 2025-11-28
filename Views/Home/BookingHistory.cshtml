@@ -132,7 +132,7 @@
                                     <td class="text-center">
                                         <button type="button" class="btn btn-outline-primary btn-sm" 
                                                 data-bs-toggle="modal" 
-                                                data-bs-target="#detailsModal@booking.BookingID"
+                                                data-bs-target="@($"#detailsModal{booking.BookingID}")"
                                                 title="Xem chi tiết">
                                             <i class="bi bi-eye me-1"></i>Xem
                                         </button>
@@ -150,9 +150,10 @@
 <!-- Modals (Placed outside the table for valid HTML) -->
 @if (Model != null)
 {
-    @foreach (var booking in Model)
+    @foreach (var item in Model)
     {
-        <div class="modal fade" id="detailsModal@booking.BookingID" tabindex="-1" aria-hidden="true">
+        var booking = item; // Copy to local variable to create proper closure
+        <div class="modal fade" id="@($"detailsModal{booking.BookingID}")" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header bg-gradient bg-primary text-white">
@@ -197,17 +198,32 @@
 
                         <div class="p-4">
                             <!-- Status Banner -->
-                            <div class="alert @(booking.Status == "Confirmed" ? "alert-success" : (booking.Status == "Cancelled" ? "alert-danger" : "alert-warning")) mb-4 d-flex align-items-center shadow-sm">
+                            @{
+                                var statusLower = booking.Status?.ToLower() ?? "";
+                                var statusClass = statusLower switch
+                                {
+                                    "confirmed" => "alert-success",
+                                    "cancelled" => "alert-danger",
+                                    "pending" => "alert-warning",
+                                    "completed" => "alert-info",
+                                    _ => "alert-secondary"
+                                };
+                            }
+                            <div class="alert @statusClass mb-4 d-flex align-items-center shadow-sm">
                                 <i class="bi @booking.StatusIcon fs-4 me-3"></i>
                                 <div>
                                     <h6 class="alert-heading fw-bold mb-1">Trạng thái: @booking.Status</h6>
                                     <p class="mb-0 small">
-                                        @if (booking.Status == "Pending") {
+                                        @if (statusLower == "pending") {
                                             <span>Đơn đặt tour của bạn đang chờ xác nhận. Chúng tôi sẽ liên hệ sớm nhất.</span>
-                                        } else if (booking.Status == "Confirmed") {
+                                        } else if (statusLower == "confirmed") {
                                             <span>Đơn đặt tour đã được xác nhận. Chúc bạn có chuyến đi vui vẻ!</span>
-                                        } else if (booking.Status == "Cancelled") {
+                                        } else if (statusLower == "cancelled") {
                                             <span>Đơn đặt tour đã bị hủy.</span>
+                                        } else if (statusLower == "completed") {
+                                            <span>Chuyến đi đã hoàn thành. Hy vọng bạn đã có những trải nghiệm tuyệt vời!</span>
+                                        } else {
+                                            <span>Trạng thái hiện tại: @booking.Status</span>
                                         }
                                     </p>
                                 </div>

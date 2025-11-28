@@ -163,7 +163,7 @@ public class HomeController : Controller
     }
     
     // AdministrativeStaff specific actions
-    public IActionResult StaffDashboard()
+    public async Task<IActionResult> StaffDashboard()
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -173,7 +173,40 @@ public class HomeController : Controller
             return RedirectToAction("Index");
         }
         
-        return View("../AdministrativeStaffPage/StaffDashboard");
+        var statistics = new TourViet.ViewModels.DashboardStatisticsViewModel();
+        var now = DateTime.UtcNow;
+        var currentMonthStart = new DateTime(now.Year, now.Month, 1);
+        var twelveMonthsAgo = currentMonthStart.AddMonths(-12);
+        var thirtyDaysAgo = now.AddDays(-30);
+        
+        statistics.TotalTours = await _context.Tours.Where(t => !t.IsDeleted).CountAsync();
+        statistics.TotalBookings = await _context.Bookings.CountAsync();
+        statistics.TotalCustomers = await _context.Users.Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == "Customer")).CountAsync();
+        statistics.UpcomingTours = await _context.TourInstances.Where(ti => ti.StartDate > now && (ti.Capacity - ti.SeatsBooked - ti.SeatsHeld) > 0).CountAsync();
+        
+        var allBookings = await _context.Bookings.Select(b => new { b.TotalAmount, b.CreatedAt, b.Status }).ToListAsync();
+        statistics.TotalRevenue = allBookings.Where(b => b.Status != "Cancelled").Sum(b => b.TotalAmount);
+        statistics.CurrentMonthRevenue = allBookings.Where(b => b.CreatedAt >= currentMonthStart && b.Status != "Cancelled").Sum(b => b.TotalAmount);
+        
+        statistics.BookingsByStatus = await _context.Bookings.GroupBy(b => b.Status).Select(g => new { Status = g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Status, x => x.Count);
+        statistics.TopTours = await _context.Bookings.Include(b => b.TourInstance).ThenInclude(ti => ti.Tour).Where(b => b.Status != "Cancelled").GroupBy(b => new { b.TourInstance.Tour.TourID, b.TourInstance.Tour.TourName }).Select(g => new TourViet.ViewModels.TopTourViewModel { TourName = g.Key.TourName, BookingCount = g.Count(), TotalRevenue = g.Sum(b => b.TotalAmount) }).OrderByDescending(t => t.BookingCount).Take(5).ToListAsync();
+        
+        var monthlyRevenueData = await _context.Bookings.Where(b => b.CreatedAt >= twelveMonthsAgo && b.Status != "Cancelled").GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month }).Select(g => new TourViet.ViewModels.MonthlyDataViewModel { Year = g.Key.Year, Month = g.Key.Month.ToString(), Value = g.Sum(b => b.TotalAmount), Count = g.Count() }).ToListAsync();
+        statistics.MonthlyRevenue = new List<TourViet.ViewModels.MonthlyDataViewModel>();
+        for (int i = 11; i >= 0; i--) { var date = currentMonthStart.AddMonths(-i); var data = monthlyRevenueData.FirstOrDefault(d => d.Year == date.Year && d.Month == date.Month.ToString()); statistics.MonthlyRevenue.Add(new TourViet.ViewModels.MonthlyDataViewModel { Year = date.Year, Month = date.ToString("MMM yyyy"), Value = data?.Value ?? 0, Count = data?.Count ?? 0 }); }
+        statistics.MonthlyBookings = statistics.MonthlyRevenue.Select(m => new TourViet.ViewModels.MonthlyDataViewModel { Month = m.Month, Year = m.Year, Count = m.Count, Value = m.Value }).ToList();
+        
+        var customerGrowthData = await _context.Users.Where(u => u.CreatedAt >= twelveMonthsAgo && u.UserRoles.Any(ur => ur.Role.RoleName == "Customer")).GroupBy(u => new { u.CreatedAt.Year, u.CreatedAt.Month }).Select(g => new TourViet.ViewModels.MonthlyDataViewModel { Year = g.Key.Year, Month = g.Key.Month.ToString(), Count = g.Count() }).ToListAsync();
+        statistics.CustomerGrowth = new List<TourViet.ViewModels.MonthlyDataViewModel>();
+        for (int i = 11; i >= 0; i--) { var date = currentMonthStart.AddMonths(-i); var data = customerGrowthData.FirstOrDefault(d => d.Year == date.Year && d.Month == date.Month.ToString()); statistics.CustomerGrowth.Add(new TourViet.ViewModels.MonthlyDataViewModel { Year = date.Year, Month = date.ToString("MMM yyyy"), Count = data?.Count ?? 0 }); }
+        
+        statistics.ToursByCategory = await _context.Tours.Include(t => t.Category).Where(t => !t.IsDeleted && t.Category != null).GroupBy(t => t.Category!.CategoryName).Select(g => new { Category = g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Category, x => x.Count);
+        
+        var dailyBookingsData = await _context.Bookings.Where(b => b.CreatedAt >= thirtyDaysAgo).GroupBy(b => b.CreatedAt.Date).Select(g => new TourViet.ViewModels.DailyDataViewModel { Date = g.Key, Count = g.Count() }).ToListAsync();
+        statistics.DailyBookings = new List<TourViet.ViewModels.DailyDataViewModel>();
+        for (int i = 29; i >= 0; i--) { var date = now.Date.AddDays(-i); var data = dailyBookingsData.FirstOrDefault(d => d.Date == date); statistics.DailyBookings.Add(new TourViet.ViewModels.DailyDataViewModel { Date = date, Count = data?.Count ?? 0 }); }
+        
+        return View("../AdministrativeStaffPage/StaffDashboard", statistics);
     }
 
     public async Task<IActionResult> ManageTours()
