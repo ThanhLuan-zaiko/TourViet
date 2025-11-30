@@ -76,56 +76,51 @@ namespace TourViet.Services
                 // Add services
                 if (tourDto.TourServiceIds != null && tourDto.TourServiceIds.Any())
                 {
-                    foreach (var serviceId in tourDto.TourServiceIds)
+                    var tourServices = tourDto.TourServiceIds.Select(serviceId => new Models.TourService
                     {
-                        _context.TourServices.Add(new Models.TourService
-                        {
-                            TourID = tour.TourID,
-                            ServiceID = serviceId,
-                            CreatedAt = DateTime.UtcNow
-                        });
-                    }
+                        TourID = tour.TourID,
+                        ServiceID = serviceId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    _context.TourServices.AddRange(tourServices);
                 }
 
                 // Process images
                 if (imageFiles != null && imageFiles.Count > 0)
                 {
                     var tourImages = await _imageService.ProcessMultipleImagesAsync(tour.TourID, imageFiles);
-                    foreach (var tourImage in tourImages)
-                    {
-                        _context.TourImages.Add(tourImage);
-                    }
+                    _context.TourImages.AddRange(tourImages);
                 }
 
                 // Add itineraries
-                if (tourDto.Itineraries != null)
+                if (tourDto.Itineraries != null && tourDto.Itineraries.Any())
                 {
                     foreach (var itinerary in tourDto.Itineraries)
                     {
                         itinerary.TourID = tour.TourID;
-                        _context.Itineraries.Add(itinerary);
                     }
+                    _context.Itineraries.AddRange(tourDto.Itineraries);
                 }
 
                 // Add prices
-                if (tourDto.TourPrices != null)
+                if (tourDto.TourPrices != null && tourDto.TourPrices.Any())
                 {
                     foreach (var price in tourDto.TourPrices)
                     {
                         price.TourID = tour.TourID;
-                        _context.TourPrices.Add(price);
                     }
+                    _context.TourPrices.AddRange(tourDto.TourPrices);
                 }
 
                 // Add instances
-                if (tourDto.TourInstances != null)
+                if (tourDto.TourInstances != null && tourDto.TourInstances.Any())
                 {
                     foreach (var instance in tourDto.TourInstances)
                     {
                         instance.TourID = tour.TourID;
                         instance.CreatedAt = DateTime.UtcNow;
-                        _context.TourInstances.Add(instance);
                     }
+                    _context.TourInstances.AddRange(tourDto.TourInstances);
                 }
 
                 await _context.SaveChangesAsync();
@@ -226,11 +221,7 @@ namespace TourViet.Services
                         imageFiles,
                         currentMaxSort + 1
                     );
-
-                    foreach (var tourImage in tourImages)
-                    {
-                        _context.TourImages.Add(tourImage);
-                    }
+                    _context.TourImages.AddRange(tourImages);
                 }
 
                 // Update Itineraries
@@ -520,30 +511,27 @@ namespace TourViet.Services
         {
             if (itineraries == null) return;
 
-            var idsToKeep = itineraries
-                .Where(i => i.ItineraryID != Guid.Empty)
-                .Select(i => i.ItineraryID)
-                .ToList();
+            // Fetch all existing itineraries for this tour once
+            var existingItineraries = await _context.Itineraries
+                .Where(i => i.TourID == tourId)
+                .ToDictionaryAsync(i => i.ItineraryID);
 
-            var toDelete = await _context.Itineraries
-                .Where(i => i.TourID == tourId && !idsToKeep.Contains(i.ItineraryID))
-                .ToListAsync();
-            _context.Itineraries.RemoveRange(toDelete);
+            var newItineraries = new List<Itinerary>();
+            var processedIds = new HashSet<Guid>();
 
             foreach (var itineraryDto in itineraries)
             {
-                if (itineraryDto.ItineraryID != Guid.Empty)
+                if (itineraryDto.ItineraryID != Guid.Empty && existingItineraries.TryGetValue(itineraryDto.ItineraryID, out var existing))
                 {
-                    var existing = await _context.Itineraries.FindAsync(itineraryDto.ItineraryID);
-                    if (existing != null)
-                    {
-                        existing.DayIndex = itineraryDto.DayIndex;
-                        existing.Title = itineraryDto.Title;
-                        existing.Description = itineraryDto.Description;
-                    }
+                    // Update existing
+                    existing.DayIndex = itineraryDto.DayIndex;
+                    existing.Title = itineraryDto.Title;
+                    existing.Description = itineraryDto.Description;
+                    processedIds.Add(itineraryDto.ItineraryID);
                 }
                 else
                 {
+                    // Create new
                     var newItinerary = new Itinerary
                     {
                         ItineraryID = Guid.NewGuid(),
@@ -552,8 +540,18 @@ namespace TourViet.Services
                         Title = itineraryDto.Title,
                         Description = itineraryDto.Description
                     };
-                    _context.Itineraries.Add(newItinerary);
+                    newItineraries.Add(newItinerary);
                 }
+            }
+
+            // Delete removed items
+            var toDelete = existingItineraries.Values.Where(i => !processedIds.Contains(i.ItineraryID));
+            _context.Itineraries.RemoveRange(toDelete);
+
+            // Add new items
+            if (newItineraries.Any())
+            {
+                _context.Itineraries.AddRange(newItineraries);
             }
         }
 
@@ -561,30 +559,27 @@ namespace TourViet.Services
         {
             if (prices == null) return;
 
-            var idsToKeep = prices
-                .Where(p => p.TourPriceID != Guid.Empty)
-                .Select(p => p.TourPriceID)
-                .ToList();
+            // Fetch all existing prices for this tour once
+            var existingPrices = await _context.TourPrices
+                .Where(p => p.TourID == tourId)
+                .ToDictionaryAsync(p => p.TourPriceID);
 
-            var toDelete = await _context.TourPrices
-                .Where(p => p.TourID == tourId && !idsToKeep.Contains(p.TourPriceID))
-                .ToListAsync();
-            _context.TourPrices.RemoveRange(toDelete);
+            var newPrices = new List<TourPrice>();
+            var processedIds = new HashSet<Guid>();
 
             foreach (var priceDto in prices)
             {
-                if (priceDto.TourPriceID != Guid.Empty)
+                if (priceDto.TourPriceID != Guid.Empty && existingPrices.TryGetValue(priceDto.TourPriceID, out var existing))
                 {
-                    var existing = await _context.TourPrices.FindAsync(priceDto.TourPriceID);
-                    if (existing != null)
-                    {
-                        existing.PriceType = priceDto.PriceType;
-                        existing.Amount = priceDto.Amount;
-                        existing.Currency = string.IsNullOrEmpty(priceDto.Currency) ? "USD" : priceDto.Currency;
-                    }
+                    // Update existing
+                    existing.PriceType = priceDto.PriceType;
+                    existing.Amount = priceDto.Amount;
+                    existing.Currency = string.IsNullOrEmpty(priceDto.Currency) ? "USD" : priceDto.Currency;
+                    processedIds.Add(priceDto.TourPriceID);
                 }
                 else
                 {
+                    // Create new
                     var newPrice = new TourPrice
                     {
                         TourPriceID = Guid.NewGuid(),
@@ -593,8 +588,18 @@ namespace TourViet.Services
                         Amount = priceDto.Amount,
                         Currency = string.IsNullOrEmpty(priceDto.Currency) ? "USD" : priceDto.Currency
                     };
-                    _context.TourPrices.Add(newPrice);
+                    newPrices.Add(newPrice);
                 }
+            }
+
+            // Delete removed items
+            var toDelete = existingPrices.Values.Where(p => !processedIds.Contains(p.TourPriceID));
+            _context.TourPrices.RemoveRange(toDelete);
+
+            // Add new items
+            if (newPrices.Any())
+            {
+                _context.TourPrices.AddRange(newPrices);
             }
         }
 
@@ -602,37 +607,34 @@ namespace TourViet.Services
         {
             if (instances == null) return;
 
-            var idsToKeep = instances
-                .Where(i => i.InstanceID != Guid.Empty)
-                .Select(i => i.InstanceID)
-                .ToList();
+            // Fetch all existing instances for this tour once
+            var existingInstances = await _context.TourInstances
+                .Where(i => i.TourID == tourId)
+                .ToDictionaryAsync(i => i.InstanceID);
 
-            var toDelete = await _context.TourInstances
-                .Where(i => i.TourID == tourId && !idsToKeep.Contains(i.InstanceID))
-                .ToListAsync();
-            _context.TourInstances.RemoveRange(toDelete);
+            var newInstances = new List<TourInstance>();
+            var processedIds = new HashSet<Guid>();
 
             foreach (var instanceDto in instances)
             {
-                if (instanceDto.InstanceID != Guid.Empty)
+                if (instanceDto.InstanceID != Guid.Empty && existingInstances.TryGetValue(instanceDto.InstanceID, out var existing))
                 {
-                    var existing = await _context.TourInstances.FindAsync(instanceDto.InstanceID);
-                    if (existing != null)
-                    {
-                        existing.StartDate = instanceDto.StartDate;
-                        existing.EndDate = instanceDto.EndDate;
-                        existing.Capacity = instanceDto.Capacity;
-                        existing.SeatsBooked = instanceDto.SeatsBooked;
-                        existing.SeatsHeld = instanceDto.SeatsHeld;
-                        existing.Status = string.IsNullOrEmpty(instanceDto.Status) ? "Scheduled" : instanceDto.Status;
-                        existing.PriceBase = instanceDto.PriceBase;
-                        existing.Currency = string.IsNullOrEmpty(instanceDto.Currency) ? "VND" : instanceDto.Currency;
-                        existing.GuideID = instanceDto.GuideID;
-                        existing.UpdatedAt = DateTime.UtcNow;
-                    }
+                    // Update existing
+                    existing.StartDate = instanceDto.StartDate;
+                    existing.EndDate = instanceDto.EndDate;
+                    existing.Capacity = instanceDto.Capacity;
+                    existing.SeatsBooked = instanceDto.SeatsBooked;
+                    existing.SeatsHeld = instanceDto.SeatsHeld;
+                    existing.Status = string.IsNullOrEmpty(instanceDto.Status) ? "Scheduled" : instanceDto.Status;
+                    existing.PriceBase = instanceDto.PriceBase;
+                    existing.Currency = string.IsNullOrEmpty(instanceDto.Currency) ? "VND" : instanceDto.Currency;
+                    existing.GuideID = instanceDto.GuideID;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    processedIds.Add(instanceDto.InstanceID);
                 }
                 else
                 {
+                    // Create new
                     var newInstance = new TourInstance
                     {
                         InstanceID = Guid.NewGuid(),
@@ -648,8 +650,18 @@ namespace TourViet.Services
                         GuideID = instanceDto.GuideID,
                         CreatedAt = DateTime.UtcNow
                     };
-                    _context.TourInstances.Add(newInstance);
+                    newInstances.Add(newInstance);
                 }
+            }
+
+            // Delete removed items
+            var toDelete = existingInstances.Values.Where(i => !processedIds.Contains(i.InstanceID));
+            _context.TourInstances.RemoveRange(toDelete);
+
+            // Add new items
+            if (newInstances.Any())
+            {
+                _context.TourInstances.AddRange(newInstances);
             }
         }
 

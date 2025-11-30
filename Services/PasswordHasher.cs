@@ -45,7 +45,7 @@ public class PasswordHasher : IPasswordHasher
     private byte[] ComputeHash(string password, byte[] salt)
     {
         using var sha512 = SHA512.Create();
-        var passwordBytes = Encoding.UTF8.GetBytes(password);
+        var passwordBytes = Encoding.Unicode.GetBytes(password);
         var combined = new byte[passwordBytes.Length + salt.Length];
         
         Buffer.BlockCopy(passwordBytes, 0, combined, 0, passwordBytes.Length);

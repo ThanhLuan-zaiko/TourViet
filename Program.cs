@@ -7,7 +7,29 @@ using System.IO;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddControllersWithViews();
+    .AddControllersWithViews()
+    .AddMvcOptions(options =>
+    {
+        // Allow large form collections (for tours with many itineraries/prices)
+        options.MaxModelBindingCollectionSize = 10000; // Default is 1024
+    });
+
+// Configure Kestrel for large requests
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    // Allow larger request bodies (100MB to handle tours with many entries and images)
+    serverOptions.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
+});
+
+// Configure form options for multipart/form-data
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    // Allow larger forms
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+    options.ValueLengthLimit = int.MaxValue;
+    options.ValueCountLimit = 10000; // Allow up to 10000 form values
+    options.KeyLengthLimit = int.MaxValue;
+});
 
 builder.Services
     .AddPersistence(builder.Configuration);

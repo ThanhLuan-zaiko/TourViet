@@ -22,6 +22,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Models.BookingService> BookingServices { get; set; }
+    public DbSet<Payment> Payments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -221,6 +222,16 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
             entity.HasOne(e => e.Service)
                 .WithMany()
                 .HasForeignKey(e => e.ServiceID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure Payment entity
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.PaymentID);
+            entity.HasOne(e => e.Booking)
+                .WithMany()
+                .HasForeignKey(e => e.BookingID)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

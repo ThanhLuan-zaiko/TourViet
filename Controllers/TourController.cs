@@ -52,8 +52,29 @@ namespace TourViet.Controllers
             {
                 if (!ModelState.IsValid)
                 {
+                    // Log validation errors
+                    foreach (var key in ModelState.Keys)
+                    {
+                        var modelStateVal = ModelState[key];
+                        foreach (var error in modelStateVal.Errors)
+                        {
+                            _logger.LogError($"Validation Error for {key}: {error.ErrorMessage}");
+                            if (error.Exception != null)
+                            {
+                                _logger.LogError($"Validation Exception for {key}: {error.Exception.Message}");
+                            }
+                        }
+                    }
+
                     await LoadViewDataAsync();
                     return View(tourDto);
+                }
+
+                // Debug: Log file count
+                _logger.LogInformation($"Received {Request.Form.Files.Count} files");
+                foreach (var file in Request.Form.Files)
+                {
+                    _logger.LogInformation($"File: {file.FileName}, Size: {file.Length} bytes");
                 }
 
                 // Create tour using service

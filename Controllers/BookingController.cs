@@ -21,16 +21,24 @@ public class BookingController : ControllerBase
     /// Check if user is authenticated
     /// </summary>
     [HttpGet("check-auth")]
-    public IActionResult CheckAuth()
+    public async Task<IActionResult> CheckAuth(Guid? tourId = null)
     {
-        var userId = HttpContext.Session.GetString("UserId");
-        var isAuthenticated = !string.IsNullOrEmpty(userId);
+        var userIdString = HttpContext.Session.GetString("UserId");
+        var isAuthenticated = !string.IsNullOrEmpty(userIdString);
+        Guid? pendingBookingId = null;
+
+        if (isAuthenticated && tourId.HasValue && Guid.TryParse(userIdString, out var userId))
+        {
+            pendingBookingId = await _bookingService.GetPendingBookingIdAsync(userId, tourId.Value);
+        }
 
         return Ok(new
         {
             isAuthenticated,
-            userId = isAuthenticated ? userId : null,
-            userName = isAuthenticated ? HttpContext.Session.GetString("FullName") : null
+            userId = isAuthenticated ? userIdString : null,
+            userName = isAuthenticated ? HttpContext.Session.GetString("FullName") : null,
+            hasPendingBooking = pendingBookingId.HasValue,
+            pendingBookingId
         });
     }
 
@@ -124,6 +132,104 @@ public class BookingController : ControllerBase
         {
             _logger.LogError(ex, "Error creating booking");
             return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi đặt tour." });
+        }
+    }
+
+    /// <summary>
+    /// Process payment for a booking (User)
+    /// </summary>
+    [HttpPost("pay/{id}")]
+    public async Task<IActionResult> PayBooking(Guid id)
+    {
+        try
+        {
+            var userIdString = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized(new { success = false, message = "Bạn cần đăng nhập để thực hiện thao tác này." });
+            }
+
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy booking." });
+            }
+
+            if (booking.UserID != userId)
+            {
+                return Forbid();
+            }
+
+            var result = await _bookingService.ProcessPaymentAsync(id);
+
+            if (result.Success)
+            {
+                return Ok(new { success = true, message = result.Message });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error paying for booking {BookingId}", id);
+            return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi thanh toán." });
+        }
+    }
+
+    /// <summary>
+    /// Cancel a pending booking (User)
+    /// </summary>
+    [HttpPost("cancel/{id}")]
+    public async Task<IActionResult> CancelBooking(Guid id)
+    {
+        try
+        {
+            var userIdString = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized(new { success = false, message = "Bạn cần đăng nhập để thực hiện thao tác này." });
+            }
+
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy booking." });
+            }
+
+            if (booking.UserID != userId)
+            {
+                return Forbid();
+            }
+
+            if (booking.Status != "Pending" && booking.Status != "Confirmed")
+            {
+                return BadRequest(new { success = false, message = "Chỉ có thể hủy đơn đặt tour đang ở trạng thái chờ xử lý hoặc đã xác nhận (chưa thanh toán)." });
+            }
+
+            // Check if already paid (cannot cancel if paid - simplistic logic for now)
+            var isPaid = await _bookingService.IsBookingPaidAsync(id);
+            if (isPaid)
+            {
+                 return BadRequest(new { success = false, message = "Không thể hủy đơn đặt tour đã thanh toán." });
+            }
+
+            var result = await _bookingService.UpdateBookingStatusAsync(id, "Cancelled");
+
+            if (result.Success)
+            {
+                return Ok(new { success = true, message = "Hủy đặt tour thành công." });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = result.Message });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cancelling booking {BookingId}", id);
+            return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi hủy đặt tour." });
         }
     }
 

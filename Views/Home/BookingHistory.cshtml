@@ -206,6 +206,7 @@
                                     "cancelled" => "alert-danger",
                                     "pending" => "alert-warning",
                                     "completed" => "alert-info",
+                                    "rejected" => "alert-secondary",
                                     _ => "alert-secondary"
                                 };
                             }
@@ -217,11 +218,14 @@
                                         @if (statusLower == "pending") {
                                             <span>Đơn đặt tour của bạn đang chờ xác nhận. Chúng tôi sẽ liên hệ sớm nhất.</span>
                                         } else if (statusLower == "confirmed") {
-                                            <span>Đơn đặt tour đã được xác nhận. Chúc bạn có chuyến đi vui vẻ!</span>
+                                            <span>Đơn đặt tour đã được xác nhận. Vui lòng thanh toán!</span>
                                         } else if (statusLower == "cancelled") {
                                             <span>Đơn đặt tour đã bị hủy.</span>
                                         } else if (statusLower == "completed") {
-                                            <span>Chuyến đi đã hoàn thành. Hy vọng bạn đã có những trải nghiệm tuyệt vời!</span>
+                                            <span>Thanh toán thành công. Chúc bạn có chuyến đi vui vẻ!</span>
+                                        }
+                                        else if (statusLower == "rejected") {
+                                            <span>Đơn đặt tour đã bị từ chối.</span>
                                         } else {
                                             <span>Trạng thái hiện tại: @booking.Status</span>
                                         }
@@ -346,9 +350,27 @@
                         </div>
                     </div>
                     <div class="modal-footer bg-light d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-danger" onclick="generatePDF('@booking.BookingID')">
-                            <i class="bi bi-file-earmark-pdf me-2"></i>Tải hóa đơn PDF
-                        </button>
+                        <div>
+                            @if (booking.IsPaid || booking.Status == "Completed")
+                            {
+                                <button type="button" class="btn btn-outline-danger me-2" onclick="generatePDF('@booking.BookingID')">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i>Tải hóa đơn PDF
+                                </button>
+                            }
+                            else if (booking.Status == "Confirmed")
+                            {
+                                <button type="button" class="btn btn-success me-2" onclick="payBooking('@booking.BookingID', '@booking.FormattedTotalAmount')">
+                                    <i class="bi bi-credit-card me-2"></i>Thanh toán ngay
+                                </button>
+                            }
+
+                            @if (booking.Status == "Pending" || (booking.Status == "Confirmed" && !booking.IsPaid))
+                            {
+                                <button type="button" class="btn btn-danger" onclick="cancelBooking('@booking.BookingID')">
+                                    <i class="bi bi-x-circle me-2"></i>Hủy đặt tour
+                                </button>
+                            }
+                        </div>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     </div>
                 </div>
@@ -356,87 +378,176 @@
         </div>
 
         <!-- Hidden Invoice Template for PDF Generation -->
-        <div id="invoice-@booking.BookingID" class="d-none">
-            <div style="padding: 40px; font-family: 'Times New Roman', serif; color: #000; background: #fff;">
-                <!-- Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
-                    <div>
-                        <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #0d6efd;">TOUR VIET</h1>
-                        <p style="margin: 5px 0 0; font-size: 14px;">Khám phá vẻ đẹp Việt Nam</p>
+        @if (booking.IsPaid || booking.Status == "Completed")
+        {
+            <div id="invoice-@booking.BookingID" class="d-none">
+                <div style="padding: 40px; font-family: 'Times New Roman', serif; color: #000; background: #fff;">
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #0d6efd;">TOUR VIET</h1>
+                            <p style="margin: 5px 0 0; font-size: 14px;">Khám phá vẻ đẹp Việt Nam</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 style="margin: 0; font-size: 24px; text-transform: uppercase;">Hóa Đơn</h2>
+                            <p style="margin: 5px 0 0; font-size: 14px;">Mã đặt tour: <strong>@booking.BookingRef</strong></p>
+                            <p style="margin: 5px 0 0; font-size: 14px;">Ngày: @booking.FormattedCreatedAt</p>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <h2 style="margin: 0; font-size: 24px; text-transform: uppercase;">Hóa Đơn</h2>
-                        <p style="margin: 5px 0 0; font-size: 14px;">Mã đặt tour: <strong>@booking.BookingRef</strong></p>
-                        <p style="margin: 5px 0 0; font-size: 14px;">Ngày: @booking.FormattedCreatedAt</p>
-                    </div>
-                </div>
 
-                <!-- Info Section -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-                    <div style="width: 48%;">
-                        <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Khách hàng</h3>
-                        <p style="margin: 0 0 5px;"><strong>@booking.CustomerName</strong></p>
-                        <p style="margin: 0 0 5px;">Email: @booking.CustomerEmail</p>
-                        <p style="margin: 0 0 5px;">SĐT: @booking.CustomerPhone</p>
+                    <!-- Info Section -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                        <div style="width: 48%;">
+                            <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Khách hàng</h3>
+                            <p style="margin: 0 0 5px;"><strong>@booking.CustomerName</strong></p>
+                            <p style="margin: 0 0 5px;">Email: @booking.CustomerEmail</p>
+                            <p style="margin: 0 0 5px;">SĐT: @booking.CustomerPhone</p>
+                        </div>
+                        <div style="width: 48%;">
+                            <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin Tour</h3>
+                            <p style="margin: 0 0 5px;"><strong>@booking.TourName</strong></p>
+                            <p style="margin: 0 0 5px;">Khởi hành: @booking.FormattedStartDate</p>
+                            <p style="margin: 0 0 5px;">Thời gian: @booking.DurationDays ngày</p>
+                        </div>
                     </div>
-                    <div style="width: 48%;">
-                        <h3 style="font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">Thông tin Tour</h3>
-                        <p style="margin: 0 0 5px;"><strong>@booking.TourName</strong></p>
-                        <p style="margin: 0 0 5px;">Khởi hành: @booking.FormattedStartDate</p>
-                        <p style="margin: 0 0 5px;">Thời gian: @booking.DurationDays ngày</p>
-                    </div>
-                </div>
 
-                <!-- Table -->
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                    <thead>
-                        <tr style="background-color: #f8f9fa;">
-                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Mô tả</th>
-                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Số lượng</th>
-                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Đơn giá</th>
-                            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="border: 1px solid #dee2e6; padding: 12px;">
-                                <strong>Vé Tour Cơ Bản</strong>
-                                <br><small style="color: #6c757d;">@booking.TourName</small>
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@booking.Seats</td>
-                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePrice.ToString("N0") @booking.Currency</td>
-                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePriceTotal.ToString("N0") @booking.Currency</td>
-                        </tr>
-                        @if (booking.BookedServices != null)
-                        {
-                            foreach (var service in booking.BookedServices)
+                    <!-- Table -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Mô tả</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Số lượng</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Đơn giá</th>
+                                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 12px;">
+                                    <strong>Vé Tour Cơ Bản</strong>
+                                    <br><small style="color: #6c757d;">@booking.TourName</small>
+                                </td>
+                                <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@booking.Seats</td>
+                                <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePrice.ToString("N0") @booking.Currency</td>
+                                <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@booking.BasePriceTotal.ToString("N0") @booking.Currency</td>
+                            </tr>
+                            @if (booking.BookedServices != null)
                             {
-                                <tr>
-                                    <td style="border: 1px solid #dee2e6; padding: 12px;">Dịch vụ: @service.ServiceName</td>
-                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@service.Quantity</td>
-                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.PriceAtBooking.ToString("N0") @service.Currency</td>
-                                    <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.FormattedSubTotal</td>
-                                </tr>
+                                foreach (var service in booking.BookedServices)
+                                {
+                                    <tr>
+                                        <td style="border: 1px solid #dee2e6; padding: 12px;">
+                                            <strong>@service.ServiceName</strong>
+                                        </td>
+                                        <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">@service.Quantity</td>
+                                        <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.PriceAtBooking.ToString("N0") @service.Currency</td>
+                                        <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">@service.SubTotal.ToString("N0") @service.Currency</td>
+                                    </tr>
+                                }
                             }
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3" style="border: 1px solid #dee2e6; padding: 12px; text-align: right; font-weight: bold;">Tổng cộng</td>
-                            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right; font-weight: bold; color: #0d6efd;">@booking.FormattedTotalAmount</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                            <tr style="background-color: #f8f9fa; font-weight: bold;">
+                                <td colspan="3" style="border: 1px solid #dee2e6; padding: 12px; text-align: right;">Tổng cộng</td>
+                                <td style="border: 1px solid #dee2e6; padding: 12px; text-align: right; color: #dc3545;">@booking.FormattedTotalAmount</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <!-- Footer -->
-                <div style="margin-top: 50px; text-align: center; color: #6c757d; font-size: 12px;">
-                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của Tour Viet!</p>
-                    <p>Đây là hóa đơn điện tử.</p>
+                    <!-- Footer -->
+                    <div style="text-align: center; margin-top: 50px; color: #6c757d; font-size: 14px;">
+                        <p>Cảm ơn quý khách đã sử dụng dịch vụ của TourViet!</p>
+                        <p>Mọi thắc mắc xin vui lòng liên hệ hotline: 1900 1234</p>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+<!-- Cancellation Confirmation Modal -->
+<div class="modal fade" id="cancelConfirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận hủy tour
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="mb-0">Bạn có chắc chắn muốn hủy đơn đặt tour này không?</p>
+                <p class="text-muted small mt-2">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer border-0 bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Không, giữ lại</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmCancelBtn">
+                    <i class="bi bi-x-circle me-2"></i>Có, hủy ngay
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0" id="notificationHeader">
+                <h5 class="modal-title text-white" id="notificationTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="notificationIcon" class="mb-3" style="font-size: 3rem;"></div>
+                <p id="notificationMessage" class="mb-0 fw-bold"></p>
+            </div>
+            <div class="modal-footer border-0 bg-light justify-content-center">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-credit-card-2-front-fill me-2"></i>Thanh toán đơn hàng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="closePaymentModalBtn"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="paymentProcessing">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="mb-2">Đang xử lý thanh toán...</h5>
+                    <p class="text-muted small">Vui lòng không tắt trình duyệt.</p>
+                </div>
+                <div id="paymentSuccess" class="d-none">
+                    <div class="mb-3">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-success mb-2">Thanh toán thành công!</h4>
+                    <p class="text-muted mb-4">Cảm ơn bạn đã thanh toán. Hóa đơn điện tử đã sẵn sàng.</p>
+                    <button type="button" class="btn btn-primary px-4 rounded-pill" onclick="location.reload()">
+                        <i class="bi bi-check-lg me-2"></i>Hoàn tất
+                    </button>
+                </div>
+                <div id="paymentError" class="d-none">
+                    <div class="mb-3">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="fw-bold text-danger mb-2">Thanh toán thất bại!</h4>
+                    <p class="text-muted mb-4" id="paymentErrorMessage">Đã xảy ra lỗi trong quá trình xử lý.</p>
+                    <button type="button" class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">
+                        Đóng
+                    </button>
                 </div>
             </div>
         </div>
-    }
-}
+    </div>
+</div>
 
 @section Scripts {
     <!-- DataTables CSS and JS from CDN -->
@@ -506,6 +617,130 @@
                 // Add d-none back
                 element.classList.add('d-none');
             });
+        }
+
+        let bookingIdToCancel = null;
+
+        function cancelBooking(bookingId) {
+            bookingIdToCancel = bookingId;
+            // Hide the details modal if it's open
+            const detailsModalEl = document.getElementById('detailsModal' + bookingId);
+            if (detailsModalEl) {
+                const detailsModal = bootstrap.Modal.getInstance(detailsModalEl);
+                if (detailsModal) {
+                    detailsModal.hide();
+                }
+            }
+            
+            // Show confirmation modal
+            const confirmModal = new bootstrap.Modal(document.getElementById('cancelConfirmationModal'));
+            confirmModal.show();
+        }
+
+        document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+            if (!bookingIdToCancel) return;
+
+            // Hide confirmation modal
+            const confirmModalEl = document.getElementById('cancelConfirmationModal');
+            const confirmModal = bootstrap.Modal.getInstance(confirmModalEl);
+            confirmModal.hide();
+
+            fetch(`/api/booking/cancel/${bookingIdToCancel}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.success, data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(false, 'Đã xảy ra lỗi kết nối.');
+            });
+        });
+
+        function showNotification(isSuccess, message) {
+            const modal = document.getElementById('notificationModal');
+            const header = document.getElementById('notificationHeader');
+            const title = document.getElementById('notificationTitle');
+            const msg = document.getElementById('notificationMessage');
+            const icon = document.getElementById('notificationIcon');
+
+            if (isSuccess) {
+                header.className = 'modal-header bg-success border-0';
+                title.textContent = 'Thành công';
+                title.className = 'modal-title text-white';
+                icon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                msg.textContent = message;
+                
+                // Reload page when modal is closed
+                modal.addEventListener('hidden.bs.modal', function () {
+                    location.reload();
+                }, { once: true });
+            } else {
+                header.className = 'modal-header bg-danger border-0';
+                title.textContent = 'Thất bại';
+                title.className = 'modal-title text-white';
+                icon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+                msg.textContent = message;
+            }
+
+            const notifModal = new bootstrap.Modal(modal);
+            notifModal.show();
+        }
+
+        function payBooking(bookingId, amount) {
+            // Hide details modal
+            const detailsModalEl = document.getElementById('detailsModal' + bookingId);
+            if (detailsModalEl) {
+                const detailsModal = bootstrap.Modal.getInstance(detailsModalEl);
+                if (detailsModal) {
+                    detailsModal.hide();
+                }
+            }
+
+            // Show payment modal
+            const paymentModalEl = document.getElementById('paymentModal');
+            const paymentModal = new bootstrap.Modal(paymentModalEl);
+            
+            // Reset state
+            document.getElementById('paymentProcessing').classList.remove('d-none');
+            document.getElementById('paymentSuccess').classList.add('d-none');
+            document.getElementById('paymentError').classList.add('d-none');
+            document.getElementById('closePaymentModalBtn').disabled = true;
+            
+            paymentModal.show();
+
+            // Simulate processing delay
+            setTimeout(() => {
+                fetch(`/api/booking/pay/${bookingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('paymentProcessing').classList.add('d-none');
+                    document.getElementById('closePaymentModalBtn').disabled = false;
+                    
+                    if (data.success) {
+                        document.getElementById('paymentSuccess').classList.remove('d-none');
+                    } else {
+                        document.getElementById('paymentError').classList.remove('d-none');
+                        document.getElementById('paymentErrorMessage').textContent = data.message || 'Đã xảy ra lỗi.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('paymentProcessing').classList.add('d-none');
+                    document.getElementById('closePaymentModalBtn').disabled = false;
+                    document.getElementById('paymentError').classList.remove('d-none');
+                    document.getElementById('paymentErrorMessage').textContent = 'Đã xảy ra lỗi kết nối.';
+                });
+            }, 2000); // 2 seconds delay for simulation
         }
     </script>
 }

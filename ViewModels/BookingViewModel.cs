@@ -10,6 +10,7 @@ public class BookingViewModel
     public string StatusIcon { get; set; } = "bi-circle";
     public DateTime CreatedAt { get; set; }
     public string FormattedCreatedAt { get; set; } = string.Empty;
+    public bool IsPaid { get; set; }
     
     // Customer Info
     public Guid UserID { get; set; }

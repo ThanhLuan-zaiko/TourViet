@@ -24,6 +24,20 @@ public class BookingService : IBookingService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
+            // 0. Check for existing pending booking
+            var tourInstanceForCheck = await _context.TourInstances
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ti => ti.InstanceID == dto.TourInstanceID);
+                
+            if (tourInstanceForCheck != null)
+            {
+                var pendingBookingId = await GetPendingBookingIdAsync(userId, tourInstanceForCheck.TourID);
+                if (pendingBookingId.HasValue)
+                {
+                    return (false, "Bạn đang có đơn đặt tour này ở trạng thái chờ xử lý. Vui lòng đợi xác nhận trước khi đặt tiếp.", null, null);
+                }
+            }
+
             // 1. Validate tour instance exists and has available seats
             var tourInstance = await _context.TourInstances
                 .Include(ti => ti.Tour)
@@ -39,10 +53,32 @@ public class BookingService : IBookingService
                 return (false, "Chuyến đi này hiện không nhận đặt chỗ.", null, null);
             }
 
-            var seatsAvailable = tourInstance.Capacity - tourInstance.SeatsBooked - tourInstance.SeatsHeld;
-            if (seatsAvailable < dto.Seats)
+            // NO LIMIT on pending bookings - allow unlimited overbooking
+            // But limit each individual booking to not exceed tour capacity
+            if (dto.Seats > tourInstance.Capacity)
             {
-                return (false, $"Không đủ chỗ trống. Chỉ còn {seatsAvailable} chỗ.", null, null);
+                return (false, $"Không thể đặt quá {tourInstance.Capacity} chỗ cho tour này.", null, null);
+            }
+            
+            // Soft limit warning for customers
+            var totalPendingSeats = await _context.Bookings
+                .Where(b => b.InstanceID == dto.TourInstanceID && b.Status == "Pending")
+                .SumAsync(b => (int?)b.Seats) ?? 0;
+                
+            var actualAvailable = tourInstance.Capacity - tourInstance.SeatsBooked;
+            
+            // Soft limit warning: if more than 50 pending bookings or pending > 5x capacity
+            var pendingBookingCount = await _context.Bookings
+                .CountAsync(b => b.InstanceID == dto.TourInstanceID && b.Status == "Pending");
+                
+            string? warningMessage = null;
+            if (pendingBookingCount >= 50)
+            {
+                warningMessage = $"⚠️ Lưu ý: Tour này đang rất hot với nhiều đơn chờ duyệt. Khả năng được xác nhận phụ thuộc vào quyết định của Admin.";
+            }
+            else if (totalPendingSeats > tourInstance.Capacity * 5)
+            {
+                warningMessage = $"⚠️ Lưu ý: Tour này đang rất hot. Chỉ còn {actualAvailable} chỗ thực tế.";
             }
 
             // 2. Calculate total price
@@ -100,10 +136,16 @@ public class BookingService : IBookingService
             // 5. Update tour instance seats (hold seats until confirmed)
             tourInstance.SeatsHeld += dto.Seats;
             
-            // Check if full
-            if (tourInstance.SeatsBooked + tourInstance.SeatsHeld >= tourInstance.Capacity)
+            // Status management: Only set SoldOut when CONFIRMED bookings fill capacity
+            // Keep status as Open if only pending bookings exist
+            if (tourInstance.SeatsBooked >= tourInstance.Capacity)
             {
                 tourInstance.Status = "SoldOut";
+            }
+            else if (tourInstance.Status == "SoldOut" && tourInstance.SeatsBooked < tourInstance.Capacity)
+            {
+                // Re-open if we have capacity and status was SoldOut
+                tourInstance.Status = "Open";
             }
             
             tourInstance.UpdatedAt = DateTime.UtcNow;
@@ -312,8 +354,21 @@ public class BookingService : IBookingService
             }
 
             var oldStatus = booking.Status;
-            booking.Status = newStatus;
-            booking.UpdatedAt = DateTime.UtcNow;
+        
+        // Special handling for Pending -> Confirmed
+        if (oldStatus == "Pending" && newStatus == "Confirmed")
+        {
+            // Check if we have actual capacity available
+            var actualAvailable = booking.TourInstance.Capacity - booking.TourInstance.SeatsBooked;
+            
+            if (actualAvailable < booking.Seats)
+            {
+                return (false, $"Không thể xác nhận. Chỉ còn {actualAvailable} chỗ thực tế. Booking này yêu cầu {booking.Seats} chỗ.");
+            }
+        }
+        
+        booking.Status = newStatus;
+        booking.UpdatedAt = DateTime.UtcNow;
 
             // Update seat counts based on status change
             if (oldStatus == "Pending" && newStatus == "Confirmed")
@@ -335,33 +390,141 @@ public class BookingService : IBookingService
                 }
             }
 
-            // Update status based on availability
-            if (booking.TourInstance.SeatsBooked + booking.TourInstance.SeatsHeld >= booking.TourInstance.Capacity)
+            // Update status based on actual confirmed capacity only
+            if (booking.TourInstance.SeatsBooked >= booking.TourInstance.Capacity)
             {
                 booking.TourInstance.Status = "SoldOut";
             }
             else if (booking.TourInstance.Status == "SoldOut" && 
-                     booking.TourInstance.SeatsBooked + booking.TourInstance.SeatsHeld < booking.TourInstance.Capacity)
+                     booking.TourInstance.SeatsBooked < booking.TourInstance.Capacity)
             {
                 booking.TourInstance.Status = "Open";
             }
 
             booking.TourInstance.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "Booking status updated: {BookingRef} from {OldStatus} to {NewStatus}",
-                booking.BookingRef, oldStatus, newStatus);
-
-            return (true, $"Cập nhật trạng thái thành công: {newStatus}");
-        }
-        catch (Exception ex)
+        await _context.SaveChangesAsync();
+        
+        // After confirming, auto-reject excess pending bookings if needed
+        if (oldStatus == "Pending" && newStatus == "Confirmed")
         {
-            _logger.LogError(ex, "Error updating booking status for {BookingId}", bookingId);
-            return (false, "Đã xảy ra lỗi khi cập nhật trạng thái.");
+            await AutoRejectOverbookedPendingBookingsAsync(booking.TourInstance.InstanceID);
+        }
+
+        _logger.LogInformation(
+            "Booking status updated: {BookingRef} from {OldStatus} to {NewStatus}",
+            booking.BookingRef, oldStatus, newStatus);
+
+        return (true, $"Cập nhật trạng thái thành công: {newStatus}");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error updating booking status for {BookingId}", bookingId);
+        return (false, "Đã xảy ra lỗi khi cập nhật trạng thái.");
+    }
+}
+
+private async Task AutoRejectOverbookedPendingBookingsAsync(Guid instanceId)
+{
+    try
+    {
+        // Get instance info without loading all bookings
+        var instance = await _context.TourInstances
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ti => ti.InstanceID == instanceId);
+            
+        if (instance == null) return;
+        
+        var remainingCapacity = instance.Capacity - instance.SeatsBooked;
+        
+        if (remainingCapacity <= 0)
+        {
+            // No capacity left - reject ALL pending bookings with batch update
+            var rejectedCount = await _context.Bookings
+                .Where(b => b.InstanceID == instanceId && b.Status == "Pending")
+                .ExecuteUpdateAsync(b => b
+                    .SetProperty(x => x.Status, "Rejected")
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow));
+            
+            // Reset SeatsHeld to 0 since all pending rejected
+            if (rejectedCount > 0)
+            {
+                var instanceToUpdate = await _context.TourInstances
+                    .FirstOrDefaultAsync(ti => ti.InstanceID == instanceId);
+                if (instanceToUpdate != null)
+                {
+                    instanceToUpdate.SeatsHeld = 0;
+                    instanceToUpdate.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+                
+                _logger.LogInformation(
+                    "Auto-rejected {Count} pending bookings for instance {InstanceId} (no capacity)",
+                    rejectedCount, instanceId);
+            }
+        }
+        else
+        {
+            // Some capacity remaining - selective rejection
+            // Get IDs of bookings to keep (earliest ones that fit)
+            var pendingBookings = await _context.Bookings
+                .Where(b => b.InstanceID == instanceId && b.Status == "Pending")
+                .OrderBy(b => b.CreatedAt)
+                .Select(b => new { b.BookingID, b.Seats })
+                .ToListAsync();
+            
+            var bookingsToKeep = new List<Guid>();
+            var capacityLeft = remainingCapacity;
+            var totalSeatsToReject = 0;
+            
+            foreach (var booking in pendingBookings)
+            {
+                if (capacityLeft >= booking.Seats)
+                {
+                    bookingsToKeep.Add(booking.BookingID);
+                    capacityLeft -= booking.Seats;
+                }
+                else
+                {
+                    totalSeatsToReject += booking.Seats;
+                }
+            }
+            
+            // Batch reject bookings NOT in the keep list
+            if (bookingsToKeep.Count < pendingBookings.Count)
+            {
+                var rejectedCount = await _context.Bookings
+                    .Where(b => b.InstanceID == instanceId && 
+                                b.Status == "Pending" && 
+                                !bookingsToKeep.Contains(b.BookingID))
+                    .ExecuteUpdateAsync(b => b
+                        .SetProperty(x => x.Status, "Rejected")
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow));
+                
+                // Update SeatsHeld
+                if (rejectedCount > 0)
+                {
+                    var instanceToUpdate = await _context.TourInstances
+                        .FirstOrDefaultAsync(ti => ti.InstanceID == instanceId);
+                    if (instanceToUpdate != null)
+                    {
+                        instanceToUpdate.SeatsHeld = Math.Max(0, instanceToUpdate.SeatsHeld - totalSeatsToReject);
+                        instanceToUpdate.UpdatedAt = DateTime.UtcNow;
+                        await _context.SaveChangesAsync();
+                    }
+                    
+                    _logger.LogInformation(
+                        "Auto-rejected {Count} pending bookings for instance {InstanceId} ({Kept} kept, {Capacity} capacity left)",
+                        rejectedCount, instanceId, bookingsToKeep.Count, capacityLeft);
+                }
+            }
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error auto-rejecting overbooked pending bookings for instance {InstanceId}", instanceId);
+    }
+}
 
     public async Task<PriceCalculationDto?> CalculatePriceAsync(
         Guid instanceId, 
@@ -432,5 +595,64 @@ public class BookingService : IBookingService
         var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
         var randomPart = Guid.NewGuid().ToString("N").Substring(0, 5).ToUpper();
         return $"BK-{datePart}-{randomPart}";
+    }
+
+    public async Task<Guid?> GetPendingBookingIdAsync(Guid userId, Guid tourId)
+    {
+        var booking = await _context.Bookings
+            .Include(b => b.TourInstance)
+            .FirstOrDefaultAsync(b => b.UserID == userId && 
+                                    b.TourInstance.TourID == tourId && 
+                                    b.Status == "Pending");
+        
+        return booking?.BookingID;
+    }
+
+    public async Task<ServiceResult> ProcessPaymentAsync(Guid bookingId)
+    {
+        var booking = await _context.Bookings.FindAsync(bookingId);
+        if (booking == null)
+        {
+            return new ServiceResult { Success = false, Message = "Không tìm thấy booking." };
+        }
+
+        if (booking.Status != "Confirmed")
+        {
+            return new ServiceResult { Success = false, Message = "Chỉ có thể thanh toán cho đơn đặt tour đã được xác nhận." };
+        }
+
+        // Check if already paid
+        var isPaid = await _context.Payments.AnyAsync(p => p.BookingID == bookingId && p.Status == "Completed");
+        if (isPaid)
+        {
+            return new ServiceResult { Success = false, Message = "Đơn đặt tour này đã được thanh toán." };
+        }
+
+        // Create payment record
+        var payment = new Payment
+        {
+            BookingID = bookingId,
+            Amount = booking.TotalAmount,
+            Currency = booking.Currency,
+            PaymentMethod = "CreditCard", // Simulated
+            Status = "Completed",
+            TransactionRef = $"TXN-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}",
+            PaidAt = DateTime.UtcNow
+        };
+
+        _context.Payments.Add(payment);
+        
+        // Update booking status to Completed
+        booking.Status = "Completed";
+        booking.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.SaveChangesAsync();
+
+        return new ServiceResult { Success = true, Message = "Thanh toán thành công." };
+    }
+
+    public async Task<bool> IsBookingPaidAsync(Guid bookingId)
+    {
+        return await _context.Payments.AnyAsync(p => p.BookingID == bookingId && p.Status == "Completed");
     }
 }

@@ -1,4 +1,6 @@
 using TourViet.DTOs;
+using TourViet.Models.DTOs;
+using TourViet.Services;
 
 namespace TourViet.Services.Interfaces;
 
@@ -43,4 +45,19 @@ public interface IBookingService
     /// Generates a unique booking reference
     /// </summary>
     string GenerateBookingReference();
+
+    /// <summary>
+    /// Checks if a user has a pending booking for a specific tour and returns the BookingID if found
+    /// </summary>
+    Task<Guid?> GetPendingBookingIdAsync(Guid userId, Guid tourId);
+
+    /// <summary>
+    /// Process payment for a booking
+    /// </summary>
+    Task<ServiceResult> ProcessPaymentAsync(Guid bookingId);
+
+    /// <summary>
+    /// Check if a booking is paid
+    /// </summary>
+    Task<bool> IsBookingPaidAsync(Guid bookingId);
 }

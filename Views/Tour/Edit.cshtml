@@ -31,7 +31,7 @@
 
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="TourID" />
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
         
         <!-- Location & Map Card -->
         <div class="card shadow-sm mb-4 border-0">
@@ -193,21 +193,21 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
-                                        <input type="date" name="TourInstances[@instIndex].StartDate" class="form-control" value="@instance.StartDate.ToString("yyyy-MM-dd")" />
+                                        <input type="date" name="TourInstances[@instIndex].StartDate" class="form-control" value="@instance.StartDate.ToString("yyyy-MM-dd")" required />
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-calendar-xmark text-danger me-1"></i>Ngày kết thúc</label>
-                                        <input type="date" name="TourInstances[@instIndex].EndDate" class="form-control" value="@instance.EndDate.ToString("yyyy-MM-dd")" />
+                                        <input type="date" name="TourInstances[@instIndex].EndDate" class="form-control" value="@instance.EndDate.ToString("yyyy-MM-dd")" required />
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-users text-info me-1"></i>Sức chứa</label>
-                                        <input type="number" name="TourInstances[@instIndex].Capacity" class="form-control" min="0" value="@instance.Capacity" />
+                                        <input type="number" name="TourInstances[@instIndex].Capacity" class="form-control" min="0" value="@instance.Capacity" required />
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-dollar-sign text-warning me-1"></i>Giá cơ bản</label>
-                                        <input type="number" name="TourInstances[@instIndex].PriceBase" class="form-control" min="0" step="0.01" value="@instance.PriceBase" />
+                                        <input type="number" name="TourInstances[@instIndex].PriceBase" class="form-control" min="0" step="0.01" value="@instance.PriceBase" required />
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-user-tie text-primary me-1"></i>Hướng dẫn viên</label>
@@ -247,7 +247,7 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-tag text-info me-1"></i>Loại giá</label>
-                                        <select name="TourPrices[@priceIdx].PriceType" class="form-select">
+                                        <select name="TourPrices[@priceIdx].PriceType" class="form-select" required>
                                             <option value="Người lớn" selected="@(price.PriceType == "Người lớn")">Người lớn</option>
                                             <option value="Trẻ em" selected="@(price.PriceType == "Trẻ em")">Trẻ em</option>
                                             <option value="Người cao tuổi" selected="@(price.PriceType == "Người cao tuổi")">Người cao tuổi</option>
@@ -257,7 +257,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-money-bill-wave text-success me-1"></i>Số tiền</label>
-                                        <input type="number" name="TourPrices[@priceIdx].Amount" class="form-control" min="0" step="0.01" value="@price.Amount" />
+                                        <input type="number" name="TourPrices[@priceIdx].Amount" class="form-control" min="0" step="0.01" value="@price.Amount" required />
                                     </div>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-danger remove-price"><i class="fas fa-trash me-1"></i>Xóa</button>
@@ -291,11 +291,11 @@
                                 <div class="row">
                                     <div class="col-md-2 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
-                                        <input type="number" name="Itineraries[@itinIdx].DayIndex" class="form-control" min="1" value="@itinerary.DayIndex" />
+                                        <input type="number" name="Itineraries[@itinIdx].DayIndex" class="form-control" min="1" value="@itinerary.DayIndex" required />
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-heading text-info me-1"></i>Tiêu đề</label>
-                                        <input type="text" name="Itineraries[@itinIdx].Title" class="form-control" value="@itinerary.Title" />
+                                        <input type="text" name="Itineraries[@itinIdx].Title" class="form-control" value="@itinerary.Title" required />
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold"><i class="fas fa-align-left text-success me-1"></i>Mô tả</label>
@@ -661,6 +661,27 @@
     
     <script>
         (function() {
+            // Initialize map FIRST
+            const map = L.map('map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            let currentMarker = null;
+
+            // Debounce function to limit API calls
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
             // Pre-populate location data
             @if (Model.Location != null)
             {
@@ -694,32 +715,29 @@
                 }
             }
 
-            // Initialize map and set existing location if available
+            // Set existing location if available - NO TIMEOUT NEEDED NOW
             @if (Model.Location != null && Model.Location.Latitude.HasValue && Model.Location.Longitude.HasValue)
             {
                 <text>
-                // Wait for map to be initialized, then set location
-                setTimeout(() => {
-                    const lat = @Model.Location.Latitude.Value;
-                    const lng = @Model.Location.Longitude.Value;
-                    
-                    // Set map view to location
-                    map.setView([lat, lng], 13);
-                    
-                    // Add marker
-                    if (currentMarker) {
-                        map.removeLayer(currentMarker);
-                    }
-                    currentMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-                    
-                    // Update marker on drag
-                    currentMarker.on('dragend', function(e) {
-                        const position = e.target.getLatLng();
-                        document.getElementById("NewLocationLatitude").value = position.lat;
-                        document.getElementById("NewLocationLongitude").value = position.lng;
-                        reverseGeocode(position.lat, position.lng);
-                    });
-                }, 100);
+                const lat = @Model.Location.Latitude.Value;
+                const lng = @Model.Location.Longitude.Value;
+                
+                // Set map view to location
+                map.setView([lat, lng], 13);
+                
+                // Add marker
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                currentMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                
+                // Update marker on drag
+                currentMarker.on('dragend', function(e) {
+                    const position = e.target.getLatLng();
+                    document.getElementById("NewLocationLatitude").value = position.lat;
+                    document.getElementById("NewLocationLongitude").value = position.lng;
+                    debouncedReverseGeocode(position.lat, position.lng);
+                });
                 </text>
             }
 
@@ -752,21 +770,21 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-calendar-check text-success me-1"></i>Ngày bắt đầu</label>
-                            <input type="date" name="TourInstances[${nextIndex}].StartDate" class="form-control" />
+                            <input type="date" name="TourInstances[${nextIndex}].StartDate" class="form-control" required />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-calendar-xmark text-danger me-1"></i>Ngày kết thúc</label>
-                            <input type="date" name="TourInstances[${nextIndex}].EndDate" class="form-control" />
+                            <input type="date" name="TourInstances[${nextIndex}].EndDate" class="form-control" required />
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-users text-info me-1"></i>Sức chứa</label>
-                            <input type="number" name="TourInstances[${nextIndex}].Capacity" class="form-control" min="0" />
+                            <input type="number" name="TourInstances[${nextIndex}].Capacity" class="form-control" min="0" value="20" required />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-dollar-sign text-warning me-1"></i>Giá cơ bản</label>
-                            <input type="number" name="TourInstances[${nextIndex}].PriceBase" class="form-control" min="0" step="0.01" />
+                            <input type="number" name="TourInstances[${nextIndex}].PriceBase" class="form-control" min="0" step="0.01" value="0" required />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-user-tie text-primary me-1"></i>Hướng dẫn viên</label>
@@ -803,7 +821,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-tag text-primary me-1"></i>Loại giá</label>
-                            <select name="TourPrices[${nextIndex}].PriceType" class="form-select">
+                            <select name="TourPrices[${nextIndex}].PriceType" class="form-select" required>
                                 <option value="Người lớn">Người lớn</option>
                                 <option value="Trẻ em">Trẻ em</option>
                                 <option value="Người cao tuổi">Người cao tuổi</option>
@@ -813,7 +831,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-money-bill-wave text-success me-1"></i>Số tiền</label>
-                            <input type="number" name="TourPrices[${nextIndex}].Amount" class="form-control" min="0" step="0.01" />
+                            <input type="number" name="TourPrices[${nextIndex}].Amount" class="form-control" min="0" step="0.01" required />
                         </div>
                     </div>
                     <div class="text-end">
@@ -837,11 +855,11 @@
                     <div class="row">
                         <div class="col-md-2 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-hashtag text-primary me-1"></i>Ngày thứ</label>
-                            <input type="number" name="Itineraries[${nextIndex}].DayIndex" class="form-control" min="1" />
+                            <input type="number" name="Itineraries[${nextIndex}].DayIndex" class="form-control" min="1" required />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-heading text-info me-1"></i>Tiêu đề</label>
-                            <input type="text" name="Itineraries[${nextIndex}].Title" class="form-control" />
+                            <input type="text" name="Itineraries[${nextIndex}].Title" class="form-control" required />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold"><i class="fas fa-align-left text-success me-1"></i>Mô tả</label>
@@ -870,16 +888,6 @@
                 }
             });
 
-
-
-            // Initialize map
-            const map = L.map('map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            let currentMarker = null;
-
             function reverseGeocode(lat, lng) {
                 // Show loading state
                 const nameField = document.getElementById("NewLocationName");
@@ -892,116 +900,86 @@
                 cityField.value = "Đang tải...";
                 countryField.value = "Đang tải...";
                 
-                // Add delay to respect Nominatim usage policy (max 1 request per second)
-                setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
-                        headers: {
-                            'User-Agent': 'TourViet-App/1.0'
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`, {
+                    headers: {
+                        'User-Agent': 'TourViet-App/1.0'
+                    }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
                         }
+                        return res.json();
                     })
-                        .then(res => {
-                            if (!res.ok) {
-                                throw new Error(`HTTP error! status: ${res.status}`);
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            console.log('Reverse geocoding response:', data);
+                    .then(data => {
+                        console.log('Reverse geocoding response:', data);
+                        
+                        if (data && data.address) {
+                            const address = data.address;
                             
-                            if (data && data.address) {
-                                const address = data.address;
-                                
-                                // Set location name - try various fields
-                                let locationName = address.tourism || 
-                                                 address.amenity || 
-                                                 address.historic ||
-                                                 address.shop ||
-                                                 address.building ||
-                                                 address.road ||
-                                                 address.neighbourhood ||
-                                                 address.suburb ||
-                                                 address.village ||
-                                                 address.town ||
-                                                 address.city ||
-                                                 data.display_name?.split(',')[0]?.trim() ||
-                                                 'Địa điểm không tên';
-                                nameField.value = locationName;
-                                
-                                // Set full address
-                                addressField.value = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                                
-                                // Set city - try multiple address components
-                                let city = address.city || 
-                                          address.town || 
-                                          address.village || 
-                                          address.municipality || 
-                                          address.county ||
-                                          address.state ||
-                                          '';
-                                cityField.value = city;
-                                
-                                // Set country
-                                if (address.country) {
-                                    countryField.value = address.country;
-                                } else {
-                                    countryField.value = 'Không xác định';
-                                }
-                                
-                                console.log('Location fields updated:', {
-                                    name: locationName,
-                                    address: data.display_name,
-                                    city: city,
-                                    country: address.country
-                                });
+                            // Set location name - try various fields
+                            let locationName = address.tourism || 
+                                             address.amenity || 
+                                             address.historic ||
+                                             address.shop ||
+                                             address.building ||
+                                             address.road ||
+                                             address.neighbourhood ||
+                                             address.suburb ||
+                                             address.village ||
+                                             address.town ||
+                                             address.city ||
+                                             data.display_name?.split(',')[0]?.trim() ||
+                                             'Địa điểm không tên';
+                            nameField.value = locationName;
+                            
+                            // Set full address
+                            addressField.value = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                            
+                            // Set city - try multiple address components
+                            let city = address.city || 
+                                      address.town || 
+                                      address.village || 
+                                      address.municipality || 
+                                      address.county ||
+                                      address.state ||
+                                      '';
+                            cityField.value = city;
+                            
+                            // Set country
+                            if (address.country) {
+                                countryField.value = address.country;
                             } else {
-                                // No address data - set coordinate-based values
-                                nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                                addressField.value = `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                                cityField.value = '';
                                 countryField.value = 'Không xác định';
-                                console.warn('No address data returned from geocoding');
                             }
-                        })
-                        .catch(error => {
-                            console.error('Reverse geocoding error:', error);
-                            
-                            // Fallback values on error
+                        } else {
+                            // No address data - set coordinate-based values
                             nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                             addressField.value = `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                             cityField.value = '';
                             countryField.value = 'Không xác định';
-                            
-                            // Show user-friendly error
-                            alert('Không thể tự động điền địa chỉ. Vui lòng nhập thủ công hoặc thử lại.');
-                        });
-                }, 1000); // 1 second delay to respect API rate limits
+                            console.warn('No address data returned from geocoding');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Reverse geocoding error:', error);
+                        
+                        // Fallback values on error
+                        nameField.value = `Vị trí ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        addressField.value = `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        cityField.value = '';
+                        countryField.value = 'Không xác định';
+                        
+                        // Show user-friendly error (non-blocking)
+                        if (typeof showAlert === 'function') {
+                            showAlert('warning', 'Không thể tự động điền địa chỉ. Vui lòng nhập thủ công.');
+                        }
+                    });
             }
 
-            // Load existing marker if coordinates exist
-            const initialLat = document.getElementById("NewLocationLatitude").value;
-            const initialLng = document.getElementById("NewLocationLongitude").value;
-            if (initialLat && initialLng) {
-                const lat = parseFloat(initialLat);
-                const lng = parseFloat(initialLng);
-                
-                currentMarker = L.marker([lat, lng], {draggable: true}).addTo(map)
-                    .bindPopup(`Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
-                    .openPopup();
-                
-                map.setView([lat, lng], 13);
-                
-                currentMarker.on('dragend', function(event) {
-                    const marker = event.target;
-                    const position = marker.getLatLng();
-                    
-                    document.getElementById("NewLocationLatitude").value = position.lat;
-                    document.getElementById("NewLocationLongitude").value = position.lng;
-                    
-                    reverseGeocode(position.lat, position.lng);
-                    
-                    marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
-                });
-            }
+            // Create debounced version of reverseGeocode
+            // 1000ms delay to be safe with Nominatim limits
+            const debouncedReverseGeocode = debounce(reverseGeocode, 1000);
 
             map.on('click', function(e) {
                 const lat = e.latlng.lat;
@@ -1018,7 +996,7 @@
                 document.getElementById("NewLocationLatitude").value = lat;
                 document.getElementById("NewLocationLongitude").value = lng;
                 
-                reverseGeocode(lat, lng);
+                debouncedReverseGeocode(lat, lng);
                 
                 currentMarker.on('dragend', function(event) {
                     const marker = event.target;
@@ -1027,7 +1005,7 @@
                     document.getElementById("NewLocationLatitude").value = position.lat;
                     document.getElementById("NewLocationLongitude").value = position.lng;
                     
-                    reverseGeocode(position.lat, position.lng);
+                    debouncedReverseGeocode(position.lat, position.lng);
                     
                     marker.bindPopup(`Tọa độ: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`).openPopup();
                 });
@@ -1367,12 +1345,11 @@
                 });
             }
 
-            // Attach reindexing to button CLICK to ensure it runs before validation/submit
+            // Attach reindexing to FORM SUBMIT to ensure it runs before validation/submit
             const editForm = document.querySelector('form');
-            const submitBtn = document.getElementById('edit-tour-submit-btn');
             
-            if (submitBtn) {
-                submitBtn.addEventListener('click', function() {
+            if (editForm) {
+                editForm.addEventListener('submit', function() {
                     reindexArrayFields();
                 });
             }

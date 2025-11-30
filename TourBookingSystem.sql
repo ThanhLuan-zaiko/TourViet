@@ -63,9 +63,7 @@ CREATE TABLE dbo.UserRoles (
 
 -- Seed roles (chạy trong cùng batch)
 INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'Customer', N'Customer / Guest');
-INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'Admin', N'Administrator with full privileges');
 INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'AdministrativeStaff', N'Tour guide');
-INSERT INTO dbo.Roles (RoleID, RoleName, Description) VALUES (NEWID(), N'ExecutiveStaff', N'Tour guide');
 
 -- Tạo clustered index cho Users và UserRoles, index phụ
 CREATE CLUSTERED INDEX CX_Users_CreatedAt_UserID ON dbo.Users (CreatedAt, UserID);
@@ -271,6 +269,23 @@ CREATE TABLE dbo.Promotions (
 
 CREATE NONCLUSTERED INDEX IX_Promotions_IsActive_StartEnd ON dbo.Promotions(IsActive, StartAt, EndAt);
 
+-- Part B1: Services (dịch vụ độc lập, UUID PK) - Moved before Bookings to satisfy FK constraint
+CREATE TABLE dbo.Services (
+  ServiceID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Services PRIMARY KEY DEFAULT NEWID(),
+  ServiceName NVARCHAR(200) NOT NULL,
+  Code NVARCHAR(50) NULL,                     -- mã nội bộ
+  Description NVARCHAR(MAX) NULL,
+  Price DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  Currency NVARCHAR(10) NOT NULL DEFAULT N'USD',
+  IsActive BIT NOT NULL DEFAULT 1,
+  IsTaxable BIT NOT NULL DEFAULT 1,
+  CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+  UpdatedAt DATETIME2(3) NULL,
+  IsDeleted BIT NOT NULL DEFAULT 0
+);
+
+CREATE NONCLUSTERED INDEX IX_Services_ServiceName ON dbo.Services(ServiceName);
+
 -- Tạo bảng Bookings (Đặt tour - liên kết khách và tour, hỗ trợ đặt/hủy) 
 CREATE TABLE dbo.Bookings (
   BookingID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Bookings PRIMARY KEY NONCLUSTERED DEFAULT NEWID(),
@@ -425,23 +440,6 @@ CREATE NONCLUSTERED INDEX IX_Notifications_UserID_SentAt ON dbo.Notifications(Us
 CREATE NONCLUSTERED INDEX IX_Notifications_IsRead_SentAt ON dbo.Notifications(IsRead, SentAt);
 
 
--- Part B1: Services (dịch vụ độc lập, UUID PK)
-CREATE TABLE dbo.Services (
-  ServiceID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Services PRIMARY KEY DEFAULT NEWID(),
-  ServiceName NVARCHAR(200) NOT NULL,
-  Code NVARCHAR(50) NULL,                     -- mã nội bộ
-  Description NVARCHAR(MAX) NULL,
-  Price DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-  Currency NVARCHAR(10) NOT NULL DEFAULT N'USD',
-  IsActive BIT NOT NULL DEFAULT 1,
-  IsTaxable BIT NOT NULL DEFAULT 1,
-  CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
-  UpdatedAt DATETIME2(3) NULL,
-  IsDeleted BIT NOT NULL DEFAULT 0
-);
-
-CREATE NONCLUSTERED INDEX IX_Services_ServiceName ON dbo.Services(ServiceName);
-
 -- Part B2: TourServices (liên kết many to many giữa Tours và Services)
 CREATE TABLE dbo.TourServices (
   TourServiceID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_TourServices PRIMARY KEY DEFAULT NEWID(),
@@ -463,6 +461,60 @@ CREATE UNIQUE NONCLUSTERED INDEX UQ_TourServices_Tour_Service ON dbo.TourService
 -- Part C: Indexes bổ sung (chạy sau khi các bảng tồn tại)
 CREATE NONCLUSTERED INDEX IDX_Tours_TourName ON dbo.Tours(TourName);
 CREATE NONCLUSTERED INDEX IDX_Users_Email ON dbo.Users(Email);
+
+DECLARE 
+  @plain NVARCHAR(4000) = N'AdminPassword123!',   -- thay mật khẩu an toàn trước khi production
+  @salt VARBINARY(32) = CRYPT_GEN_RANDOM(32),
+  @hash VARBINARY(MAX),
+  @i INT = 0,
+  @iterations INT = 1000,
+  @adminUserID UNIQUEIDENTIFIER,
+  @adminRoleID UNIQUEIDENTIFIER;
+
+SET @hash = CONVERT(VARBINARY(MAX), @plain) + @salt;
+
+WHILE @i < @iterations
+BEGIN
+  SET @hash = HASHBYTES('SHA2_512', @hash);
+  SET @i += 1;
+END
+
+SET @adminUserID = NEWID();
+
+INSERT INTO dbo.Users (UserID, Username, Email, PasswordHash, PasswordSalt, PasswordAlgo, CreatedAt, FullName)
+VALUES (
+  @adminUserID,
+  N'admin',
+  N'ThanhLuanAdmin@gmail.com',
+  @hash,
+  @salt,
+  N'SHA2_512+iter1000',
+  SYSUTCDATETIME(),
+  N'Administrator'
+);
+
+SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'AdministrativeStaff';
+
+INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
+VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);
+
+-- Performance Optimization Indexes for Overbooking System
+-- Run this SQL script to add indexes for faster queries
+
+-- Index for finding pending bookings by instance (used in soft limit checks)
+CREATE INDEX IX_Bookings_InstanceID_Status_CreatedAt 
+ON Bookings(InstanceID, Status, CreatedAt)
+INCLUDE (Seats);
+
+-- Index for user pending booking checks
+CREATE INDEX IX_Bookings_UserID_Status
+ON Bookings(UserID, Status);
+
+-- Composite index for tour instance lookups
+CREATE INDEX IX_TourInstances_Status_StartDate
+ON TourInstances(Status, StartDate);
+
+PRINT 'Performance indexes created successfully';
 
 select * from users;
 select * from userroles;
