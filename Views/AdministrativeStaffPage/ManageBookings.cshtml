@@ -146,6 +146,14 @@
                                                 <i class="bi bi-x-circle"></i>
                                             </button>
                                         }
+                                        else if (booking.Status == "Confirmed" && !booking.IsPaid)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="confirmCancel('@booking.BookingID', '@booking.BookingRef')"
+                                                    title="Hủy (chưa thanh toán)">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
                                     </div>
                                 </td>
                             </tr>

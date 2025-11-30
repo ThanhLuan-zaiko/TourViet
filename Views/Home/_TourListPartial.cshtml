@@ -43,20 +43,36 @@
 
                 <div class="mb-2">
                     @{
-                        // Get the most recent instance (future first, then latest past)
-                        var futureInstance = tour.TourInstances?
-                            .Where(ti => ti.StartDate >= DateTime.UtcNow.Date)
+                        // Prioritize showing instances with ACTUAL available capacity (based on confirmed bookings only)
+                        var futureInstances = tour.TourInstances?
+                            .Where(ti => ti.StartDate >= DateTime.UtcNow.Date && ti.Status == "Open")
                             .OrderBy(ti => ti.StartDate)
-                            .FirstOrDefault();
+                            .ToList();
                         
-                        var displayInstance = futureInstance ?? tour.TourInstances?
-                            .OrderByDescending(ti => ti.StartDate)
-                            .FirstOrDefault();
+                        // First try to find instance with available capacity
+                        var displayInstance = futureInstances?
+                            .FirstOrDefault(ti => ti.SeatsBooked < ti.Capacity);
+                        
+                        // If no available instances, show earliest future instance
+                        if (displayInstance == null)
+                        {
+                            displayInstance = futureInstances?.FirstOrDefault();
+                        }
+                        
+                        // Fallback to latest past instance
+                        if (displayInstance == null)
+                        {
+                            displayInstance = tour.TourInstances?
+                                .OrderByDescending(ti => ti.StartDate)
+                                .FirstOrDefault();
+                        }
                         
                         if (displayInstance != null)
                         {
-                            var availableSlots = displayInstance.Capacity - (displayInstance.SeatsBooked + displayInstance.SeatsHeld);
-                            if (availableSlots <= 0)
+                            // Calculate actual available slots (based on confirmed bookings only, not pending)
+                            var actualAvailable = displayInstance.Capacity - displayInstance.SeatsBooked;
+                            
+                            if (actualAvailable <= 0)
                             {
                                 <span class="text-danger small fw-bold">
                                     <i class="bi bi-x-circle-fill me-1"></i>Hết chỗ
@@ -65,7 +81,7 @@
                             else
                             {
                                 <span class="text-success small fw-bold">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Còn @availableSlots chỗ
+                                    <i class="bi bi-check-circle-fill me-1"></i>Còn @actualAvailable chỗ
                                 </span>
                             }
                             <span class="text-muted small ms-1">(@displayInstance.StartDate.ToString("dd/MM"))</span>

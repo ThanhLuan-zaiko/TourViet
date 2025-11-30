@@ -56,12 +56,15 @@ namespace TourViet.Controllers
                     foreach (var key in ModelState.Keys)
                     {
                         var modelStateVal = ModelState[key];
-                        foreach (var error in modelStateVal.Errors)
+                        if (modelStateVal != null)
                         {
-                            _logger.LogError($"Validation Error for {key}: {error.ErrorMessage}");
-                            if (error.Exception != null)
+                            foreach (var error in modelStateVal.Errors)
                             {
-                                _logger.LogError($"Validation Exception for {key}: {error.Exception.Message}");
+                                _logger.LogError($"Validation Error for {key}: {error.ErrorMessage}");
+                                if (error.Exception != null)
+                                {
+                                    _logger.LogError($"Validation Exception for {key}: {error.Exception.Message}");
+                                }
                             }
                         }
                     }
