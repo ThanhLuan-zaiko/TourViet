@@ -533,3 +533,5 @@ select * from TourServices;
 
 select * from Bookings;
 select * from BookingServices;
+select * from Payments;
+select * from Reviews;
