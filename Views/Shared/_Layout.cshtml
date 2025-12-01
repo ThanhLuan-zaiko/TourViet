@@ -117,9 +117,97 @@
     </footer>
 
 
+    <!-- Force Logout Notification Modal -->
+    <div class="modal fade" id="forceLogoutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="forceLogoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title" id="forceLogoutModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Thông báo quan trọng
+                    </h5>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-x-fill text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="mb-3 text-danger">Tài khoản đã bị cấm!</h4>
+                    <p class="lead mb-4" id="forceLogoutMessage"></p>
+                    <div class="alert alert-warning">
+                        Hệ thống sẽ tự động đăng xuất sau <strong id="logoutCountdown">5</strong> giây.
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0">
+                    <button type="button" class="btn btn-danger px-4" id="logoutNowBtn">Đăng xuất ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Global SignalR connection for UserHub
+        const userConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/user")
+            .withAutomaticReconnect()
+            .build();
+
+        userConnection.on("ForceLogout", function (message) {
+            // Set message
+            document.getElementById('forceLogoutMessage').textContent = message;
+            
+            // Show modal
+            var logoutModal = new bootstrap.Modal(document.getElementById('forceLogoutModal'));
+            logoutModal.show();
+            
+            // Countdown
+            var seconds = 5;
+            var countdownElement = document.getElementById('logoutCountdown');
+            
+            var interval = setInterval(function() {
+                seconds--;
+                countdownElement.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    performLogout();
+                }
+            }, 1000);
+            
+            // Handle "Logout Now" button
+            document.getElementById('logoutNowBtn').addEventListener('click', function() {
+                clearInterval(interval);
+                performLogout();
+            });
+        });
+
+        function performLogout() {
+            // Create a form to submit logout post request
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Account/Logout';
+            
+            // Add CSRF token
+            var token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '__RequestVerificationToken';
+                input.value = token.value;
+                form.appendChild(input);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        userConnection.start().catch(function (err) {
+            console.error("SignalR UserHub Connection Error: ", err.toString());
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

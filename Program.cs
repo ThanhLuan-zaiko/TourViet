@@ -55,6 +55,7 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddApplicationServices();
 
 // Add SignalR for real-time features
@@ -100,6 +101,7 @@ app.MapControllerRoute(
 // Map SignalR hubs
 app.MapHub<TourViet.Hubs.ReviewHub>("/hubs/review");
 app.MapHub<TourViet.Hubs.TourHub>("/hubs/tour");
+app.MapHub<TourViet.Hubs.UserHub>("/hubs/user");
 
 
 

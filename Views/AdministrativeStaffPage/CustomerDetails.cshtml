@@ -1,0 +1,471 @@
+@model TourViet.ViewModels.CustomerDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi Tiết Khách Hàng";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a asp-action="CustomerList" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <h1 class="h3">Chi Tiết Khách Hàng: @Model.FullName</h1>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng đặt tour
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalBookings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng chi tiêu
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.FormattedTotalSpent</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Đánh giá đã viết
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalReviews</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-star-fill fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Rating trung bình
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.AverageRating.ToString("F1") <i class="bi bi-star-fill text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-award fs-2 text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="customerTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                <i class="bi bi-person"></i> Thông Tin Cá Nhân
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab">
+                <i class="bi bi-calendar-check"></i> Lịch Sử Đặt Tour (@Model.TotalBookings)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                <i class="bi bi-star"></i> Đánh Giá (@Model.TotalReviews)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-4 bg-white shadow-sm" id="customerTabsContent">
+        <!-- Personal Information Tab -->
+        <div class="tab-pane fade show active" id="info" role="tabpanel">
+            @if (Model.IsBanned)
+            {
+                <div class="alert alert-danger mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Tài khoản này đang bị cấm!</h5>
+                            <p class="mb-0">Khách hàng này không thể đăng nhập hoặc thực hiện bất kỳ hành động nào trên hệ thống.</p>
+                        </div>
+                        <div class="ms-auto">
+                            <button type="button" class="btn btn-success unban-customer-btn" 
+                                    data-customer-id="@Model.UserID" data-customer-name="@Model.FullName">
+                                <i class="bi bi-unlock me-1"></i>Bỏ cấm ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" class="btn btn-danger ban-customer-btn" 
+                            data-customer-id="@Model.UserID" data-customer-name="@Model.FullName">
+                        <i class="bi bi-ban me-1"></i>Cấm tài khoản
+                    </button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông Tin Tài Khoản</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Họ tên:</dt>
+                                <dd class="col-sm-8">@Model.FullName</dd>
+
+                                <dt class="col-sm-4">Username:</dt>
+                                <dd class="col-sm-8">@Model.Username</dd>
+
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">@Model.Email</dd>
+
+                                <dt class="col-sm-4">Số điện thoại:</dt>
+                                <dd class="col-sm-8">@(Model.Phone ?? "N/A")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Địa chỉ:</dt>
+                                <dd class="col-sm-8">@(Model.Address ?? "N/A")</dd>
+
+                                <dt class="col-sm-4">Ngày đăng ký:</dt>
+                                <dd class="col-sm-8">@Model.FormattedCreatedAt</dd>
+
+                                <dt class="col-sm-4">User ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.UserID</code></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking History Tab -->
+        <div class="tab-pane fade" id="bookings" role="tabpanel">
+            <h5 class="mb-3">Lịch Sử Đặt Tour</h5>
+            @if (Model.Bookings != null && Model.Bookings.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã đặt</th>
+                                <th>Tour</th>
+                                <th>Ngày khởi hành</th>
+                                <th>Số chỗ</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.Bookings)
+                            {
+                                <tr>
+                                    <td><strong>@booking.BookingRef</strong></td>
+                                    <td>
+                                        <a asp-controller="Home" asp-action="TourDetails" asp-route-id="@booking.TourID">
+                                            @booking.TourName
+                                        </a>
+                                        <br />
+                                        <small class="text-muted">@booking.LocationName, @booking.Country</small>
+                                    </td>
+                                    <td>@booking.FormattedStartDate</td>
+                                    <td class="text-center">@booking.Seats</td>
+                                    <td>@booking.FormattedTotalAmount</td>
+                                    <td>
+                                        <span class="badge @booking.StatusBadgeClass">
+                                            <i class="@booking.StatusIcon"></i> @booking.Status
+                                        </span>
+                                    </td>
+                                    <td>@booking.FormattedCreatedAt</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Khách hàng chưa đặt tour nào.
+                </div>
+            }
+        </div>
+
+        <!-- Reviews Tab -->
+        <div class="tab-pane fade" id="reviews" role="tabpanel">
+            <h5 class="mb-3">Đánh Giá Tour</h5>
+            @if (Model.Reviews != null && Model.Reviews.Any())
+            {
+                <div class="row">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">
+                                            <a asp-controller="Home" asp-action="TourDetails" asp-route-id="@review.TourID">
+                                                @review.TourName
+                                            </a>
+                                        </h6>
+                                        <div class="text-warning">
+                                            @for (int i = 0; i < review.Rating; i++)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            @for (int i = review.Rating; i < 5; i++)
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(review.Comment))
+                                    {
+                                        <p class="card-text">@review.Comment</p>
+                                    }
+                                    <div class="text-muted small">
+                                        <i class="bi bi-geo-alt"></i> @review.LocationName, @review.Country
+                                        <br />
+                                        <i class="bi bi-calendar"></i> @review.FormattedCreatedAt
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Khách hàng chưa viết đánh giá nào.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.nav-tabs .nav-link {
+    color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+    color: #4e73df;
+    font-weight: bold;
+}
+
+.tab-content {
+    min-height: 400px;
+}
+</style>
+
+<!-- Ban Modal -->
+<div class="modal fade" id="banModal" tabindex="-1" aria-labelledby="banModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title" id="banModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận cấm tài khoản
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-3">Bạn có chắc chắn muốn cấm tài khoản <strong id="customerNameToBan" class="text-primary"></strong>?</p>
+                <div class="alert alert-warning d-flex align-items-center mb-0">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <small>Khách hàng sẽ bị đăng xuất ngay lập tức và không thể đăng nhập lại!</small>
+                </div>
+                <input type="hidden" id="customerIdToBan" />
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmBanBtn">
+                    <i class="bi bi-ban me-1"></i>Cấm Tài Khoản
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unban Modal -->
+<div class="modal fade" id="unbanModal" tabindex="-1" aria-labelledby="unbanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white border-0">
+                <h5 class="modal-title" id="unbanModalLabel">
+                    <i class="bi bi-unlock me-2"></i>Xác nhận bỏ cấm tài khoản
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-3">Bạn có chắc chắn muốn bỏ cấm tài khoản <strong id="customerNameToUnban" class="text-primary"></strong>?</p>
+                <div class="alert alert-info d-flex align-items-center mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small>Khách hàng sẽ có thể đăng nhập và sử dụng dịch vụ trở lại!</small>
+                </div>
+                <input type="hidden" id="customerIdToUnban" />
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-success" id="confirmUnbanBtn">
+                    <i class="bi bi-unlock me-1"></i>Bỏ Cấm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle ban button click
+            $('.ban-customer-btn').click(function() {
+                var customerId = $(this).data('customer-id');
+                var customerName = $(this).data('customer-name');
+                
+                $('#customerIdToBan').val(customerId);
+                $('#customerNameToBan').text(customerName);
+                
+                $('#banModal').modal('show');
+            });
+            
+            // Handle unban button click
+            $('.unban-customer-btn').click(function() {
+                var customerId = $(this).data('customer-id');
+                var customerName = $(this).data('customer-name');
+                
+                $('#customerIdToUnban').val(customerId);
+                $('#customerNameToUnban').text(customerName);
+                
+                $('#unbanModal').modal('show');
+            });
+            
+            // Handle ban confirmation
+            $('#confirmBanBtn').click(function() {
+                var customerId = $('#customerIdToBan').val();
+                if(customerId) {
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    
+                    $.ajax({
+                        url: '@Url.Action("BanCustomer", "Home")',
+                        type: 'POST',
+                        data: {
+                            'id': customerId,
+                            '__RequestVerificationToken': token
+                        },
+                        success: function(response) {
+                            $('#banModal').modal('hide');
+                            
+                            if(response.success) {
+                                window.location.href = '@Url.Action("CustomerList", "Home")';
+                            } else {
+                                alert(response.message || 'Có lỗi xảy ra khi cấm tài khoản.');
+                            }
+                        },
+                        error: function() {
+                            $('#banModal').modal('hide');
+                            alert('Có lỗi xảy ra khi cấm tài khoản.');
+                        }
+                    });
+                }
+            });
+            
+            // Handle unban confirmation
+            $('#confirmUnbanBtn').click(function() {
+                var customerId = $('#customerIdToUnban').val();
+                if(customerId) {
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    
+                    $.ajax({
+                        url: '@Url.Action("UnbanCustomer", "Home")',
+                        type: 'POST',
+                        data: {
+                            'id': customerId,
+                            '__RequestVerificationToken': token
+                        },
+                        success: function(response) {
+                            $('#unbanModal').modal('hide');
+                            
+                            if(response.success) {
+                                location.reload();
+                            } else {
+                                alert(response.message || 'Có lỗi xảy ra khi bỏ cấm tài khoản.');
+                            }
+                        },
+                        error: function() {
+                            $('#unbanModal').modal('hide');
+                            alert('Có lỗi xảy ra khi bỏ cấm tài khoản.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
+
+@* Add CSRF token for AJAX requests *@
+<form id="csrfForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>

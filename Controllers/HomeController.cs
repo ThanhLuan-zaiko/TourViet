@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using TourViet.Data;
 using TourViet.Models;
 using TourViet.Services.Interfaces;
@@ -13,17 +14,23 @@ public class HomeController : Controller
     private readonly TourBookingDbContext _context;
     private readonly ITourService _tourService;
     private readonly IBookingService _bookingService;
+    private readonly ICustomerService _customerService;
+    private readonly IHubContext<TourViet.Hubs.UserHub> _userHubContext;
 
     public HomeController(
         ILogger<HomeController> logger, 
         TourBookingDbContext context,
         ITourService tourService,
-        IBookingService bookingService)
+        IBookingService bookingService,
+        ICustomerService customerService,
+        IHubContext<TourViet.Hubs.UserHub> userHubContext)
     {
         _logger = logger;
         _context = context;
         _tourService = tourService;
         _bookingService = bookingService;
+        _customerService = customerService;
+        _userHubContext = userHubContext;
     }
 
     public async Task<IActionResult> Index()
@@ -453,7 +460,7 @@ public class HomeController : Controller
         return View(bookings);
     }
 
-    public IActionResult CustomerList()
+    public async Task<IActionResult> CustomerList()
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -463,6 +470,98 @@ public class HomeController : Controller
             return RedirectToAction("Index");
         }
         
-        return View("../AdministrativeStaffPage/CustomerList");
+        // Get all customers - DataTables will handle pagination client-side
+        var customers = await _customerService.GetCustomersPagedAsync(1, int.MaxValue);
+        var totalCustomers = customers.Count;
+        
+        // Calculate statistics
+        ViewBag.TotalCustomers = totalCustomers;
+        ViewBag.CustomersThisMonth = customers.Count(c => c.CreatedAt >= DateTime.UtcNow.AddMonths(-1));
+        ViewBag.TotalBookings = customers.Sum(c => c.TotalBookings);
+        ViewBag.TotalRevenue = customers.Sum(c => c.TotalSpent);
+        
+        return View("../AdministrativeStaffPage/CustomerList", customers);
+    }
+    
+    public async Task<IActionResult> CustomerDetails(Guid? id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return RedirectToAction("Index");
+        }
+        
+        if (id == null)
+        {
+            return NotFound();
+        }
+        
+        var customerDetails = await _customerService.GetCustomerDetailsAsync(id.Value);
+        
+        if (customerDetails == null)
+        {
+            return NotFound();
+        }
+        
+        return View("../AdministrativeStaffPage/CustomerDetails", customerDetails);
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BanCustomer(Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return Json(new { success = false, message = "Bạn không có quyền thực hiện hành động này." });
+        }
+        
+        try
+        {
+            var result = await _customerService.BanCustomerAsync(id);
+            
+            if (result.Success)
+            {
+                // Broadcast ban event via SignalR to logout user immediately
+                await _userHubContext.Clients.Group($"user_{id}").SendAsync("ForceLogout", "Tài khoản của bạn đã bị cấm. Vui lòng liên hệ Admin.");
+                _logger.LogInformation("Customer {CustomerId} banned successfully and logout signal sent", id);
+            }
+            
+            return Json(new { success = result.Success, message = result.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error banning customer {CustomerId}", id);
+            return Json(new { success = false, message = "Có lỗi xảy ra khi cấm tài khoản." });
+        }
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnbanCustomer(Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
+        
+        if (!isAdministrativeStaff)
+        {
+            return Json(new { success = false, message = "Bạn không có quyền thực hiện hành động này." });
+        }
+        
+        try
+        {
+            var result = await _customerService.UnbanCustomerAsync(id);
+            
+            return Json(new { success = result.Success, message = result.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unbanning customer {CustomerId}", id);
+            return Json(new { success = false, message = "Có lỗi xảy ra khi bỏ cấm tài khoản." });
+        }
     }
 }

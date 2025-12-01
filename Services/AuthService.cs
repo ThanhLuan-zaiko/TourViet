@@ -162,9 +162,9 @@ public class AuthService : IAuthService
             var user = await _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null)
+            if (user == null || (user.IsDeleted && !user.IsDeleted)) // Keep logic for non-existent users
             {
                 await _rateLimitService.IncrementAttemptAsync(rateLimitKey, RateLimitWindow);
                 _logger.LogWarning("Login attempt with non-existent email: {Email}", request.Email);
@@ -172,6 +172,17 @@ public class AuthService : IAuthService
                 {
                     Success = false,
                     Message = "Email hoặc mật khẩu không đúng"
+                };
+            }
+
+            // Check if user is banned
+            if (user.IsDeleted)
+            {
+                _logger.LogWarning("Login attempt by banned user: {Email}", request.Email);
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Tài khoản đã bị cấm vui lòng liên hệ Admin"
                 };
             }
 
