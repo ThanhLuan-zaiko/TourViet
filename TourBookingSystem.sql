@@ -535,3 +535,9 @@ select * from Bookings;
 select * from BookingServices;
 select * from Payments;
 select * from Reviews;
+
+select * from Promotions;
+select * from PromotionRules;
+select * from PromotionTargets;
+select * from Coupons;
+select * from PromotionRedemptions;

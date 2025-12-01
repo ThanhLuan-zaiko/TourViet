@@ -23,6 +23,11 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Models.BookingService> BookingServices { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Promotion> Promotions { get; set; }
+    public DbSet<PromotionRule> PromotionRules { get; set; }
+    public DbSet<PromotionTarget> PromotionTargets { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<PromotionRedemption> PromotionRedemptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -233,6 +238,70 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
                 .WithMany()
                 .HasForeignKey(e => e.BookingID)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure Promotion entity
+        modelBuilder.Entity<Promotion>(entity =>
+        {
+            entity.HasKey(e => e.PromotionID);
+            entity.HasIndex(e => e.Slug);
+            entity.HasIndex(e => new { e.IsActive, e.StartAt, e.EndAt });
+        });
+
+        // Configure PromotionRule entity
+        modelBuilder.Entity<PromotionRule>(entity =>
+        {
+            entity.HasKey(e => e.PromotionRuleID);
+            entity.HasOne(e => e.Promotion)
+                .WithMany(p => p.PromotionRules)
+                .HasForeignKey(e => e.PromotionID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure PromotionTarget entity
+        modelBuilder.Entity<PromotionTarget>(entity =>
+        {
+            entity.HasKey(e => e.PromotionTargetID);
+            entity.HasOne(e => e.Promotion)
+                .WithMany(p => p.PromotionTargets)
+                .HasForeignKey(e => e.PromotionID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.TargetType, e.TargetID });
+        });
+
+        // Configure Coupon entity
+        modelBuilder.Entity<Coupon>(entity =>
+        {
+            entity.HasKey(e => e.CouponID);
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasOne(e => e.Promotion)
+                .WithMany(p => p.Coupons)
+                .HasForeignKey(e => e.PromotionID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure PromotionRedemption entity
+        modelBuilder.Entity<PromotionRedemption>(entity =>
+        {
+            entity.HasKey(e => e.RedemptionID);
+            entity.HasOne(e => e.Promotion)
+                .WithMany(p => p.PromotionRedemptions)
+                .HasForeignKey(e => e.PromotionID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Coupon)
+                .WithMany(c => c.PromotionRedemptions)
+                .HasForeignKey(e => e.CouponID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Booking)
+                .WithMany()
+                .HasForeignKey(e => e.BookingID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserID)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => e.PromotionID);
+            entity.HasIndex(e => e.UserID);
         });
     }
 }

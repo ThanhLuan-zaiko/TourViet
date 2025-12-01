@@ -1,0 +1,343 @@
+@{
+    ViewData["Title"] = "Chỉnh sửa Khuyến mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model TourViet.Models.Promotion
+
+<style>
+    .edit-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
+    }
+    
+    .form-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+    
+    .section-title {
+        color: #f5576c;
+        font-weight: 600;
+        border-bottom: 2px solid #ffe0ec;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;  
+        display: flex;
+        align-items-center;
+        gap: 0.5rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 0.65rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #f5576c;
+        box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+    }
+    
+    .info-badge {
+        background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+        border-left: 4px solid #6366f1;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="edit-header">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="h2 mb-2">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Chỉnh sửa Chương trình Khuyến mãi
+                </h1>
+                <p class="mb-0 opacity-75">Cập nhật thông tin chương trình khuyến mãi</p>
+            </div>
+            <a asp-action="Index" asp-controller="Promotion" class="btn btn-light">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card card">
+        <div class="card-body p-4">
+            <form asp-action="Edit" asp-controller="Promotion" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="PromotionID" />
+                <input type="hidden" asp-for="CreatedAt" />
+                
+                <!-- Info Badge -->
+                <div class="info-badge mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill text-primary me-2" style="font-size: 1.25rem;"></i>
+                        <div>
+                            <strong>Chương trình được tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <br /><strong>Cập nhật lần cuối:</strong> @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Basic Information Section -->
+                <div class="section-title">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Thông tin cơ bản</span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Name" class="form-label">
+                            <i class="bi bi-tag me-1 text-primary"></i>
+                            Tên chương trình <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Name" class="form-control" placeholder="Nhập tên chương trình khuyến mãi" required />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Slug" class="form-label">
+                            <i class="bi bi-link-45deg me-1 text-primary"></i>
+                            Slug (URL thân thiện)
+                        </label>
+                        <input asp-for="Slug" class="form-control" placeholder="Tự động tạo nếu để trống" />
+                        <span asp-validation-for="Slug" class="text-danger"></span>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Để trống để tự động tạo từ tên chương trình
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PromotionType" class="form-label">
+                            <i class="bi bi-tags me-1 text-primary"></i>
+                            Loại khuyến mãi <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="PromotionType" class="form-select" required>
+                            <option value="">-- Chọn loại khuyến mãi --</option>
+                            <option value="Coupon">🎫 Mã giảm giá (Coupon)</option>
+                            <option value="Automatic">⚡ Tự động áp dụng</option>
+                            <option value="FlashSale">🔥 Flash Sale</option>
+                        </select>
+                        <span asp-validation-for="PromotionType" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Priority" class="form-label">
+                            <i class="bi bi-sort-numeric-down me-1 text-primary"></i>
+                            Độ ưu tiên
+                        </label>
+                        <input asp-for="Priority" type="number" class="form-control" min="1" max="1000" />
+                        <span asp-validation-for="Priority" class="text-danger"></span>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Số nhỏ = ưu tiên cao hơn (1-1000)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label">
+                        <i class="bi bi-file-text me-1 text-primary"></i>
+                        Mô tả chi tiết
+                    </label>
+                    <textarea asp-for="Description" class="form-control" rows="4" 
+                              placeholder="Mô tả chi tiết về chương trình khuyến mãi"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                
+                <!-- Time Configuration Section -->
+                <div class="section-title mt-4">
+                    <i class="bi bi-calendar-range-fill"></i>
+                    <span>Cấu hình thời gian</span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StartAt" class="form-label">
+                            <i class="bi bi-calendar-event me-1 text-success"></i>
+                            Ngày bắt đầu
+                        </label>
+                        <input asp-for="StartAt" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="StartAt" class="text-danger"></span>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Để trống nếu không giới hạn thời gian bắt đầu
+                        </small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EndAt" class="form-label">
+                            <i class="bi bi-calendar-x me-1 text-danger"></i>
+                            Ngày kết thúc
+                        </label>
+                        <input asp-for="EndAt" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="EndAt" class="text-danger"></span>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Để trống nếu không giới hạn thời gian kết thúc
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Usage Limits Section -->
+                <div class="section-title mt-4">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Giới hạn sử dụng</span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="MaxGlobalUses" class="form-label">
+                            <i class="bi bi-globe me-1 text-primary"></i>
+                            Số lần sử dụng tối đa (Toàn cục)
+                        </label>
+                        <input asp-for="MaxGlobalUses" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
+                        <span asp-validation-for="MaxGlobalUses" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="MaxUsesPerUser" class="form-label">
+                            <i class="bi bi-person me-1 text-primary"></i>
+                            Số lần sử dụng/người
+                        </label>
+                        <input asp-for="MaxUsesPerUser" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
+                        <span asp-validation-for="MaxUsesPerUser" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="MinSeats" class="form-label">
+                            <i class="bi bi-people me-1 text-primary"></i>
+                            Số ghế tối thiểu
+                        </label>
+                        <input asp-for="MinSeats" type="number" class="form-control" min="0" placeholder="Không yêu cầu" />
+                        <span asp-validation-for="MinSeats" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="MinTotalAmount" class="form-label">
+                            <i class="bi bi-cash-coin me-1 text-success"></i>
+                            Giá trị đơn hàng tối thiểu (VND)
+                        </label>
+                        <input asp-for="MinTotalAmount" type="number" step="0.01" class="form-control" min="0" placeholder="Không yêu cầu" />
+                        <span asp-validation-for="MinTotalAmount" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <!-- Settings Section -->
+                <div class="section-title mt-4">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Cài đặt</span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
+                            <label asp-for="IsActive" class="form-check-label ms-2">
+                                <i class="bi bi-toggle-on text-success me-1"></i>
+                                Kích hoạt chương trình
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1 ms-5">
+                            Chương trình sẽ hoạt động trong khoảng thời gian đã định
+                        </small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="AllowStack" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
+                            <label asp-for="AllowStack" class="form-check-label ms-2">
+                                <i class="bi bi-layers text-info me-1"></i>
+                                Cho phép cộng dồn khuyến mãi
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1 ms-5">
+                            Cho phép sử dụng cùng lúc với các khuyến mãi khác
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-5 pt-4 border-top">
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-gradient btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Cập nhật chương trình
+                        </button>
+                        <a asp-action="Index" asp-controller="Promotion" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Convert UTC to local time for datetime-local inputs
+            var startAtInput = document.querySelector('input[name="StartAt"]');
+            var endAtInput = document.querySelector('input[name="EndAt"]');
+            
+            if (startAtInput && startAtInput.value) {
+                var startDate = new Date(startAtInput.value);
+                startAtInput.value = formatDateTimeLocal(startDate);
+            }
+            
+            if (endAtInput && endAtInput.value) {
+                var endDate = new Date(endAtInput.value);
+                endAtInput.value = formatDateTimeLocal(endDate);
+            }
+            
+            function formatDateTimeLocal(date) {
+                var year = date.getFullYear();
+                var month = String(date.getMonth() + 1).padStart(2, '0');
+                var day = String(date.getDate()).padStart(2, '0');
+                var hours = String(date.getHours()).padStart(2, '0');
+                var minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        });
+    </script>
+}
