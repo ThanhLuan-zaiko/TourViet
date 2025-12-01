@@ -96,5 +96,13 @@ namespace TourViet.Services.Interfaces
         /// </summary>
         /// <returns>Collection of Country entities (excluding Vietnam)</returns>
         Task<IEnumerable<Country>> GetInternationalCountriesAsync();
+
+        /// <summary>
+        /// Gets tour instances within a specific date range.
+        /// </summary>
+        /// <param name="startDate">Start date of the range</param>
+        /// <param name="endDate">End date of the range</param>
+        /// <returns>Collection of TourInstance entities</returns>
+        Task<IEnumerable<TourInstance>> GetTourInstancesAsync(DateTime startDate, DateTime endDate);
     }
 }

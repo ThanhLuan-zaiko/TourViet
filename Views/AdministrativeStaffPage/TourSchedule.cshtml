@@ -1,126 +1,547 @@
+@model IEnumerable<TourViet.Models.TourInstance>
 @{
     ViewData["Title"] = "Lịch Trình Tour";
     Layout = "_Layout";
+    var weekInstances = ViewBag.WeekInstances as IEnumerable<TourViet.Models.TourInstance>;
+    var selectedMonth = ViewBag.SelectedMonth as int? ?? DateTime.Now.Month;
+    var selectedYear = ViewBag.SelectedYear as int? ?? DateTime.Now.Year;
+    
+    // Ensure Model is not null
+    var tours = Model ?? Enumerable.Empty<TourViet.Models.TourInstance>();
+
+    // Data Aggregation for Charts
+    var allBookings = tours.SelectMany(t => t.Bookings).ToList();
+    
+    // 1. Booking Status Distribution
+    var bookingsByStatus = allBookings
+        .GroupBy(b => b.Status)
+        .ToDictionary(g => g.Key, g => g.Count());
+
+    // 2. Top 5 Tours by Occupancy Rate
+    var topTours = tours
+        .Select(t => new { 
+            Name = t.Tour.TourName, 
+            Occupancy = t.Capacity > 0 ? (double)(t.Bookings.Count(b => b.Status != "Cancelled" && b.Status != "Rejected")) / t.Capacity * 100 : 0 
+        })
+        .OrderByDescending(t => t.Occupancy)
+        .Take(5)
+        .ToList();
+
+    // 3. Daily Bookings (Last 30 Days)
+    var thirtyDaysAgo = DateTime.Now.AddDays(-30);
+    var dailyBookings = allBookings
+        .Where(b => b.CreatedAt >= thirtyDaysAgo)
+        .GroupBy(b => b.CreatedAt.Date)
+        .OrderBy(g => g.Key)
+        .Select(g => new { Date = g.Key.ToString("dd/MM"), Count = g.Count() })
+        .ToList();
+        
+    // 4. Revenue by Tour (Top 5)
+    var revenueByTour = tours
+        .Select(t => new {
+            Name = t.Tour.TourName,
+            Revenue = t.Bookings.Where(b => b.Status == "Completed" || b.Status == "Confirmed").Sum(b => b.TotalAmount)
+        })
+        .OrderByDescending(t => t.Revenue)
+        .Take(5)
+        .ToList();
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="h3 mb-4">Lịch Trình Tour</h1>
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800">
+                <i class="bi bi-calendar3 text-primary me-2"></i>Lịch Trình Tour
+            </h1>
+            <p class="text-muted mb-0">
+                <small>Quản lý lịch trình và theo dõi trạng thái tour</small>
+            </p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="tourTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule" type="button" role="tab" aria-controls="schedule" aria-selected="true">
+                <i class="bi bi-calendar-week me-2"></i>Lịch Trình
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab" aria-controls="statistics" aria-selected="false">
+                <i class="bi bi-graph-up me-2"></i>Thống Kê
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="tourTabContent">
+        <!-- Schedule Tab -->
+        <div class="tab-pane fade show active" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
             
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Lịch Trình Tour Trong Tháng</h6>
+            <!-- Monthly Schedule Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="bi bi-calendar-month me-2"></i>Lịch Trình Tháng @selectedMonth/@selectedYear
+                    </h6>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="monthSelect">Chọn tháng:</label>
-                                <select class="form-control" id="monthSelect">
-                                    <option>Tháng 11/2025</option>
-                                    <option>Tháng 12/2025</option>
-                                    <option>Tháng 1/2026</option>
+                <div class="card-body p-4">
+                    <!-- Search and Filter Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-2 mb-md-0">
+                            <div class="d-flex align-items-center">
+                                <label for="entriesPerPage" class="me-2 mb-0 text-muted">
+                                    <i class="bi bi-list-ol me-1"></i>Hiển thị:
+                                </label>
+                                <select id="entriesPerPage" class="form-select form-select-sm shadow-sm" style="width: auto;">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="75">75</option>
+                                    <option value="100">100</option>
                                 </select>
+                                <span class="ms-2 text-muted">tour</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="statusFilter">Lọc theo trạng thái:</label>
-                                <select class="form-control" id="statusFilter">
-                                    <option>Tất cả</option>
-                                    <option>Đang diễn ra</option>
-                                    <option>Sắp diễn ra</option>
-                                    <option>Đã kết thúc</option>
-                                </select>
+                        <div class="col-md-3">
+                            <select class="form-select shadow-sm" id="monthSelect" onchange="location.href='@Url.Action("TourSchedule")?month=' + this.value + '&year=@selectedYear'">
+                                @for (int i = 1; i <= 12; i++)
+                                {
+                                    if (selectedMonth == i)
+                                    {
+                                        <option value="@i" selected>Tháng @i/@selectedYear</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@i">Tháng @i/@selectedYear</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select shadow-sm" id="statusFilterSelect">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="upcoming">Sắp diễn ra</option>
+                                <option value="ongoing">Đang diễn ra</option>
+                                <option value="completed">Đã hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control border-start-0" 
+                                       placeholder="Tìm tour..." aria-label="Search">
                             </div>
                         </div>
+                    </div>
                     
                         <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
+                            <table class="table table-bordered table-hover" id="scheduleTable">
+                                <thead class="table-light">
                                 <tr>
                                     <th>Tour</th>
                                     <th>Ngày bắt đầu</th>
                                     <th>Ngày kết thúc</th>
-                                    <th>Khách hàng</th>
-                                    <th>Số lượng</th>
-                                    <th>Trạng thái</th>
-                                    <th>Hành động</th>
+                                    <th class="text-center">Sức chứa</th>
+                                    <th class="text-center">Thống kê khách</th>
+                                    <th class="text-center">Trạng thái</th>
+                                    <th class="text-center">Hành động</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <td>Du lịch Đà Lạt</td>
-                                    <td>20/11/2025</td>
-                                    <td>23/11/2025</td>
-                                    <td>Nguyễn Văn A</td>
-                                    <td>2 người</td>
-                                    <td><span class="badge bg-success">Sắp diễn ra</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Du lịch Nha Trang</td>
-                                    <td>25/11/2025</td>
-                                    <td>28/11/2025</td>
-                                    <td>Trần Thị B</td>
-                                    <td>3 người</td>
-                                    <td><span class="badge bg-success">Sắp diễn ra</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Du lịch Phú Quốc</td>
-                                    <td>02/12/2025</td>
-                                    <td>05/12/2025</td>
-                                    <td>Lê Văn C</td>
-                                    <td>4 người</td>
-                                    <td><span class="badge bg-info">Chưa diễn ra</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Du lịch Đà Nẵng</td>
-                                    <td>10/12/2025</td>
-                                    <td>13/12/2025</td>
-                                    <td>Phạm Thị D</td>
-                                    <td>2 người</td>
-                                    <td><span class="badge bg-info">Chưa diễn ra</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Xem chi tiết</a>
-                                    </td>
-                                </tr>
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        var statusClass = "bg-secondary";
+                                        var statusText = item.Status;
+                                        var dataStatus = "upcoming";
+                                        
+                                        var activeBookings = item.Bookings.Where(b => b.Status != "Cancelled" && b.Status != "Rejected").ToList();
+                                        var hasBookings = activeBookings.Any();
+                                        
+                                        // Calculate detailed statistics
+                                        var pendingSeats = item.Bookings.Where(b => b.Status == "Pending").Sum(b => b.Seats);
+                                        var confirmedSeats = item.Bookings.Where(b => b.Status == "Confirmed").Sum(b => b.Seats);
+                                        var completedSeats = item.Bookings.Where(b => b.Status == "Completed").Sum(b => b.Seats);
+                                        var cancelledSeats = item.Bookings.Where(b => b.Status == "Cancelled").Sum(b => b.Seats);
+                                        var totalBookedSeats = pendingSeats + confirmedSeats + completedSeats;
+                                        
+                                        if (!hasBookings)
+                                        {
+                                            // No bookings -> Upcoming
+                                            statusClass = "bg-primary";
+                                            statusText = "Sắp diễn ra";
+                                            dataStatus = "upcoming";
+                                        }
+                                        else
+                                        {
+                                            // Has bookings -> Check if sold out AND all paid
+                                            var isSoldOut = totalBookedSeats >= item.Capacity;
+                                            var allPaid = activeBookings.All(b => b.Status == "Completed");
+                                            
+                                            if (isSoldOut && allPaid)
+                                            {
+                                                // Tour is full AND all payments completed
+                                                statusClass = "bg-success";
+                                                statusText = "Đã hoàn thành";
+                                                dataStatus = "completed";
+                                            }
+                                            else
+                                            {
+                                                // Either not full or not all paid
+                                                statusClass = "bg-warning text-dark";
+                                                statusText = "Đang diễn ra";
+                                                dataStatus = "ongoing";
+                                            }
+                                        }
+
+                                        <tr class="tour-row" data-status="@dataStatus">
+                                            <td>
+                                                <strong>@item.Tour.TourName</strong>
+                                            </td>
+                                            <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+                                            <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">@item.Capacity chỗ</span>
+                                            </td>
+                                            <td>
+                                                <div class="customer-stats">
+                                                    @if (completedSeats > 0)
+                                                    {
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                                            <strong>Đã thanh toán:</strong> <span class="badge bg-success">@completedSeats khách</span>
+                                                        </div>
+                                                    }
+                                                    @if (confirmedSeats > 0)
+                                                    {
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-check-circle text-info"></i>
+                                                            <strong>Đã xác nhận:</strong> <span class="badge bg-info">@confirmedSeats khách</span>
+                                                        </div>
+                                                    }
+                                                    @if (pendingSeats > 0)
+                                                    {
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-clock text-warning"></i>
+                                                            <strong>Chờ xử lý:</strong> <span class="badge bg-warning text-dark">@pendingSeats khách</span>
+                                                        </div>
+                                                    }
+                                                    @if (cancelledSeats > 0)
+                                                    {
+                                                        <div class="mb-1">
+                                                            <i class="bi bi-x-circle text-danger"></i>
+                                                            <strong>Đã hủy:</strong> <span class="badge bg-danger">@cancelledSeats khách</span>
+                                                        </div>
+                                                    }
+                                                    @if (!hasBookings)
+                                                    {
+                                                        <div class="text-muted">
+                                                            <i class="bi bi-info-circle"></i> Chưa có đặt chỗ
+                                                        </div>
+                                                    }
+                                                    <hr class="my-1">
+                                                    <div>
+                                                        <strong>Tổng đã đặt:</strong> <span class="badge bg-dark">@totalBookedSeats / @item.Capacity</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge @statusClass">@statusText</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-action="TourDetails" asp-route-id="@item.TourID" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> Xem
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center">Không có lịch trình nào trong tháng này.</td>
+                                    </tr>
+                                }
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                </div>
             
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Lịch Trình Tuần Này</h6>
+                    <!-- Weekly Schedule Card -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-gradient-primary text-white py-3">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="bi bi-calendar-week me-2"></i>Lịch Trình Tuần Này
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle" id="weekScheduleTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Tour</th>
+                                        <th>Ngày</th>
+                                        <th class="text-center">Sức chứa</th>
+                                        <th class="text-center">Thống kê khách</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-center">Hành động</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                @if (weekInstances != null && weekInstances.Any())
+                                {
+                                    foreach (var item in weekInstances)
+                                    {
+                                        var activeBookings = item.Bookings.Where(b => b.Status != "Cancelled" && b.Status != "Rejected").ToList();
+                                        var pendingSeats = item.Bookings.Where(b => b.Status == "Pending").Sum(b => b.Seats);
+                                        var confirmedSeats = item.Bookings.Where(b => b.Status == "Confirmed").Sum(b => b.Seats);
+                                        var completedSeats = item.Bookings.Where(b => b.Status == "Completed").Sum(b => b.Seats);
+                                        var totalBookedSeats = pendingSeats + confirmedSeats + completedSeats;
+                                        
+                                        var statusBadge = "bg-primary";
+                                        var statusText = "Sắp diễn ra";
+                                        
+                                        if (activeBookings.Any())
+                                        {
+                                            var isSoldOut = totalBookedSeats >= item.Capacity;
+                                            var allPaid = activeBookings.All(b => b.Status == "Completed");
+                                            
+                                            if (isSoldOut && allPaid)
+                                            {
+                                                statusBadge = "bg-success";
+                                                statusText = "Đã hoàn thành";
+                                            }
+                                            else
+                                            {
+                                                statusBadge = "bg-warning text-dark";
+                                                statusText = "Đang diễn ra";
+                                            }
+                                        }
+                                        
+                                        <tr>
+                                            <td><strong>@item.Tour.TourName</strong></td>
+                                            <td>
+                                                <i class="bi bi-clock text-muted"></i> 
+                                                @item.StartDate.ToString("dd/MM") - @item.EndDate.ToString("dd/MM/yyyy")
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">@item.Capacity chỗ</span>
+                                            </td>
+                                            <td>
+                                                <div class="customer-stats-compact">
+                                                    @if (completedSeats > 0)
+                                                    {
+                                                        <span class="badge bg-success me-1">
+                                                            <i class="bi bi-check-circle-fill"></i> @completedSeats
+                                                        </span>
+                                                    }
+                                                    @if (confirmedSeats > 0)
+                                                    {
+                                                        <span class="badge bg-info me-1">
+                                                            <i class="bi bi-check-circle"></i> @confirmedSeats
+                                                        </span>
+                                                    }
+                                                    @if (pendingSeats > 0)
+                                                    {
+                                                        <span class="badge bg-warning text-dark me-1">
+                                                            <i class="bi bi-clock"></i> @pendingSeats
+                                                        </span>
+                                                    }
+                                                    @if (!activeBookings.Any())
+                                                    {
+                                                        <span class="badge bg-secondary">
+                                                            <i class="bi bi-info-circle"></i> 0
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge @statusBadge">@statusText</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a asp-action="TourDetails" asp-route-id="@item.TourID" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> Xem
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <i class="bi bi-info-circle text-muted"></i> 
+                                            Không có lịch trình nào trong tuần này.
+                                        </td>
+                                    </tr>
+                                }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+            <div class="row">
+                <!-- Booking Status Chart -->
+                <div class="col-xl-4 col-lg-5 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Trạng thái đặt chỗ</h6>
                         </div>
                         <div class="card-body">
-                            <div class="list-group">
-                                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">Du lịch Đà Lạt</h5>
-                                        <small>20/11 - 23/11/2025</small>
-                                    </div>
-                                    <p class="mb-1">Khách hàng: Nguyễn Văn A (2 người)</p>
-                                    <small class="text-muted">Địa điểm: Đà Lạt, Lâm Đồng</small>
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h5 class="mb-1">Du lịch Nha Trang</h5>
-                                        <small>25/11 - 28/11/2025</small>
-                                    </div>
-                                    <p class="mb-1">Khách hàng: Trần Thị B (3 người)</p>
-                                    <small class="text-muted">Địa điểm: Nha Trang, Khánh Hòa</small>
-                                </a>
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="bookingStatusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Tours Chart -->
+                <div class="col-xl-8 col-lg-7 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Top 5 Tour có tỷ lệ lấp đầy cao nhất</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-bar">
+                                <canvas id="topToursChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Daily Bookings Chart -->
+                <div class="col-xl-8 col-lg-7 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Xu hướng đặt tour (30 ngày qua)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="dailyBookingsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Chart -->
+                <div class="col-xl-4 col-lg-5 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Top 5 Tour doanh thu cao nhất</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-bar">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Customer Statistics Table -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thống kê khách hàng theo Tour</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="tourStatsTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên Tour</th>
+                                            <th>Tổng khách</th>
+                                            <th>Doanh thu</th>
+                                            <th>Tỷ lệ lấp đầy</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            var tourStats = tours
+                                                .GroupBy(t => t.Tour.TourName)
+                                                .Select(g => new {
+                                                    TourName = g.Key,
+                                                    TotalGuests = g.Sum(t => t.Bookings.Where(b => b.Status != "Cancelled" && b.Status != "Rejected").Sum(b => b.Seats)),
+                                                    TotalRevenue = g.Sum(t => t.Bookings.Where(b => b.Status == "Completed" || b.Status == "Confirmed").Sum(b => b.TotalAmount)),
+                                                    AvgOccupancy = g.Average(t => t.Capacity > 0 ? (double)t.Bookings.Where(b => b.Status != "Cancelled" && b.Status != "Rejected").Sum(b => b.Seats) / t.Capacity * 100 : 0)
+                                                })
+                                                .OrderByDescending(t => t.TotalGuests)
+                                                .ToList();
+
+                                            foreach (var stat in tourStats)
+                                            {
+                                                <tr>
+                                                    <td>@stat.TourName</td>
+                                                    <td>@stat.TotalGuests</td>
+                                                    <td>@stat.TotalRevenue.ToString("N0") ₫</td>
+                                                    <td>
+                                                        <div class="progress" style="height: 20px;">
+                                                            <div class="progress-bar bg-info" role="progressbar" style="width: @stat.AvgOccupancy%" aria-valuenow="@stat.AvgOccupancy" aria-valuemin="0" aria-valuemax="100">
+                                                                @stat.AvgOccupancy.ToString("F1")%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Destination Statistics Table -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Thống kê theo địa điểm</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="destinationStatsTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Địa điểm</th>
+                                            <th>Số lượng Tour</th>
+                                            <th>Tổng khách</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            var destinationStats = tours
+                                                .GroupBy(t => t.Tour.Location?.LocationName ?? "Chưa xác định")
+                                                .Select(g => new {
+                                                    LocationName = g.Key,
+                                                    TourCount = g.Select(t => t.TourID).Distinct().Count(),
+                                                    TotalGuests = g.Sum(t => t.Bookings.Where(b => b.Status != "Cancelled" && b.Status != "Rejected").Sum(b => b.Seats))
+                                                })
+                                                .OrderByDescending(d => d.TotalGuests)
+                                                .ToList();
+
+                                            foreach (var stat in destinationStats)
+                                            {
+                                                <tr>
+                                                    <td>@stat.LocationName</td>
+                                                    <td>@stat.TourCount</td>
+                                                    <td>@stat.TotalGuests</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -129,3 +550,371 @@
         </div>
     </div>    
 </div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #667eea;
+}
+
+.input-group .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.customer-stats {
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem;
+}
+
+.tour-row {
+    transition: all 0.2s ease;
+}
+
+.tour-row:hover {
+    background-color: #f8f9fc;
+    transform: scale(1.005);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.list-group-item {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.5rem;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fc;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+@section Scripts {
+    <!-- DataTables CSS and JS from CDN -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <script>
+        // Chart.js Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Color palette
+            const colors = {
+                primary: 'rgb(78, 115, 223)',
+                success: 'rgb(28, 200, 138)',
+                info: 'rgb(54, 185, 204)',
+                warning: 'rgb(246, 194, 62)',
+                danger: 'rgb(231, 74, 59)',
+                secondary: 'rgb(133, 135, 150)'
+            };
+
+            Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+            Chart.defaults.color = '#858796';
+
+            // 1. Booking Status Chart (Doughnut)
+            const statusCtx = document.getElementById('bookingStatusChart');
+            if (statusCtx) {
+                const statusData = @Html.Raw(Json.Serialize(bookingsByStatus));
+                const statusLabels = Object.keys(statusData);
+                const statusValues = Object.values(statusData);
+                const statusColors = statusLabels.map(s => {
+                    if (s === 'Completed') return colors.success;
+                    if (s === 'Confirmed') return colors.info;
+                    if (s === 'Pending') return colors.warning;
+                    if (s === 'Cancelled') return colors.danger;
+                    return colors.secondary;
+                });
+
+                new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statusLabels,
+                        datasets: [{
+                            data: statusValues,
+                            backgroundColor: statusColors,
+                            hoverBorderColor: "rgba(234, 236, 244, 1)",
+                        }],
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Top Tours by Occupancy (Bar)
+            const topToursCtx = document.getElementById('topToursChart');
+            if (topToursCtx) {
+                new Chart(topToursCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(topTours.Select(t => t.Name))),
+                        datasets: [{
+                            label: 'Tỷ lệ lấp đầy (%)',
+                            data: @Html.Raw(Json.Serialize(topTours.Select(t => t.Occupancy))),
+                            backgroundColor: colors.primary,
+                            hoverBackgroundColor: "#2e59d9",
+                            borderColor: "#4e73df",
+                        }],
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%' }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.parsed.x.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 3. Daily Bookings Chart (Line)
+            const dailyCtx = document.getElementById('dailyBookingsChart');
+            if (dailyCtx) {
+                new Chart(dailyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(dailyBookings.Select(d => d.Date))),
+                        datasets: [{
+                            label: 'Số lượng đặt tour',
+                            data: @Html.Raw(Json.Serialize(dailyBookings.Select(d => d.Count))),
+                            borderColor: colors.info,
+                            backgroundColor: "rgba(54, 185, 204, 0.05)",
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.info,
+                            pointBorderColor: colors.info,
+                            pointHoverRadius: 3,
+                            pointHoverBackgroundColor: colors.info,
+                            pointHoverBorderColor: colors.info,
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }],
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // 4. Revenue Chart (Bar)
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                new Chart(revenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(Json.Serialize(revenueByTour.Select(t => t.Name))),
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: @Html.Raw(Json.Serialize(revenueByTour.Select(t => t.Revenue))),
+                            backgroundColor: colors.success,
+                            hoverBackgroundColor: "#17a673",
+                            borderColor: "#1cc88a",
+                        }],
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString('vi-VN') + ' ₫';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.parsed.y.toLocaleString('vi-VN') + ' ₫';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <script>
+        $(document).ready(function() {
+            var table;
+            if($.fn.DataTable) {
+                table = $('#scheduleTable').DataTable({
+                    "language": {
+                        "decimal": "",
+                        "emptyTable": "Không có dữ liệu",
+                        "info": "Hiển thị _START_ đến _END_ trong _TOTAL_ tour",
+                        "infoEmpty": "Hiển thị 0 đến 0 trong 0 tour",
+                        "infoFiltered": "(lọc từ _MAX_ tour)",
+                        "infoPostFix": "",
+                        "thousands": ",",
+                        "lengthMenu": "Hiển thị _MENU_ tour",
+                        "loadingRecords": "Đang tải...",
+                        "processing": "Đang xử lý...",
+                        "search": "Tìm kiếm:",
+                        "zeroRecords": "Không tìm thấy tour nào",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Sau",
+                            "previous": "Trước"
+                        },
+                        "aria": {
+                            "sortAscending": ": sắp xếp tăng dần",
+                            "sortDescending": ": sắp xếp giảm dần"
+                        }
+                    },
+                    "pageLength": 25,
+                    "lengthMenu": [[25, 50, 75, 100], [25, 50, 75, 100]],
+                    "responsive": true,
+                    "dom": '<"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    "order": [[1, 'asc']], // Sort by start date ascending
+                    "columnDefs": [
+                        { "orderable": false, "targets": [4, 5, 6] } // Disable sorting on Stats, Status, Actions
+                    ]
+                });
+                
+                // Initialize DataTable for weekly schedule
+                $('#weekScheduleTable').DataTable({
+                    "language": {
+                        "decimal": "",
+                        "emptyTable": "Không có dữ liệu",
+                        "info": "Hiển thị _START_ đến _END_ trong _TOTAL_ tour",
+                        "infoEmpty": "Hiển thị 0 đến 0 trong 0 tour",
+                        "infoFiltered": "(lọc từ _MAX_ tour)",
+                        "infoPostFix": "",
+                        "thousands": ",",
+                        "lengthMenu": "Hiển thị _MENU_ tour",
+                        "loadingRecords": "Đang tải...",
+                        "processing": "Đang xử lý...",
+                        "search": "Tìm kiếm:",
+                        "zeroRecords": "Không tìm thấy tour nào",
+                        "paginate": {
+                            "first": "Đầu",
+                            "last": "Cuối",
+                            "next": "Sau",
+                            "previous": "Trước"
+                        },
+                        "aria": {
+                            "sortAscending": ": sắp xếp tăng dần",
+                            "sortDescending": ": sắp xếp giảm dần"
+                        }
+                    },
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50], [10, 25, 50]],
+                    "responsive": true,
+                    "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>><"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    "order": [[1, 'asc']], // Sort by date
+                    "columnDefs": [
+                        { "orderable": false, "targets": [3, 4, 5] }
+                    ]
+                });
+
+                // Initialize DataTable for Tour Statistics
+                $('#tourStatsTable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+                    },
+                    "pageLength": 5,
+                    "lengthMenu": [[5, 10, 25], [5, 10, 25]],
+                    "responsive": true,
+                    "order": [[1, 'desc']] // Sort by Total Guests desc
+                });
+
+                // Initialize DataTable for Destination Statistics
+                $('#destinationStatsTable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json"
+                    },
+                    "pageLength": 5,
+                    "lengthMenu": [[5, 10, 25], [5, 10, 25]],
+                    "responsive": true,
+                    "order": [[2, 'desc']] // Sort by Total Guests desc
+                });
+                
+                // Custom search input
+                $('#searchInput').on('keyup', function() {
+                    table.search(this.value).draw();
+                });
+                
+                // Custom entries per page selector
+                $('#entriesPerPage').on('change', function() {
+                    table.page.len(parseInt(this.value)).draw();
+                });
+                
+                // Custom status filter
+                $('#statusFilterSelect').on('change', function() {
+                    var status = this.value;
+                    if (status === '') {
+                        table.column(5).search('').draw(); // Clear filter
+                    } else {
+                        // Map status values to Vietnamese text
+                        var statusMap = {
+                            'upcoming': 'Sắp diễn ra',
+                            'ongoing': 'Đang diễn ra',
+                            'completed': 'Đã hoàn thành'
+                        };
+                        table.column(5).search(statusMap[status] || '').draw();
+                    }
+                });
+            }
+        });
+    </script>
+}

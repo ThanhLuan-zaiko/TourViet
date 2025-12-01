@@ -484,6 +484,18 @@ namespace TourViet.Services
                 .ToListAsync();
         }
 
+        /// <inheritdoc/>
+        public async Task<IEnumerable<TourInstance>> GetTourInstancesAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _context.TourInstances
+                .Include(ti => ti.Tour)
+                    .ThenInclude(t => t.Location)
+                .Include(ti => ti.Bookings)
+                .Where(ti => ti.StartDate >= startDate && ti.StartDate <= endDate && !ti.Tour.IsDeleted)
+                .OrderBy(ti => ti.StartDate)
+                .ToListAsync();
+        }
+
         #region Private Helper Methods
 
         private void DetachDtoEntities(TourUpdateDto tourDto)

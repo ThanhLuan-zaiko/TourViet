@@ -369,7 +369,7 @@ public class HomeController : Controller
         };
     }
 
-    public IActionResult TourSchedule()
+    public async Task<IActionResult> TourSchedule(int? month, int? year)
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
         var isAdministrativeStaff = userRoles.Contains("AdministrativeStaff");
@@ -378,8 +378,28 @@ public class HomeController : Controller
         {
             return RedirectToAction("Index");
         }
+
+        var now = DateTime.UtcNow;
+        var selectedMonth = month ?? now.Month;
+        var selectedYear = year ?? now.Year;
         
-        return View("../AdministrativeStaffPage/TourSchedule");
+        // Month view data
+        var monthStart = new DateTime(selectedYear, selectedMonth, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        var monthInstances = await _tourService.GetTourInstancesAsync(monthStart, monthEnd);
+
+        // Week view data (current week)
+        var today = now.Date;
+        var currentDayOfWeek = (int)today.DayOfWeek;
+        var weekStart = today.AddDays(-currentDayOfWeek + 1); // Monday
+        var weekEnd = weekStart.AddDays(6); // Sunday
+        var weekInstances = await _tourService.GetTourInstancesAsync(weekStart, weekEnd);
+
+        ViewBag.SelectedMonth = selectedMonth;
+        ViewBag.SelectedYear = selectedYear;
+        ViewBag.WeekInstances = weekInstances;
+        
+        return View("../AdministrativeStaffPage/TourSchedule", monthInstances);
     }
 
     public async Task<IActionResult> BookingHistory()
