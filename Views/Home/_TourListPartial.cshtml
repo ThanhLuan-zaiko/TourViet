@@ -3,7 +3,7 @@
 @foreach (var tour in Model)
 {
     <div class="col tour-item">
-        <div class="card h-100 shadow-sm border-0 hover-shadow transition-all">
+        <div class="card h-100 shadow-sm border-0 hover-shadow transition-all" data-tour-id="@tour.TourID">
             <div class="position-relative overflow-hidden" style="height: 200px;">
                 @if (tour.TourImages != null && tour.TourImages.Any())
                 {

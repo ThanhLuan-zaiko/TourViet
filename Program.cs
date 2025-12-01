@@ -99,6 +99,7 @@ app.MapControllerRoute(
 
 // Map SignalR hubs
 app.MapHub<TourViet.Hubs.ReviewHub>("/hubs/review");
+app.MapHub<TourViet.Hubs.TourHub>("/hubs/tour");
 
 
 

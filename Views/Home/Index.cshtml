@@ -107,9 +107,136 @@
 
         // Observe the loading spinner (which is at the bottom)
         observer.observe(loadingSpinner);
-        
-        // Also observe end of list just in case, though usually spinner is enough
-        // But since spinner is hidden when not loading, we need a sentinel or just observe the last element
-        // A better approach is to have a sentinel element
     });
+</script>
+
+<!-- Toast Container for Notifications -->
+<div id="tour-toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 9999"></div>
+
+<style>
+    .tour-toast {
+        min-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .tour-toast-clickable {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .tour-toast-clickable:hover {
+        transform: scale(1.02);
+    }
+</style>
+
+<script src="~/js/tour-signalr.js"></script>
+<script>
+    (function() {
+        // Toast notification helper
+        function showToast(message, type = 'info', onClick = null) {
+            const toastContainer = document.getElementById('tour-toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const iconMap = {
+                'info': 'bi-info-circle-fill',
+                'success': 'bi-check-circle-fill',
+                'warning': 'bi-exclamation-triangle-fill',
+                'danger': 'bi-x-circle-fill'
+            };
+            
+            const bgMap = {
+                'info': 'bg-primary',
+                'success': 'bg-success',
+                'warning': 'bg-warning',
+                'danger': 'bg-danger'
+            };
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast tour-toast ${onClick ? 'tour-toast-clickable' : ''}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${bgMap[type]} text-white">
+                        <i class="bi ${iconMap[type]} me-2"></i>
+                        <strong class="me-auto">Tour Cập Nhật</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body bg-white">
+                        ${message}
+                        ${onClick ? '<div class="mt-2"><small class="text-muted">Click để xem</small></div>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+            
+            if (onClick) {
+                toastElement.addEventListener('click', onClick);
+            }
+            
+            toast.show();
+            
+            // Remove from DOM after hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+        
+        // Remove tour card from UI
+        function removeTourCard(tourId) {
+            const tourCard = document.querySelector(`[data-tour-id="${tourId}"]`);
+            if (tourCard) {
+                tourCard.closest('.col').style.transition = 'opacity 0.3s';
+                tourCard.closest('.col').style.opacity = '0';
+                
+                setTimeout(() => {
+                    tourCard.closest('.col').remove();
+                    console.log(`Removed tour card: ${tourId}`);
+                }, 300);
+            }
+        }
+        
+        // Initialize SignalR connection
+        TourSignalR.connect('all');
+        
+        // Handle new tour published
+        TourSignalR.onTourPublished(function(tour) {
+            showToast(
+                `<strong>${tour.tourName}</strong> đã được thêm mới!`,
+                'success',
+                () => location.reload()
+            );
+        });
+        
+        // Handle tour updated
+        TourSignalR.onTourUpdated(function(tour) {
+            showToast(
+                `<strong>${tour.tourName}</strong> đã được cập nhật!`,
+                'info',
+                () => location.reload()
+            );
+        });
+        
+        // Handle tour deleted
+        TourSignalR.onTourDeleted(function(tourId) {
+            removeTourCard(tourId);
+            showToast('Một tour đã bị xóa khỏi danh sách', 'warning');
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            TourSignalR.disconnect();
+        });
+    })();
 </script>

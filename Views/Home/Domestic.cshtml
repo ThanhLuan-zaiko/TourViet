@@ -110,3 +110,74 @@
         observer.observe(loadingSpinner);
     });
 </script>
+
+<!-- Toast Container -->
+<div id="tour-toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 9999"></div>
+
+<style>
+    .tour-toast { min-width: 300px; animation: slideInRight 0.3s ease-out; }
+    @@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .tour-toast-clickable { cursor: pointer; transition: transform 0.2s; }
+    .tour-toast-clickable:hover { transform: scale(1.02); }
+</style>
+
+<script src="~/js/tour-signalr.js"></script>
+<script>
+    (function() {
+        function showToast(message, type = 'info', onClick = null) {
+            const toastContainer = document.getElementById('tour-toast-container');
+            const toastId = 'toast-' + Date.now();
+            const iconMap = { 'info': 'bi-info-circle-fill', 'success': 'bi-check-circle-fill', 'warning': 'bi-exclamation-triangle-fill' };
+            const bgMap = { 'info': 'bg-primary', 'success': 'bg-success', 'warning': 'bg-warning' };
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast tour-toast ${onClick ? 'tour-toast-clickable' : ''}" role="alert">
+                    <div class="toast-header ${bgMap[type]} text-white">
+                        <i class="bi ${iconMap[type]} me-2"></i>
+                        <strong class="me-auto">Tour Trong Nước</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body bg-white">${message}${onClick ? '<div class="mt-2"><small class="text-muted">Click để xem</small></div>' : ''}</div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+            if (onClick) toastElement.addEventListener('click', onClick);
+            toast.show();
+            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+        }
+        
+        function removeTourCard(tourId) {
+            const tourCard = document.querySelector(`[data-tour-id="${tourId}"]`);
+            if (tourCard) {
+                tourCard.closest('.col').style.transition = 'opacity 0.3s';
+                tourCard.closest('.col').style.opacity = '0';
+                setTimeout(() => tourCard.closest('.col').remove(), 300);
+            }
+        }
+        
+        TourSignalR.connect('domestic');
+        
+        // Only show notifications for domestic tours (Vietnam)
+        TourSignalR.onTourPublished(function(tour) {
+            if (tour.isDomestic) {
+                showToast(`<strong>${tour.tourName}</strong> trong nước đã được thêm!`, 'success', () => location.reload());
+            }
+        });
+        
+        TourSignalR.onTourUpdated(function(tour) {
+            if (tour.isDomestic) {
+                showToast(`<strong>${tour.tourName}</strong> đã được cập nhật!`, 'info', () => location.reload());
+            }
+        });
+        
+        TourSignalR.onTourDeleted(function(tourId) {
+            removeTourCard(tourId);
+            showToast('Một tour trong nước đã bị xóa', 'warning');
+        });
+        
+        window.addEventListener('beforeunload', () => TourSignalR.disconnect());
+    })();
+</script>

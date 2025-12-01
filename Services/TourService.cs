@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TourViet.Data;
+using TourViet.DTOs;
+using TourViet.Hubs;
 using TourViet.Models;
 using TourViet.Models.DTOs;
 using TourViet.Services.Interfaces;
@@ -16,17 +19,20 @@ namespace TourViet.Services
         private readonly IImageService _imageService;
         private readonly ILocationService _locationService;
         private readonly ILogger<TourService> _logger;
+        private readonly IHubContext<TourHub> _tourHubContext;
 
         public TourService(
             TourBookingDbContext context,
             IImageService imageService,
             ILocationService locationService,
-            ILogger<TourService> logger)
+            ILogger<TourService> logger,
+            IHubContext<TourHub> tourHubContext)
         {
             _context = context;
             _imageService = imageService;
             _locationService = locationService;
             _logger = logger;
+            _tourHubContext = tourHubContext;
         }
 
         /// <inheritdoc/>
@@ -125,6 +131,12 @@ namespace TourViet.Services
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // Broadcast tour creation if published
+                if (tour.IsPublished)
+                {
+                    await BroadcastTourPublished(tour);
+                }
 
                 return tour;
             }
@@ -236,6 +248,9 @@ namespace TourViet.Services
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Broadcast tour update if published status changed or important fields changed
+                await BroadcastTourUpdated(existingTour);
+
                 return existingTour;
             }
             catch
@@ -309,6 +324,9 @@ namespace TourViet.Services
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // Broadcast tour deletion
+                await BroadcastTourDeleted(id);
 
                 return true;
             }
@@ -662,6 +680,139 @@ namespace TourViet.Services
             if (newInstances.Any())
             {
                 _context.TourInstances.AddRange(newInstances);
+            }
+        }
+
+        /// <summary>
+        /// Converts Tour entity to TourDto for SignalR broadcasting.
+        /// </summary>
+        private async Task<TourDto> ConvertToTourDto(Tour tour)
+        {
+            // Reload tour with all necessary includes if not already loaded
+            var fullTour = tour.Location == null || tour.Category == null
+                ? await _context.Tours
+                    .Include(t => t.Location)
+                        .ThenInclude(l => l!.Country)
+                    .Include(t => t.Category)
+                    .Include(t => t.TourImages)
+                    .Include(t => t.TourPrices)
+                    .FirstOrDefaultAsync(t => t.TourID == tour.TourID) ?? tour
+                : tour;
+
+            var minPrice = fullTour.TourPrices?.Any() == true
+                ? fullTour.TourPrices.Min(p => p.Amount)
+                : 0;
+
+            var mainImage = fullTour.TourImages?.OrderBy(i => i.SortOrder).FirstOrDefault();
+
+            return new TourDto
+            {
+                TourID = fullTour.TourID,
+                TourName = fullTour.TourName,
+                Description = fullTour.Description,
+                MinPrice = minPrice,
+                MainImageUrl = mainImage?.Url,
+                LocationName = fullTour.Location?.LocationName ?? "Unknown",
+                CategoryName = fullTour.Category?.CategoryName ?? "Other",
+                IsPublished = fullTour.IsPublished,
+                IsDomestic = fullTour.Location?.Country?.ISO2 == "VI",
+                CountryId = fullTour.Location?.CountryID,
+                CreatedAt = fullTour.CreatedAt
+            };
+        }
+
+        /// <summary>
+        /// Determines which page groups should receive this tour broadcast.
+        /// </summary>
+        private List<string> DeterminePageGroups(TourDto tour)
+        {
+            var groups = new List<string> { "tours_all" };
+
+            if (tour.IsDomestic)
+            {
+                groups.Add("tours_domestic");
+            }
+            else
+            {
+                groups.Add("tours_international");
+            }
+
+            // Note: Trending requires booking count check, which we'll skip for create/update
+            // Trending status will be determined by client-side logic or separate broadcast
+
+            return groups;
+        }
+
+        /// <summary>
+        /// Broadcasts tour published event to relevant page groups.
+        /// </summary>
+        private async Task BroadcastTourPublished(Tour tour)
+        {
+            try
+            {
+                var tourDto = await ConvertToTourDto(tour);
+                var groups = DeterminePageGroups(tourDto);
+
+                foreach (var group in groups)
+                {
+                    await _tourHubContext.Clients.Group(group)
+                        .SendAsync("TourPublished", tourDto);
+                }
+
+                _logger.LogInformation("Broadcasted TourPublished for {TourId} to groups: {Groups}",
+                    tour.TourID, string.Join(", ", groups));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error broadcasting TourPublished for {TourId}", tour.TourID);
+            }
+        }
+
+        /// <summary>
+        /// Broadcasts tour updated event to relevant page groups.
+        /// </summary>
+        private async Task BroadcastTourUpdated(Tour tour)
+        {
+            try
+            {
+                var tourDto = await ConvertToTourDto(tour);
+                var groups = DeterminePageGroups(tourDto);
+
+                foreach (var group in groups)
+                {
+                    await _tourHubContext.Clients.Group(group)
+                        .SendAsync("TourUpdated", tourDto);
+                }
+
+                _logger.LogInformation("Broadcasted TourUpdated for {TourId} to groups: {Groups}",
+                    tour.TourID, string.Join(", ", groups));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error broadcasting TourUpdated for {TourId}", tour.TourID);
+            }
+        }
+
+        /// <summary>
+        /// Broadcasts tour deleted event to all page groups.
+        /// </summary>
+        private async Task BroadcastTourDeleted(Guid tourId)
+        {
+            try
+            {
+                var allGroups = new[] { "tours_all", "tours_trending", "tours_domestic", "tours_international" };
+
+                foreach (var group in allGroups)
+                {
+                    await _tourHubContext.Clients.Group(group)
+                        .SendAsync("TourDeleted", tourId);
+                }
+
+                _logger.LogInformation("Broadcasted TourDeleted for {TourId} to all groups", tourId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error broadcasting TourDeleted for {TourId}", tourId);
             }
         }
 
