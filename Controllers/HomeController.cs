@@ -155,6 +155,22 @@ public class HomeController : Controller
             return NotFound();
         }
 
+        // Find applicable promotions for this tour
+        var now = DateTime.UtcNow;
+        var applicablePromotions = await _context.Promotions
+            .Include(p => p.PromotionRules)
+            .Include(p => p.PromotionTargets)
+            .Where(p => p.IsActive 
+                && (!p.StartAt.HasValue || p.StartAt <= now)
+                && (!p.EndAt.HasValue || p.EndAt >= now)
+                && (p.PromotionType == "Automatic" || p.PromotionType == "FlashSale") // Only show auto-apply promotions
+                && (p.PromotionTargets.Any(t => t.TargetType == "All") || 
+                    p.PromotionTargets.Any(t => t.TargetType == "Tour" && t.TargetID == id)))
+            .OrderByDescending(p => p.Priority)
+            .ToListAsync();
+
+        ViewBag.ApplicablePromotions = applicablePromotions;
+
         return View(tour);
     }
 

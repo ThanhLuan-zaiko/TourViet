@@ -21,5 +21,9 @@ namespace TourViet.Models
         // Navigation properties
         [ForeignKey("PromotionID")]
         public virtual required Promotion Promotion { get; set; }
+        
+        // Optional navigation to Tour (when TargetType = 'Tour')
+        [ForeignKey("TargetID")]
+        public virtual Tour? Tour { get; set; }
     }
 }

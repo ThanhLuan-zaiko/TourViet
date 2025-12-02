@@ -1285,7 +1285,6 @@
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header border-0" id="notificationHeaderTour">
                 <h5 class="modal-title text-white" id="notificationTitleTour"></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 text-center">
                 <div id="notificationIconTour" class="mb-3" style="font-size: 3rem;"></div>
@@ -1302,11 +1301,18 @@
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" data-bs-focus="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
                 <h5 class="modal-title fw-bold" id="bookingModalLabel">
                     <i class="bi bi-ticket-perforated-fill me-2"></i>Đặt tour: @Model.TourName
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" 
+                        style="position: absolute; top: 10px; right: 10px; background: #FFD700; border: 3px solid #FF0000; 
+                               border-radius: 4px; width: 40px; height: 40px; display: flex; align-items: center; 
+                               justify-content: center; color: #FF0000; font-size: 28px; font-weight: bold; 
+                               cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+                               transition: all 0.2s;"
+                        onmouseover="this.style.background='#FF0000'; this.style.color='#FFFFFF'; this.style.transform='scale(1.15)';"
+                        onmouseout="this.style.background='#FFD700'; this.style.color='#FF0000'; this.style.transform='scale(1)';">×</button>
             </div>
             <div class="modal-body p-4">
                 <!-- Success Message (Hidden by default) -->
@@ -1416,6 +1422,38 @@
                         </div>
                     }
 
+                    @* Automatic Promotions Banner *@
+                    @if (ViewBag.ApplicablePromotions != null && ((List<TourViet.Models.Promotion>)ViewBag.ApplicablePromotions).Any())
+                    {
+                        <div class="alert alert-success mb-4" style="border-left: 4px solid #28a745;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-gift-fill fs-4 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-1">🎉 Tour này đang có khuyến mãi!</h6>
+                                    @foreach (var promo in (List<TourViet.Models.Promotion>)ViewBag.ApplicablePromotions)
+                                    {
+                                        <div class="small">
+                                            <strong>@promo.Name:</strong>
+                                            @if (promo.PromotionRules.Any())
+                                            {
+                                                var rule = promo.PromotionRules.First();
+                                                if (rule.RuleType == "Percent")
+                                                {
+                                                    <span class="text-danger fw-bold">Giảm @rule.Value%</span>
+                                                }
+                                                else if (rule.RuleType == "Fixed")
+                                                {
+                                                    <span class="text-danger fw-bold">Giảm @rule.Value.ToString("N0") @rule.Currency</span>
+                                                }
+                                            }
+                                            - Tự động áp dụng khi đặt tour
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <!-- Coupon Code -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold" for="couponCode">
@@ -1428,6 +1466,11 @@
                             </button>
                         </div>
                         <div id="couponMessage" class="form-text small mt-1"></div>
+                        <div class="mt-2">
+                            <a asp-controller="Promotions" asp-action="Index" class="small text-decoration-none" target="_blank">
+                                <i class="bi bi-ticket-perforated me-1"></i>Xem danh sách khuyến mãi →
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Price Summary -->
@@ -1630,6 +1673,65 @@
             msg.textContent = message;
         }
 
+        // Ensure header has relative positioning for absolute close button
+        header.style.position = 'relative';
+        
+        // FIX: Create highly visible custom close button
+        // Remove any existing custom close button first
+        const existingClose = header.querySelector('.modal-close-custom');
+        if (existingClose) {
+            existingClose.remove();
+        }
+        
+        // Create new visible close button with explicit styles
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'modal-close-custom';
+        closeBtn.setAttribute('data-bs-dismiss', 'modal');
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.innerHTML = '<span style="font-size: 24px; font-weight: bold; line-height: 1;">×</span>';
+        
+        // Use inline styles with HIGH CONTRAST colors for visibility
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '10px';
+        closeBtn.style.right = '10px';
+        closeBtn.style.background = '#FFD700'; // Bright yellow/gold
+        closeBtn.style.border = '3px solid #FF0000'; // Red border
+        closeBtn.style.borderRadius = '4px';
+        closeBtn.style.width = '40px';
+        closeBtn.style.height = '40px';
+        closeBtn.style.display = 'flex';
+        closeBtn.style.alignItems = 'center';
+        closeBtn.style.justifyContent = 'center';
+        closeBtn.style.color = '#FF0000'; // Red X
+        closeBtn.style.fontSize = '28px';
+        closeBtn.style.fontWeight = 'bold';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.transition = 'all 0.2s';
+        closeBtn.style.zIndex = '9999';
+        closeBtn.style.opacity = '1';
+        closeBtn.style.visibility = 'visible';
+        closeBtn.style.padding = '0';
+        closeBtn.style.margin = '0';
+        closeBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        
+        // Add hover effect
+        closeBtn.addEventListener('mouseenter', function() {
+            this.style.background = '#FF0000'; // Red on hover
+            this.style.color = '#FFFFFF'; // White X on hover
+            this.style.transform = 'scale(1.15)';
+        });
+        closeBtn.addEventListener('mouseleave', function() {
+            this.style.background = '#FFD700';
+            this.style.color = '#FF0000';
+            this.style.transform = 'scale(1)';
+        });
+        
+        header.appendChild(closeBtn);
+        
+        // Debug: log to console to verify button was created
+        console.log('Close button created:', closeBtn);
+
         const notifModal = new bootstrap.Modal(modal);
         notifModal.show();
     }
@@ -1745,6 +1847,15 @@
                 const actualAvailable = capacity - seatsBooked;
                 document.getElementById('seatsAvailableDisplay').textContent = `${actualAvailable} chỗ`;
                 seatsInput.max = capacity;
+                
+                // VALIDATION: Check if seats exceed available
+                if (seats > actualAvailable) {
+                    seatsInput.classList.add('is-invalid');
+                    seatsInput.setCustomValidity(`Chỉ còn ${actualAvailable} chỗ trống`);
+                } else {
+                    seatsInput.classList.remove('is-invalid');
+                    seatsInput.setCustomValidity('');
+                }
             } else {
                 document.getElementById('seatsAvailableDisplay').textContent = 'Vui lòng chọn ngày khởi hành';
                 return; // Stop if no instance selected
@@ -1846,6 +1957,19 @@
         if (seats <= 0) {
             showError('Số lượng người phải lớn hơn 0.');
             return;
+        }
+        
+        // VALIDATION: Validate seats against available capacity
+        const selectedOption = document.querySelector(`#bookingInstanceId option[value="${instanceId}"]`);
+        if (selectedOption) {
+            const capacity = parseInt(selectedOption.getAttribute('data-capacity') || '0');
+            const seatsBooked = parseInt(selectedOption.getAttribute('data-seats-booked') || '0');
+            const seatsAvailable = capacity - seatsBooked;
+            
+            if (seats > seatsAvailable) {
+                showError(`Chỉ còn ${seatsAvailable} chỗ trống. Vui lòng giảm số lượng người.`);
+                return;
+            }
         }
         
         // Get selected services

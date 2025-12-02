@@ -1,0 +1,215 @@
+@{
+    ViewData["Title"] = "Khuyến mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<TourViet.Models.Promotion>
+
+<style>
+    .promotions-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 4rem 0 3rem;
+        color: white;
+        margin-bottom: 3rem;
+    }
+    
+    .promotion-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .promotion-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .promotion-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        z-index: 10;
+    }
+    
+    .badge-coupon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .badge-automatic {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+    
+    .badge-flashsale {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+    
+    .promotion-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+    }
+    
+    .discount-badge {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-btn {
+        border-radius: 25px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid #e0e7ff;
+        background: white;
+        color: #667eea;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-2px);
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="promotions-hero">
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="bi bi-gift-fill me-3"></i>Khuyến mãi đặc biệt
+            </h1>
+            <p class="lead mb-0">Tiết kiệm chi phí cho chuyến du lịch của bạn với các ưu đãi hấp dẫn</p>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Filter Buttons -->
+    <div class="text-center mb-5">
+        <a asp-action="Index" asp-route-type="" class="btn filter-btn me-2 mb-2 @(string.IsNullOrEmpty(ViewBag.SelectedType) ? "active" : "")">
+            <i class="bi bi-grid-fill me-2"></i>Tất cả
+        </a>
+        <a asp-action="Index" asp-route-type="Coupon" class="btn filter-btn me-2 mb-2 @(ViewBag.SelectedType == "Coupon" ? "active" : "")">
+            <i class="bi bi-ticket-perforated me-2"></i>Mã giảm giá
+        </a>
+        <a asp-action="Index" asp-route-type="Automatic" class="btn filter-btn me-2 mb-2 @(ViewBag.SelectedType == "Automatic" ? "active" : "")">
+            <i class="bi bi-lightning-charge-fill me-2"></i>Tự động áp dụng
+        </a>
+        <a asp-action="Index" asp-route-type="FlashSale" class="btn filter-btn mb-2 @(ViewBag.SelectedType == "FlashSale" ? "active" : "")">
+            <i class="bi bi-fire me-2"></i>Flash Sale
+        </a>
+    </div>
+
+    <!-- Promotions Grid -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var promo in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card promotion-card">
+                        <span class="promotion-badge badge-@(promo.PromotionType.ToLower())">
+                            @if (promo.PromotionType == "Coupon") { <text>🎫 Mã giảm giá</text> }
+                            @if (promo.PromotionType == "Automatic") { <text>⚡ Tự động</text> }
+                            @if (promo.PromotionType == "FlashSale") { <text>🔥 Flash Sale</text> }
+                        </span>
+                        
+                        <div class="card-body text-center p-4">
+                            <!-- Icon -->
+                            <div class="promotion-icon">
+                                @if (promo.PromotionType == "Coupon") { <text>🎟️</text> }
+                                @if (promo.PromotionType == "Automatic") { <text>🎁</text> }
+                                @if (promo.PromotionType == "FlashSale") { <text>⚡</text> }
+                            </div>
+                            
+                            <!-- Title -->
+                            <h4 class="fw-bold mb-3">@promo.Name</h4>
+                            
+                            <!-- Discount Info -->
+                            @if (promo.PromotionRules.Any())
+                            {
+                                var firstRule = promo.PromotionRules.First();
+                                <div class="discount-badge">
+                                    @if (firstRule.RuleType == "Percent")
+                                    {
+                                        <text>-@firstRule.Value%</text>
+                                    }
+                                    else if (firstRule.RuleType == "Fixed")
+                                    {
+                                        <text>-@firstRule.Value.ToString("N0") @firstRule.Currency</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Giảm giá đặc biệt</text>
+                                    }
+                                </div>
+                            }
+                            
+                            <!-- Description -->
+                            @if (!string.IsNullOrEmpty(promo.Description))
+                            {
+                                <p class="text-muted mb-3">
+                                    @(promo.Description.Length > 100 ? promo.Description.Substring(0, 100) + "..." : promo.Description)
+                                </p>
+                            }
+                            
+                            <!-- Validity Period -->
+                            <div class="small text-muted mb-3">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                @if (promo.EndAt.HasValue)
+                                {
+                                    <text>Còn @((promo.EndAt.Value - DateTime.UtcNow).Days) ngày</text>
+                                }
+                                else
+                                {
+                                    <text>Không giới hạn</text>
+                                }
+                            </div>
+                            
+                            <!-- CTA Button -->
+                            <a asp-action="Details" asp-route-id="@(promo.Slug ?? promo.PromotionID.ToString())" 
+                               class="btn btn-gradient w-100 py-2">
+                                @if (promo.PromotionType == "Coupon")
+                                {
+                                    <i class="bi bi-ticket-detailed me-2"></i><text>Lấy mã ngay</text>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-eye me-2"></i><text>Xem chi tiết</text>
+                                }
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div style="font-size: 5rem; opacity: 0.3;">🎁</div>
+            <h3 class="text-muted">Hiện chưa có chương trình khuyến mãi nào</h3>
+            <p class="text-muted">Vui lòng quay lại sau hoặc đặt tour ngay hôm nay!</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-gradient mt-3">
+                <i class="bi bi-house-fill me-2"></i>Về trang chủ
+            </a>
+        </div>
+    }
+</div>

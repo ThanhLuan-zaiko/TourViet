@@ -60,6 +60,13 @@
         {
             <!-- Customer menu items -->
             <li>
+                <a asp-area="" asp-controller="Promotions" asp-action="Index" class="sidebar-item">
+                    <i class="bi bi-gift"></i>
+                    <span>Khuyến mãi</span>
+                    @await Component.InvokeAsync("ActivePromotionCount")
+                </a>
+            </li>
+            <li>
                 <a asp-area="" asp-controller="Home" asp-action="Trending" class="sidebar-item">
                     <i class="bi bi-fire"></i>
                     <span>Thịnh hành</span>
@@ -89,16 +96,9 @@
                     <span>Theo dõi lịch trình</span>
                 </a>
             </li>
-            <li>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="sidebar-item">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>Thiết kế tour riêng</span>
-                </a>
-            </li>
         }
     </ul>
 </div>
 
 <!-- Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
-

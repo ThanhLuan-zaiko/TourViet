@@ -1,0 +1,314 @@
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model TourViet.Models.Promotion
+
+<style>
+    .promo-detail-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem 0;
+        color: white;
+        margin-bottom: 3rem;
+    }
+    
+    .coupon-code-box {
+        background: #f8f9fa;
+        border: 3px dashed #667eea;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .coupon-code-box:hover {
+        background: #e7f0ff;
+        transform: scale(1.02);
+    }
+    
+    .coupon-code {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        letter-spacing: 3px;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .tour-card {
+        transition: all 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .tour-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+</style>
+
+<!-- Hero -->
+<div class="promo-detail-hero">
+    <div class="container">
+        <a asp-action="Index" class="btn btn-light mb-3">
+            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+        </a>
+        <h1 class="display-4 fw-bold mb-3">@Model.Name</h1>
+        <p class="lead mb-0">@Model.Description</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Discount Rules -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="bi bi-percent me-2"></i>Mức giảm giá</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.PromotionRules.Any())
+                    {
+                        @foreach (var rule in Model.PromotionRules)
+                        {
+                            <div class="alert alert-success mb-3">
+                                <h5 class="alert-heading">
+                                    @if (rule.RuleType == "Percent")
+                                    {
+                                        <text>Giảm @rule.Value%</text>
+                                    }
+                                    else if (rule.RuleType == "Fixed")
+                                    {
+                                        <text>Giảm @rule.Value.ToString("N0") @rule.Currency</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@rule.RuleType</text>
+                                    }
+                                </h5>
+                                @if (rule.MaxDiscountAmount.HasValue)
+                                {
+                                    <p class="mb-0">Tối đa: @rule.MaxDiscountAmount.Value.ToString("N0") @rule.Currency</p>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Conditions -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Điều kiện áp dụng</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        @if (Model.MinTotalAmount.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Giá trị đơn hàng tối thiểu: <strong>@Model.MinTotalAmount.Value.ToString("N0") VND</strong>
+                            </li>
+                        }
+                        @if (Model.MinSeats.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Số ghế tối thiểu: <strong>@Model.MinSeats khách</strong>
+                            </li>
+                        }
+                        @if (Model.StartAt.HasValue || Model.EndAt.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Thời gian áp dụng: 
+                                <strong>
+                                    @if (Model.StartAt.HasValue) { <text>@Model.StartAt.Value.ToString("dd/MM/yyyy")</text> } else { <text>Ngay bây giờ</text> }
+                                    - 
+                                    @if (Model.EndAt.HasValue) { <text>@Model.EndAt.Value.ToString("dd/MM/yyyy")</text> } else { <text>Không giới hạn</text> }
+                                </strong>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Applicable Tours -->
+            @if (Model.PromotionTargets.Any() && Model.PromotionTargets.Any(t => t.TargetType == "Tour" && t.Tour != null))
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0"><i class="bi bi-map me-2"></i>Tours áp dụng</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var target in Model.PromotionTargets.Where(t => t.Tour != null))
+                            {
+                                <div class="col-md-6">
+                                    <div class="card tour-card">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold">@target.Tour!.TourName</h6>
+                                            <a asp-controller="Home" asp-action="TourDetails" asp-route-id="@target.Tour.TourID" class="btn btn-sm btn-outline-primary">
+                                                Xem tour <i class="bi bi-arrow-right ms-1"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Model.PromotionTargets.Any(t => t.TargetType == "All"))
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-globe me-2"></i>
+                    <strong>Áp dụng cho tất cả các tours!</strong>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Coupon Codes -->
+            @if (Model.PromotionType == "Coupon" && Model.Coupons.Any())
+            {
+                var isLoggedIn = Context.Session.GetString("UserId") != null;
+                var randomCoupon = Model.Coupons.OrderBy(x => Guid.NewGuid()).First();
+                
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-ticket-perforated me-2"></i>Mã giảm giá</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!isLoggedIn)
+                        {
+                            <div class="alert alert-warning mb-3">
+                                <i class="bi bi-lock-fill me-2"></i>
+                                <small>Vui lòng <a href="#" onclick="showLoginModal(); return false;" class="alert-link">đăng nhập</a> để lấy mã giảm giá</small>
+                            </div>
+                        }
+                        
+                        <div class="coupon-code-box mb-3" id="couponBox" onclick="claimCoupon('@randomCoupon.Code', '@randomCoupon.CouponID')">
+                            <div class="coupon-code" id="mainCouponCode">••••••••</div>
+                            <small class="text-muted" id="couponHint">Click để lấy mã</small>
+                        </div>
+                        
+                        @if (isLoggedIn)
+                        {
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Mỗi tài khoản chỉ được lấy 1 mã giảm giá
+                            </small>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- How to Use -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Cách sử dụng</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.PromotionType == "Coupon")
+                    {
+                        <ol class="ps-3">
+                            <li class="mb-2">Click vào hộp mã để lấy mã giảm giá</li>
+                            <li class="mb-2">Chọn tour bạn muốn đặt</li>
+                            <li class="mb-2">Nhập mã vào ô "Mã giảm giá" khi đặt tour</li>
+                            <li class="mb-2">Hoàn tất đặt tour và tận hưởng ưu đãi!</li>
+                        </ol>
+                    }
+                    else
+                    {
+                        <p>Khuyến mãi sẽ được <strong>tự động áp dụng</strong> khi bạn đặt tour đủ điều kiện!</p>
+                    }
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-gradient w-100">
+                        <i class="bi bi-search me-2"></i>Tìm tour ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-lock-fill me-2"></i>Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-shield-lock" style="font-size: 4rem; color: #667eea;"></i>
+                </div>
+                <h6 class="mb-3">Bạn cần đăng nhập để lấy mã giảm giá</h6>
+                <p class="text-muted">Đăng nhập để truy cập ưu đãi độc quyền dành cho bạn!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Để sau</button>
+                <a href="@Url.Action("Login", "Account")?returnUrl=@Uri.EscapeDataString(Context.Request.Path)" class="btn btn-gradient">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const isLoggedIn = @(Context.Session.GetString("UserId") != null ? "true" : "false");
+        let hasClaimed = false;
+        
+        function showLoginModal() {
+            const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+            modal.show();
+        }
+        
+        function claimCoupon(code, couponId) {
+            // Check if user is logged in
+            if (!isLoggedIn) {
+                showLoginModal();
+                return;
+            }
+            
+            // Check if already claimed
+            if (hasClaimed) {
+                alert('Bạn đã lấy mã giảm giá rồi. Mỗi tài khoản chỉ được lấy 1 mã!');
+                return;
+            }
+            
+            const codeElement = document.getElementById('mainCouponCode');
+            const hintElement = document.getElementById('couponHint');
+            const boxElement = document.getElementById('couponBox');
+            
+            // Reveal code
+            codeElement.textContent = code;
+            hasClaimed = true;
+            
+            // Update UI
+            boxElement.style.cursor = 'default';
+            boxElement.style.borderColor = '#28a745';
+            boxElement.style.backgroundColor = '#d4edda';
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(code).then(() => {
+                hintElement.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i>Đã sao chép vào clipboard!';
+                hintElement.classList.remove('text-muted');
+                hintElement.classList.add('text-success');
+                
+                // Remove click handler
+                boxElement.onclick = null;
+            }).catch(() => {
+                hintElement.textContent = 'Mã: ' + code;
+            });
+        }
+    </script>
+}
