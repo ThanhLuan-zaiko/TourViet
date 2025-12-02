@@ -264,7 +264,8 @@ CREATE TABLE dbo.Promotions (
   MinTotalAmount DECIMAL(18,2) NULL,       -- điều kiện tối thiểu
   MinSeats INT NULL,                       -- điều kiện tối thiểu số ghế
   CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
-  UpdatedAt DATETIME2(3) NULL
+  UpdatedAt DATETIME2(3) NULL,
+  UsageCount INT NOT NULL DEFAULT 0
 );
 
 CREATE NONCLUSTERED INDEX IX_Promotions_IsActive_StartEnd ON dbo.Promotions(IsActive, StartAt, EndAt);
@@ -323,13 +324,14 @@ ALTER TABLE dbo.Bookings ADD SpecialRequests NVARCHAR(MAX) NULL;
 
 -- PromotionRules: chi tiết cách tính giảm (tách logic cho linh hoạt)
 CREATE TABLE dbo.PromotionRules (
-  PromotionRuleID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PromotionRules PRIMARY KEY DEFAULT NEWID(),
+  RuleID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PromotionRules PRIMARY KEY DEFAULT NEWID(),
   PromotionID UNIQUEIDENTIFIER NOT NULL,
   RuleType NVARCHAR(50) NOT NULL,          -- 'Percent','Fixed','FreeSeat','BuyXGetY','FreeService'
   Value DECIMAL(18,6) NOT NULL,            -- percent as 10.00 = 10%, or fixed amount in currency
   Currency NVARCHAR(10) NULL,              -- nếu RuleType = Fixed
   MaxDiscountAmount DECIMAL(18,2) NULL,    -- cap per application
   AppliesToSeatType NVARCHAR(50) NULL,     -- optional seat type
+  Conditions NVARCHAR(MAX) NULL,
   CONSTRAINT FK_PromotionRules_Promotions FOREIGN KEY (PromotionID) REFERENCES dbo.Promotions(PromotionID)
 );
 
@@ -358,6 +360,7 @@ CREATE TABLE dbo.Coupons (
   MaxUses INT NULL,                        -- override promotion global uses if set
   MaxUsesPerUser INT NULL,                 -- override promotion per-user
   CreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
+  UsageCount INT NOT NULL DEFAULT 0,
   CONSTRAINT FK_Coupons_Promotions FOREIGN KEY (PromotionID) REFERENCES dbo.Promotions(PromotionID)
 );
 CREATE NONCLUSTERED INDEX IX_Coupons_Code ON dbo.Coupons(Code);
@@ -382,14 +385,6 @@ CREATE TABLE dbo.PromotionRedemptions (
 );
 CREATE NONCLUSTERED INDEX IX_PromotionRedemptions_Promo ON dbo.PromotionRedemptions(PromotionID);
 CREATE NONCLUSTERED INDEX IX_PromotionRedemptions_User ON dbo.PromotionRedemptions(UserID);
-
--- Optional: PromotionUsage aggregate counters (keeps simple counters, update in tx)
-CREATE TABLE dbo.PromotionUsage (
-  PromotionID UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_PromotionUsage PRIMARY KEY,
-  TotalUses INT NOT NULL DEFAULT 0,
-  LastUpdatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
-  CONSTRAINT FK_PromotionUsage_Promotions FOREIGN KEY (PromotionID) REFERENCES dbo.Promotions(PromotionID)
-);
 
 -- 8. Payments (Thanh toán - hỗ trợ thanh toán cho booking) 
 CREATE TABLE dbo.Payments (

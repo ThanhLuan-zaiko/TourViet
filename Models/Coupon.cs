@@ -30,6 +30,8 @@ namespace TourViet.Models
 
         public int? MaxUsesPerUser { get; set; }
 
+        public int UsageCount { get; set; } = 0;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties

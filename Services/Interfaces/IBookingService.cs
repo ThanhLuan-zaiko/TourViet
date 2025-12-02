@@ -39,7 +39,8 @@ public interface IBookingService
     Task<PriceCalculationDto?> CalculatePriceAsync(
         Guid instanceId, 
         int seats, 
-        List<SelectedServiceDto> selectedServices);
+        List<SelectedServiceDto> selectedServices,
+        string? couponCode = null);
 
     /// <summary>
     /// Generates a unique booking reference

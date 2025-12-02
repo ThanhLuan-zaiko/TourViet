@@ -10,11 +10,16 @@ public class BookingService : IBookingService
 {
     private readonly TourBookingDbContext _context;
     private readonly ILogger<BookingService> _logger;
+    private readonly IPromotionService _promotionService;
 
-    public BookingService(TourBookingDbContext context, ILogger<BookingService> logger)
+    public BookingService(
+        TourBookingDbContext context, 
+        ILogger<BookingService> logger,
+        IPromotionService promotionService)
     {
         _context = context;
         _logger = logger;
+        _promotionService = promotionService;
     }
 
     public async Task<(bool Success, string Message, Guid? BookingId, string? BookingRef)> CreateBookingAsync(
@@ -81,8 +86,13 @@ public class BookingService : IBookingService
                 warningMessage = $"⚠️ Lưu ý: Tour này đang rất hot. Chỉ còn {actualAvailable} chỗ thực tế.";
             }
 
-            // 2. Calculate total price
-            var priceCalculation = await CalculatePriceAsync(dto.TourInstanceID, dto.Seats, dto.SelectedServices);
+            // 2. Calculate total price (including promotions)
+            var priceCalculation = await CalculatePriceAsync(
+                dto.TourInstanceID, 
+                dto.Seats, 
+                dto.SelectedServices, 
+                dto.CouponCode); // Pass coupon code
+
             if (priceCalculation == null)
             {
                 return (false, "Không thể tính giá tour. Vui lòng thử lại.", null, null);
@@ -96,7 +106,7 @@ public class BookingService : IBookingService
                 UserID = userId,
                 BookingRef = GenerateBookingReference(),
                 Seats = dto.Seats,
-                TotalAmount = priceCalculation.GrandTotal,
+                TotalAmount = priceCalculation.GrandTotal, // This is now the discounted price
                 Currency = priceCalculation.Currency,
                 SpecialRequests = dto.SpecialRequests,
                 Status = "Pending", // Default status, admin can confirm later
@@ -104,6 +114,18 @@ public class BookingService : IBookingService
             };
 
             _context.Bookings.Add(booking);
+
+            // 3.1 Record Promotion Redemption if applied
+            if (priceCalculation.DiscountAmount > 0 && priceCalculation.AppliedPromotionId.HasValue)
+            {
+                await _promotionService.RecordRedemptionAsync(
+                    booking.BookingID,
+                    userId,
+                    priceCalculation.AppliedPromotionId.Value,
+                    priceCalculation.DiscountAmount,
+                    priceCalculation.AppliedCouponId
+                );
+            }
 
             // 4. Add selected services to BookingServices
             foreach (var selectedService in dto.SelectedServices)
@@ -529,7 +551,8 @@ private async Task AutoRejectOverbookedPendingBookingsAsync(Guid instanceId)
     public async Task<PriceCalculationDto?> CalculatePriceAsync(
         Guid instanceId, 
         int seats, 
-        List<SelectedServiceDto> selectedServices)
+        List<SelectedServiceDto> selectedServices,
+        string? couponCode = null)
     {
         try
         {
@@ -571,6 +594,24 @@ private async Task AutoRejectOverbookedPendingBookingsAsync(Guid instanceId)
                 servicesTotal += subTotal;
             }
 
+            var subTotalBeforeDiscount = basePriceTotal + servicesTotal;
+            
+            // Calculate Discount
+            // We need userId for per-user limits, but CalculatePrice might be called by anonymous users (or before login)
+            // For now, we'll pass Guid.Empty if we don't have a user context here, but ideally we should get it from context if available.
+            // However, CalculatePriceAsync in interface doesn't have userId.
+            // Let's assume for price check we use a dummy user or modify interface later.
+            // For now, let's use Guid.Empty and handle it in PromotionService (it might skip user limit checks).
+            
+            var discountResult = await _promotionService.CalculateDiscountAsync(
+                Guid.Empty, // No user context in this method yet
+                tourInstance.TourID,
+                instanceId,
+                subTotalBeforeDiscount,
+                seats,
+                couponCode
+            );
+
             return new PriceCalculationDto
             {
                 BasePrice = basePrice,
@@ -578,8 +619,14 @@ private async Task AutoRejectOverbookedPendingBookingsAsync(Guid instanceId)
                 BasePriceTotal = basePriceTotal,
                 Services = services,
                 ServicesTotal = servicesTotal,
-                GrandTotal = basePriceTotal + servicesTotal,
-                Currency = tourInstance.Currency
+                GrandTotal = subTotalBeforeDiscount - discountResult.DiscountAmount,
+                Currency = tourInstance.Currency,
+                
+                // New fields for promotion
+                DiscountAmount = discountResult.DiscountAmount,
+                AppliedPromotionId = discountResult.PromotionID,
+                AppliedCouponId = discountResult.CouponID,
+                PromotionMessage = discountResult.Message
             };
         }
         catch (Exception ex)

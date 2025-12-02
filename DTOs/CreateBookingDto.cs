@@ -5,6 +5,7 @@ public class CreateBookingDto
     public Guid TourInstanceID { get; set; }
     public int Seats { get; set; }
     public List<SelectedServiceDto> SelectedServices { get; set; } = new();
+    public string? CouponCode { get; set; }
     
     // Customer contact info (optional, can use session user info)
     public string? ContactPhone { get; set; }

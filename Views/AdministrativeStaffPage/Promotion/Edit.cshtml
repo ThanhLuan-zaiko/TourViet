@@ -28,7 +28,7 @@
         padding-bottom: 0.75rem;
         margin-bottom: 1.5rem;  
         display: flex;
-        align-items-center;
+        align-items: center;
         gap: 0.5rem;
     }
     
@@ -71,6 +71,29 @@
         padding: 1rem;
         margin-top: 1rem;
     }
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 1rem 1.5rem;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #f5576c;
+        border-bottom: 3px solid #f5576c;
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+        color: #f5576c;
+    }
+    
+    .tab-content {
+        padding-top: 2rem;
+    }
 </style>
 
 <div class="container-fluid">
@@ -82,7 +105,7 @@
                     <i class="bi bi-pencil-square me-2"></i>
                     Chỉnh sửa Chương trình Khuyến mãi
                 </h1>
-                <p class="mb-0 opacity-75">Cập nhật thông tin chương trình khuyến mãi</p>
+                <p class="mb-0 opacity-75">Cập nhật thông tin và quản lý quy tắc, đối tượng áp dụng</p>
             </div>
             <a asp-action="Index" asp-controller="Promotion" class="btn btn-light">
                 <i class="bi bi-arrow-left me-2"></i>Quay lại
@@ -90,223 +113,638 @@
         </div>
     </div>
 
-    <!-- Form Card -->
+    <!-- Main Content -->
     <div class="form-card card">
-        <div class="card-body p-4">
-            <form asp-action="Edit" asp-controller="Promotion" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="PromotionID" />
-                <input type="hidden" asp-for="CreatedAt" />
-                
-                <!-- Info Badge -->
-                <div class="info-badge mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-info-circle-fill text-primary me-2" style="font-size: 1.25rem;"></i>
-                        <div>
-                            <strong>Chương trình được tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                            @if (Model.UpdatedAt.HasValue)
-                            {
-                                <br /><strong>Cập nhật lần cuối:</strong> @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
-                            }
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Basic Information Section -->
-                <div class="section-title">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <span>Thông tin cơ bản</span>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Name" class="form-label">
-                            <i class="bi bi-tag me-1 text-primary"></i>
-                            Tên chương trình <span class="text-danger">*</span>
-                        </label>
-                        <input asp-for="Name" class="form-control" placeholder="Nhập tên chương trình khuyến mãi" required />
-                        <span asp-validation-for="Name" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Slug" class="form-label">
-                            <i class="bi bi-link-45deg me-1 text-primary"></i>
-                            Slug (URL thân thiện)
-                        </label>
-                        <input asp-for="Slug" class="form-control" placeholder="Tự động tạo nếu để trống" />
-                        <span asp-validation-for="Slug" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Để trống để tự động tạo từ tên chương trình
-                        </small>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="PromotionType" class="form-label">
-                            <i class="bi bi-tags me-1 text-primary"></i>
-                            Loại khuyến mãi <span class="text-danger">*</span>
-                        </label>
-                        <select asp-for="PromotionType" class="form-select" required>
-                            <option value="">-- Chọn loại khuyến mãi --</option>
-                            <option value="Coupon">🎫 Mã giảm giá (Coupon)</option>
-                            <option value="Automatic">⚡ Tự động áp dụng</option>
-                            <option value="FlashSale">🔥 Flash Sale</option>
-                        </select>
-                        <span asp-validation-for="PromotionType" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Priority" class="form-label">
-                            <i class="bi bi-sort-numeric-down me-1 text-primary"></i>
-                            Độ ưu tiên
-                        </label>
-                        <input asp-for="Priority" type="number" class="form-control" min="1" max="1000" />
-                        <span asp-validation-for="Priority" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Số nhỏ = ưu tiên cao hơn (1-1000)
-                        </small>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label asp-for="Description" class="form-label">
-                        <i class="bi bi-file-text me-1 text-primary"></i>
-                        Mô tả chi tiết
-                    </label>
-                    <textarea asp-for="Description" class="form-control" rows="4" 
-                              placeholder="Mô tả chi tiết về chương trình khuyến mãi"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-                
-                <!-- Time Configuration Section -->
-                <div class="section-title mt-4">
-                    <i class="bi bi-calendar-range-fill"></i>
-                    <span>Cấu hình thời gian</span>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="StartAt" class="form-label">
-                            <i class="bi bi-calendar-event me-1 text-success"></i>
-                            Ngày bắt đầu
-                        </label>
-                        <input asp-for="StartAt" type="datetime-local" class="form-control" />
-                        <span asp-validation-for="StartAt" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Để trống nếu không giới hạn thời gian bắt đầu
-                        </small>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="EndAt" class="form-label">
-                            <i class="bi bi-calendar-x me-1 text-danger"></i>
-                            Ngày kết thúc
-                        </label>
-                        <input asp-for="EndAt" type="datetime-local" class="form-control" />
-                        <span asp-validation-for="EndAt" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Để trống nếu không giới hạn thời gian kết thúc
-                        </small>
-                    </div>
-                </div>
-                
-                <!-- Usage Limits Section -->
-                <div class="section-title mt-4">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <span>Giới hạn sử dụng</span>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="MaxGlobalUses" class="form-label">
-                            <i class="bi bi-globe me-1 text-primary"></i>
-                            Số lần sử dụng tối đa (Toàn cục)
-                        </label>
-                        <input asp-for="MaxGlobalUses" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
-                        <span asp-validation-for="MaxGlobalUses" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="MaxUsesPerUser" class="form-label">
-                            <i class="bi bi-person me-1 text-primary"></i>
-                            Số lần sử dụng/người
-                        </label>
-                        <input asp-for="MaxUsesPerUser" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
-                        <span asp-validation-for="MaxUsesPerUser" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="MinSeats" class="form-label">
-                            <i class="bi bi-people me-1 text-primary"></i>
-                            Số ghế tối thiểu
-                        </label>
-                        <input asp-for="MinSeats" type="number" class="form-control" min="0" placeholder="Không yêu cầu" />
-                        <span asp-validation-for="MinSeats" class="text-danger"></span>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="MinTotalAmount" class="form-label">
-                            <i class="bi bi-cash-coin me-1 text-success"></i>
-                            Giá trị đơn hàng tối thiểu (VND)
-                        </label>
-                        <input asp-for="MinTotalAmount" type="number" step="0.01" class="form-control" min="0" placeholder="Không yêu cầu" />
-                        <span asp-validation-for="MinTotalAmount" class="text-danger"></span>
-                    </div>
-                </div>
-                
-                <!-- Settings Section -->
-                <div class="section-title mt-4">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>Cài đặt</span>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
-                            <label asp-for="IsActive" class="form-check-label ms-2">
-                                <i class="bi bi-toggle-on text-success me-1"></i>
-                                Kích hoạt chương trình
-                            </label>
-                        </div>
-                        <small class="text-muted d-block mt-1 ms-5">
-                            Chương trình sẽ hoạt động trong khoảng thời gian đã định
-                        </small>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <input asp-for="AllowStack" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
-                            <label asp-for="AllowStack" class="form-check-label ms-2">
-                                <i class="bi bi-layers text-info me-1"></i>
-                                Cho phép cộng dồn khuyến mãi
-                            </label>
-                        </div>
-                        <small class="text-muted d-block mt-1 ms-5">
-                            Cho phép sử dụng cùng lúc với các khuyến mãi khác
-                        </small>
-                    </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="mt-5 pt-4 border-top">
-                    <div class="d-flex gap-3">
-                        <button type="submit" class="btn btn-gradient btn-lg">
-                            <i class="bi bi-check-circle me-2"></i>Cập nhật chương trình
+        <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+            <ul class="nav nav-tabs" id="promotionTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+                        <i class="bi bi-info-circle me-2"></i>Thông tin chung
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rules-tab" data-bs-toggle="tab" data-bs-target="#rules" type="button" role="tab" aria-controls="rules" aria-selected="false">
+                        <i class="bi bi-list-check me-2"></i>Quy tắc giảm giá
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="targets-tab" data-bs-toggle="tab" data-bs-target="#targets" type="button" role="tab" aria-controls="targets" aria-selected="false">
+                        <i class="bi bi-bullseye me-2"></i>Đối tượng áp dụng
+                    </button>
+                </li>
+                @if (Model.PromotionType == "Coupon")
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="coupons-tab" data-bs-toggle="tab" data-bs-target="#coupons" type="button" role="tab" aria-controls="coupons" aria-selected="false">
+                            <i class="bi bi-ticket-perforated me-2"></i>Mã giảm giá
                         </button>
-                        <a asp-action="Index" asp-controller="Promotion" class="btn btn-outline-secondary btn-lg">
-                            <i class="bi bi-x-circle me-2"></i>Hủy bỏ
-                        </a>
+                    </li>
+                }
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                        <i class="bi bi-clock-history me-2"></i>Lịch sử sử dụng
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="tab-content" id="promotionTabsContent">
+                
+                <!-- Tab 1: General Info -->
+                <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                    <form asp-action="Edit" asp-controller="Promotion" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="PromotionID" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        
+                        <!-- Info Badge -->
+                        <div class="info-badge mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill text-primary me-2" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <strong>Chương trình được tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    @if (Model.UpdatedAt.HasValue)
+                                    {
+                                        <br /><strong>Cập nhật lần cuối:</strong> @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Basic Information Section -->
+                        <div class="section-title">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>Thông tin cơ bản</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="bi bi-tag me-1 text-primary"></i>
+                                    Tên chương trình <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Nhập tên chương trình khuyến mãi" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Slug" class="form-label">
+                                    <i class="bi bi-link-45deg me-1 text-primary"></i>
+                                    Slug (URL thân thiện)
+                                </label>
+                                <input asp-for="Slug" class="form-control" placeholder="Tự động tạo nếu để trống" />
+                                <span asp-validation-for="Slug" class="text-danger"></span>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Để trống để tự động tạo từ tên chương trình
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PromotionType" class="form-label">
+                                    <i class="bi bi-tags me-1 text-primary"></i>
+                                    Loại khuyến mãi <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="PromotionType" class="form-select" required>
+                                    <option value="">-- Chọn loại khuyến mãi --</option>
+                                    <option value="Coupon">🎫 Mã giảm giá (Coupon)</option>
+                                    <option value="Automatic">⚡ Tự động áp dụng</option>
+                                    <option value="FlashSale">🔥 Flash Sale</option>
+                                </select>
+                                <span asp-validation-for="PromotionType" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Priority" class="form-label">
+                                    <i class="bi bi-sort-numeric-down me-1 text-primary"></i>
+                                    Độ ưu tiên
+                                </label>
+                                <input asp-for="Priority" type="number" class="form-control" min="1" max="1000" />
+                                <span asp-validation-for="Priority" class="text-danger"></span>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Số nhỏ = ưu tiên cao hơn (1-1000)
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-file-text me-1 text-primary"></i>
+                                Mô tả chi tiết
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4" 
+                                      placeholder="Mô tả chi tiết về chương trình khuyến mãi"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        
+                        <!-- Time Configuration Section -->
+                        <div class="section-title mt-4">
+                            <i class="bi bi-calendar-range-fill"></i>
+                            <span>Cấu hình thời gian</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartAt" class="form-label">
+                                    <i class="bi bi-calendar-event me-1 text-success"></i>
+                                    Ngày bắt đầu
+                                </label>
+                                <input asp-for="StartAt" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="StartAt" class="text-danger"></span>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Để trống nếu không giới hạn thời gian bắt đầu
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndAt" class="form-label">
+                                    <i class="bi bi-calendar-x me-1 text-danger"></i>
+                                    Ngày kết thúc
+                                </label>
+                                <input asp-for="EndAt" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="EndAt" class="text-danger"></span>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Để trống nếu không giới hạn thời gian kết thúc
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Usage Limits Section -->
+                        <div class="section-title mt-4">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>Giới hạn sử dụng</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="MaxGlobalUses" class="form-label">
+                                    <i class="bi bi-globe me-1 text-primary"></i>
+                                    Số lần sử dụng tối đa (Toàn cục)
+                                </label>
+                                <input asp-for="MaxGlobalUses" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
+                                <span asp-validation-for="MaxGlobalUses" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="MaxUsesPerUser" class="form-label">
+                                    <i class="bi bi-person me-1 text-primary"></i>
+                                    Số lần sử dụng/người
+                                </label>
+                                <input asp-for="MaxUsesPerUser" type="number" class="form-control" min="0" placeholder="Không giới hạn" />
+                                <span asp-validation-for="MaxUsesPerUser" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="MinSeats" class="form-label">
+                                    <i class="bi bi-people me-1 text-primary"></i>
+                                    Số ghế tối thiểu
+                                </label>
+                                <input asp-for="MinSeats" type="number" class="form-control" min="0" placeholder="Không yêu cầu" />
+                                <span asp-validation-for="MinSeats" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MinTotalAmount" class="form-label">
+                                    <i class="bi bi-cash-coin me-1 text-success"></i>
+                                    Giá trị đơn hàng tối thiểu (VND)
+                                </label>
+                                <input asp-for="MinTotalAmount" type="number" step="0.01" class="form-control" min="0" placeholder="Không yêu cầu" />
+                                <span asp-validation-for="MinTotalAmount" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Settings Section -->
+                        <div class="section-title mt-4">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>Cài đặt</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
+                                    <label asp-for="IsActive" class="form-check-label ms-2">
+                                        <i class="bi bi-toggle-on text-success me-1"></i>
+                                        Kích hoạt chương trình
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1 ms-5">
+                                    Chương trình sẽ hoạt động trong khoảng thời gian đã định
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AllowStack" class="form-check-input" type="checkbox" role="switch" style="width: 3em; height: 1.5em;" />
+                                    <label asp-for="AllowStack" class="form-check-label ms-2">
+                                        <i class="bi bi-layers text-info me-1"></i>
+                                        Cho phép cộng dồn khuyến mãi
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1 ms-5">
+                                    Cho phép sử dụng cùng lúc với các khuyến mãi khác
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="mt-5 pt-4 border-top">
+                            <div class="d-flex gap-3">
+                                <button type="submit" class="btn btn-gradient btn-lg">
+                                    <i class="bi bi-check-circle me-2"></i>Cập nhật chương trình
+                                </button>
+                                <a asp-action="Index" asp-controller="Promotion" class="btn btn-outline-secondary btn-lg">
+                                    <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Tab 2: Rules -->
+                <div class="tab-pane fade" id="rules" role="tabpanel" aria-labelledby="rules-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="text-primary mb-0">Danh sách quy tắc giảm giá</h5>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRuleModal">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm quy tắc
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Loại quy tắc</th>
+                                    <th>Giá trị</th>
+                                    <th>Điều kiện</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PromotionRules != null && Model.PromotionRules.Any())
+                                {
+                                    foreach (var rule in Model.PromotionRules)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (rule.RuleType == "Percent") { <span class="badge bg-info">Phần trăm (%)</span> }
+                                                else if (rule.RuleType == "Fixed") { <span class="badge bg-success">Số tiền cố định</span> }
+                                                else { <span class="badge bg-secondary">@rule.RuleType</span> }
+                                            </td>
+                                            <td>
+                                                @if (rule.RuleType == "Percent") { <strong>@rule.Value.ToString("0")%</strong> }
+                                                else { <strong>@rule.Value.ToString("N0") VND</strong> }
+                                            </td>
+                                            <td>@(rule.Conditions ?? "Không có")</td>
+                                            <td>
+                                                <button class="btn btn-danger btn-sm delete-rule-btn" data-id="@rule.RuleID">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Chưa có quy tắc nào được thiết lập</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </form>
+                
+                <!-- Tab 3: Targets -->
+                <div class="tab-pane fade" id="targets" role="tabpanel" aria-labelledby="targets-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="text-primary mb-0">Đối tượng áp dụng</h5>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTargetModal">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm đối tượng
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Loại đối tượng</th>
+                                    <th>ID Đối tượng (Nếu có)</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PromotionTargets != null && Model.PromotionTargets.Any())
+                                {
+                                    foreach (var target in Model.PromotionTargets)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (target.TargetType == "All") { <span class="badge bg-success">Tất cả Tours</span> }
+                                                else if (target.TargetType == "Tour") { <span class="badge bg-primary">Tour cụ thể</span> }
+                                                else if (target.TargetType == "Category") { <span class="badge bg-info">Danh mục</span> }
+                                                else { <span class="badge bg-secondary">@target.TargetType</span> }
+                                            </td>
+                                            <td>@(target.TargetID.HasValue ? target.TargetID.ToString() : "N/A")</td>
+                                            <td>
+                                                <button class="btn btn-danger btn-sm delete-target-btn" data-id="@target.PromotionTargetID">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">Chưa có đối tượng áp dụng nào (Mặc định áp dụng cho tất cả nếu trống)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab 4: Coupons (Conditional) -->
+                @if (Model.PromotionType == "Coupon")
+                {
+                    <div class="tab-pane fade" id="coupons" role="tabpanel" aria-labelledby="coupons-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="text-primary mb-0">Quản lý Mã giảm giá</h5>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#generateCouponsModal">
+                                <i class="bi bi-magic me-1"></i>Sinh mã tự động
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã Coupon</th>
+                                        <th>Trạng thái</th>
+                                        <th>Đã dùng</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Coupons != null && Model.Coupons.Any())
+                                    {
+                                        foreach (var coupon in Model.Coupons.Take(50)) // Limit display
+                                        {
+                                            <tr>
+                                                <td><code class="fs-6">@coupon.Code</code></td>
+                                                <td>
+                                                    @if (coupon.IsActive) { <span class="badge bg-success">Hoạt động</span> }
+                                                    else { <span class="badge bg-secondary">Vô hiệu</span> }
+                                                </td>
+                                                <td>@coupon.UsageCount</td>
+                                                <td>
+                                                    <button class="btn btn-danger btn-sm delete-coupon-btn" data-id="@coupon.CouponID">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (Model.Coupons.Count > 50)
+                                        {
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">... và @(Model.Coupons.Count - 50) mã khác ...</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">Chưa có mã giảm giá nào được tạo</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                
+                <!-- Tab 5: History -->
+                <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="text-primary mb-0">Lịch sử sử dụng khuyến mãi</h5>
+                    </div>
+                    
+                    <!-- Filter Panel -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-search me-1"></i>Tìm kiếm</label>
+                                    <input type="text" id="historySearch" class="form-control" placeholder="Tìm theo tên, email người dùng...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><i class="bi bi-filter me-1"></i>Trạng thái</label>
+                                    <select id="historyStatusFilter" class="form-select">
+                                        <option value="">Tất cả</option>
+                                        <option value="Applied">Thành công</option>
+                                        <option value="Voided">Đã hủy</option>
+                                        <option value="Expired">Hết hạn</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><i class="bi bi-sort-down me-1"></i>Sắp xếp</label>
+                                    <select id="historySortFilter" class="form-select">
+                                        <option value="desc">Mới nhất</option>
+                                        <option value="asc">Cũ nhất</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Người dùng</th>
+                                    <th>Thời gian</th>
+                                    <th>Số tiền giảm</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PromotionRedemptions != null && Model.PromotionRedemptions.Any())
+                                {
+                                    foreach (var redemption in Model.PromotionRedemptions.OrderByDescending(r => r.AppliedAt).Take(50))
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (redemption.User != null)
+                                                {
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="ms-2">
+                                                            <div class="fw-bold">@redemption.User.FullName</div>
+                                                            <div class="small text-muted">@redemption.User.Email</div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Khách vãng lai</span>
+                                                }
+                                            </td>
+                                            <td>@redemption.AppliedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-success fw-bold">-@redemption.DiscountAmount.ToString("N0") @redemption.Currency</td>
+                                            <td>
+                                                @if (redemption.Status == "Applied") { <span class="badge bg-success">Thành công</span> }
+                                                else if (redemption.Status == "Voided") { <span class="badge bg-danger">Đã hủy</span> }
+                                                else { <span class="badge bg-secondary">@redemption.Status</span> }
+                                            </td>
+                                            <td>@redemption.Notes</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Chưa có lượt sử dụng nào</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Add Rule Modal -->
+<div class="modal fade" id="addRuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm quy tắc giảm giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <input type="hidden" name="promotionId" value="@Model.PromotionID" />
+                    <div class="mb-3">
+                        <label class="form-label">Loại quy tắc</label>
+                        <select name="ruleType" class="form-select" required>
+                            <option value="Percent">Phần trăm (%)</option>
+                            <option value="Fixed">Số tiền cố định (VND)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giá trị</label>
+                        <input type="number" name="value" class="form-control" required min="0" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Điều kiện (Tùy chọn)</label>
+                        <input type="text" name="conditions" class="form-control" placeholder="JSON conditions e.g. {min: 2}" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveRuleBtn">Lưu quy tắc</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Target Modal -->
+<div class="modal fade" id="addTargetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm đối tượng áp dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTargetForm">
+                    <input type="hidden" name="promotionId" value="@Model.PromotionID" />
+                    <div class="mb-3">
+                        <label class="form-label">Loại đối tượng</label>
+                        <select name="targetType" class="form-select" required id="targetTypeSelect">
+                            <option value="All">Tất cả Tours</option>
+                            <option value="Tour">Tour cụ thể</option>
+                            <option value="Category">Danh mục Tour</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="targetIdGroup" style="display:none;">
+                        <label class="form-label">ID Đối tượng</label>
+                        <input type="text" name="targetId" class="form-control" placeholder="Nhập ID Tour hoặc Category" />
+                        <small class="text-muted">Nhập GUID của Tour hoặc Category</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveTargetBtn">Lưu đối tượng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Coupons Modal -->
+<div class="modal fade" id="generateCouponsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sinh mã giảm giá tự động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generateCouponsForm">
+                    <input type="hidden" name="promotionId" value="@Model.PromotionID" />
+                    <div class="mb-3">
+                        <label class="form-label">Số lượng mã</label>
+                        <input type="number" name="quantity" class="form-control" value="10" min="1" max="1000" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tiền tố (Prefix)</label>
+                        <input type="text" name="prefix" class="form-control" placeholder="VD: SALE2024" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Độ dài mã ngẫu nhiên</label>
+                        <input type="number" name="length" class="form-control" value="8" min="4" max="20" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="generateCouponsBtn">Sinh mã</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Notification Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0" id="resultModalHeader">
+                <h5 class="modal-title text-white" id="resultModalTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div id="resultModalIcon" class="mb-3" style="font-size: 3.5rem;"></div>
+                <p id="resultModalMessage" class="mb-0 fs-5"></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
@@ -316,19 +754,9 @@
     
     <script>
         $(document).ready(function() {
-            // Convert UTC to local time for datetime-local inputs
+            // DateTime Local Formatting
             var startAtInput = document.querySelector('input[name="StartAt"]');
             var endAtInput = document.querySelector('input[name="EndAt"]');
-            
-            if (startAtInput && startAtInput.value) {
-                var startDate = new Date(startAtInput.value);
-                startAtInput.value = formatDateTimeLocal(startDate);
-            }
-            
-            if (endAtInput && endAtInput.value) {
-                var endDate = new Date(endAtInput.value);
-                endAtInput.value = formatDateTimeLocal(endDate);
-            }
             
             function formatDateTimeLocal(date) {
                 var year = date.getFullYear();
@@ -338,6 +766,215 @@
                 var minutes = String(date.getMinutes()).padStart(2, '0');
                 return `${year}-${month}-${day}T${hours}:${minutes}`;
             }
+
+            if (startAtInput && startAtInput.value) {
+                var startDate = new Date(startAtInput.value);
+                startAtInput.value = formatDateTimeLocal(startDate);
+            }
+            
+            if (endAtInput && endAtInput.value) {
+                var endDate = new Date(endAtInput.value);
+                endAtInput.value = formatDateTimeLocal(endDate);
+            }
+
+            // Helper function to show result modal
+            function showResultModal(type, title, message) {
+                const modal = $('#resultModal');
+                const header = $('#resultModalHeader');
+                const titleElem = $('#resultModalTitle');
+                const iconElem = $('#resultModalIcon');
+                const messageElem = $('#resultModalMessage');
+                
+                if (type === 'success') {
+                    header.css('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+                    iconElem.html('✅');
+                } else {
+                    header.css('background', 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)');
+                    iconElem.html('❌');
+                }
+                
+                titleElem.text(title);
+                messageElem.text(message);
+                modal.modal('show');
+            }
+
+            // Target Type Change Handler
+            $('#targetTypeSelect').change(function() {
+                if ($(this).val() === 'All') {
+                    $('#targetIdGroup').hide();
+                } else {
+                    $('#targetIdGroup').show();
+                }
+            });
+
+            // AJAX Handlers
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            // Add Rule
+            $('#saveRuleBtn').click(function() {
+                var formData = new FormData(document.getElementById('addRuleForm'));
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("AddRule", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+
+            // Delete Rule
+            $('.delete-rule-btn').click(function() {
+                if (!confirm('Bạn có chắc muốn xóa quy tắc này?')) return;
+                var id = $(this).data('id');
+                var formData = new FormData();
+                formData.append('id', id);
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("DeleteRule", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert(data.message);
+                });
+            });
+
+            // Add Target
+            $('#saveTargetBtn').click(function() {
+                var formData = new FormData(document.getElementById('addTargetForm'));
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("AddTarget", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            });
+
+            // Delete Target
+            $('.delete-target-btn').click(function() {
+                if (!confirm('Bạn có chắc muốn xóa đối tượng này?')) return;
+                var id = $(this).data('id');
+                var formData = new FormData();
+                formData.append('id', id);
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("DeleteTarget", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert(data.message);
+                });
+            });
+
+            // Generate Coupons
+            $('#generateCouponsBtn').click(function() {
+                var formData = new FormData(document.getElementById('generateCouponsForm'));
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("GenerateCoupons", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Close the generate modal
+                    $('#generateCouponsModal').modal('hide');
+                    
+                    // Show result modal
+                    if (data.success) {
+                        showResultModal('success', 'Sinh mã thành công!', data.message);
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showResultModal('error', 'Lỗi sinh mã', data.message);
+                    }
+                });
+            });
+
+            // Delete Coupon
+            $('.delete-coupon-btn').click(function() {
+                if (!confirm('Bạn có chắc muốn xóa mã này?')) return;
+                var id = $(this).data('id');
+                var formData = new FormData();
+                formData.append('id', id);
+                formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("DeleteCoupon", "Promotion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert(data.message);
+                });
+            });
+            
+            // Export Coupons
+            $('#exportCouponsBtn').click(function() {
+                window.location.href = '@Url.Action("ExportCoupons", "Promotion")?promotionId=@Model.PromotionID';
+            });
+            
+            // History Tab Filtering
+            function filterHistory() {
+                const searchTerm = $('#historySearch').val().toLowerCase();
+                const statusFilter = $('#historyStatusFilter').val();
+                const sortOrder = $('#historySortFilter').val();
+                
+                let rows = $('#history table tbody tr').toArray();
+                
+                // Filter
+                rows.forEach(row => {
+                    const $row = $(row);
+                    const text = $row.text().toLowerCase();
+                    const status = $row.find('td:eq(3)').text().trim();
+                    
+                    let showRow = true;
+                    
+                    // Search filter
+                    if (searchTerm && !text.includes(searchTerm)) {
+                        showRow = false;
+                    }
+                    
+                    // Status filter
+                    if (statusFilter && !status.includes(statusFilter === 'Applied' ? 'Thành công' : statusFilter === 'Voided' ? 'Đã hủy' : 'Hết hạn')) {
+                        showRow = false;
+                    }
+                    
+                    $row.toggle(showRow);
+                });
+                
+                // Sort
+                rows = rows.filter(r => $(r).is(':visible'));
+                rows.sort((a, b) => {
+                    const dateA = $(a).find('td:eq(1)').text();
+                    const dateB = $(b).find('td:eq(1)').text();
+                    return sortOrder === 'desc' ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+                });
+                
+                $('#history table tbody').append(rows);
+            }
+            
+            $('#historySearch, #historyStatusFilter, #historySortFilter').on('change keyup', filterHistory);
         });
     </script>
 }

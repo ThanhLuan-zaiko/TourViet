@@ -1416,6 +1416,20 @@
                         </div>
                     }
 
+                    <!-- Coupon Code -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="couponCode">
+                            <i class="bi bi-tag-fill text-secondary me-2"></i>Mã giảm giá (Nếu có)
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="couponCode" placeholder="Nhập mã giảm giá" onchange="updatePriceCalculation()">
+                            <button class="btn btn-outline-secondary" type="button" onclick="updatePriceCalculation()">
+                                Áp dụng
+                            </button>
+                        </div>
+                        <div id="couponMessage" class="form-text small mt-1"></div>
+                    </div>
+
                     <!-- Price Summary -->
                     <div class="card border-0 bg-gradient text-white shadow mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
                         <div class="card-body p-4">
@@ -1433,6 +1447,10 @@
                             <div class="d-flex justify-content-between mb-2 d-none" id="servicesRow">
                                 <span>Dịch vụ bổ sung:</span>
                                 <span id="servicesTotalDisplay">0 VND</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 d-none" id="discountRow">
+                                <span class="text-warning">Giảm giá:</span>
+                                <span id="discountDisplay" class="text-warning">-0 VND</span>
                             </div>
                             <hr class="border-white opacity-25 my-3">
                             <div class="d-flex justify-content-between align-items-center">
@@ -1705,103 +1723,96 @@
         }
     }
 
-    // Update price calculation
-    function updatePriceCalculation() {
+    // Update price calculation (Server-side)
+    async function updatePriceCalculation() {
         try {
             const instanceSelect = document.getElementById('bookingInstanceId');
             const seatsInput = document.getElementById('bookingSeats');
+            const couponInput = document.getElementById('couponCode');
+            const couponMessage = document.getElementById('couponMessage');
             
-            if (!instanceSelect || !seatsInput) {
-                console.error('Missing required elements:', { instanceSelect, seatsInput });
-                return;
-            }
+            if (!instanceSelect || !seatsInput) return;
             
-            const selectedOption = instanceSelect.options[instanceSelect.selectedIndex];
-            
-            // Check if a valid tour instance is selected (not the placeholder option)
-            const hasValidInstance = instanceSelect.value && selectedOption && selectedOption.dataset;
-            
-            // Use 0 if data-price is missing or invalid
-            const basePrice = hasValidInstance ? (parseFloat(selectedOption.dataset.price) || 0) : 0;
-            const currency = hasValidInstance && selectedOption.dataset.currency ? selectedOption.dataset.currency : 'VND';
-            const seatsAvailable = hasValidInstance ? (parseInt(selectedOption.dataset.seatsAvailable) || 0) : 0;
+            const instanceId = instanceSelect.value;
             let seats = parseInt(seatsInput.value);
-            
-            // Validate seats
             if (isNaN(seats) || seats < 1) seats = 1;
             
-            // Update seats available display
-            if (hasValidInstance) {
+            // Basic UI updates (seats available)
+            const selectedOption = instanceSelect.options[instanceSelect.selectedIndex];
+            if (instanceId && selectedOption && selectedOption.dataset) {
                 const capacity = parseInt(selectedOption.dataset.capacity) || 0;
                 const seatsBooked = parseInt(selectedOption.dataset.seatsBooked) || 0;
-                const seatsHeld = parseInt(selectedOption.dataset.seatsHeld) || 0;
                 const actualAvailable = capacity - seatsBooked;
-                
                 document.getElementById('seatsAvailableDisplay').textContent = `${actualAvailable} chỗ`;
-                seatsInput.max = capacity; // Allow booking up to capacity per booking
-                
-                // Check for overbooking situation (high pending demand)
-                const overbookingWarning = document.getElementById('overbookingWarning');
-                const overbookingMessage = document.getElementById('overbookingMessage');
-                
-                if (seatsHeld > actualAvailable * 3) {
-                    // Show warning when pending exceeds 3x actual capacity
-                    overbookingWarning.classList.remove('d-none');
-                    overbookingMessage.textContent = `Tour này đang rất hot. Chỉ còn ${actualAvailable} chỗ thực tế. Booking của bạn sẽ được xét duyệt theo thứ tự đăng ký.`;
-                } else {
-                    overbookingWarning.classList.add('d-none');
-                }
+                seatsInput.max = capacity;
             } else {
                 document.getElementById('seatsAvailableDisplay').textContent = 'Vui lòng chọn ngày khởi hành';
-                document.getElementById('overbookingWarning').classList.add('d-none');
+                return; // Stop if no instance selected
             }
-            
-            // Calculate base price
-            const basePriceTotal = basePrice * seats;
-            
-            // Calculate services total
-            let servicesTotal = 0;
-            const serviceCheckboxes = document.querySelectorAll('.booking-service-checkbox:checked');
-            
-            serviceCheckboxes.forEach(checkbox => {
-                // Get service currency from checkbox data attribute
-                const serviceCurrency = checkbox.dataset.currency || currency;
-                const servicePrice = parseFloat(checkbox.dataset.price) || 0;
-                servicesTotal += servicePrice * seats; // Services are per person
+
+            // Prepare request
+            const selectedServices = [];
+            document.querySelectorAll('.booking-service-checkbox:checked').forEach(checkbox => {
+                selectedServices.push(checkbox.value);
             });
-            
-            // Update display
-            const basePriceDisplay = document.getElementById('basePriceDisplay');
-            const seatsDisplay = document.getElementById('seatsDisplay');
-            const servicesTotalDisplay = document.getElementById('servicesTotalDisplay');
-            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
-            
-            if (!basePriceDisplay || !seatsDisplay || !servicesTotalDisplay || !grandTotalDisplay) {
-                console.error('Missing display elements:', {
-                    basePriceDisplay,
-                    seatsDisplay,
-                    servicesTotalDisplay,
-                    grandTotalDisplay
-                });
-                return;
-            }
-            
-            basePriceDisplay.textContent = `${basePrice.toLocaleString('vi-VN')} ${currency}`;
-            seatsDisplay.textContent = seats;
-            servicesTotalDisplay.textContent = `${servicesTotal.toLocaleString('vi-VN')} ${currency}`;
-            grandTotalDisplay.textContent = `${(basePriceTotal + servicesTotal).toLocaleString('vi-VN')} ${currency}`;
-            
-            // Show/hide services row - show if any services are selected, even if total is 0
-            const servicesRow = document.getElementById('servicesRow');
-            if (!servicesRow) {
-                console.error('Missing servicesRow element');
-                return;
-            }
-            
-            if (serviceCheckboxes.length > 0) {
-                servicesRow.classList.remove('d-none');
-            } else {
-                servicesRow.classList.add('d-none');
+
+            const requestData = {
+                instanceId: instanceId,
+                seats: seats,
+                selectedServiceIds: selectedServices,
+                couponCode: couponInput ? couponInput.value.trim() : null
+            };
+
+            // Call API
+            const response = await fetch('/api/booking/calculate-price', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const data = result.data;
+                const currency = data.currency || 'VND';
+
+                // Update displays
+                document.getElementById('basePriceDisplay').textContent = `${data.basePriceTotal.toLocaleString('vi-VN')} ${currency}`;
+                document.getElementById('seatsDisplay').textContent = data.seats;
+                document.getElementById('servicesTotalDisplay').textContent = `${data.servicesTotal.toLocaleString('vi-VN')} ${currency}`;
+                document.getElementById('grandTotalDisplay').textContent = `${data.grandTotal.toLocaleString('vi-VN')} ${currency}`;
+
+                // Services visibility
+                const servicesRow = document.getElementById('servicesRow');
+                if (data.servicesTotal > 0) {
+                    servicesRow.classList.remove('d-none');
+                } else {
+                    servicesRow.classList.add('d-none');
+                }
+
+                // Discount handling
+                const discountRow = document.getElementById('discountRow');
+                const discountDisplay = document.getElementById('discountDisplay');
+                
+                if (data.discountAmount > 0) {
+                    discountRow.classList.remove('d-none');
+                    discountDisplay.textContent = `-${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
+                    
+                    if (data.promotionMessage) {
+                        couponMessage.textContent = data.promotionMessage;
+                        couponMessage.className = 'form-text small mt-1 text-success fw-bold';
+                    } else {
+                         couponMessage.textContent = '';
+                    }
+                } else {
+                    discountRow.classList.add('d-none');
+                    if (requestData.couponCode && data.promotionMessage) {
+                         couponMessage.textContent = data.promotionMessage;
+                         couponMessage.className = 'form-text small mt-1 text-danger';
+                    } else {
+                         couponMessage.textContent = '';
+                    }
+                }
             }
         } catch (error) {
             console.error('Error in updatePriceCalculation:', error);
@@ -1851,7 +1862,8 @@
             tourInstanceID: instanceId,
             seats: seats,
             selectedServices: selectedServices,
-            specialRequests: specialRequests
+            specialRequests: specialRequests,
+            couponCode: document.getElementById('couponCode').value.trim()
         };
         
         // Show loading state

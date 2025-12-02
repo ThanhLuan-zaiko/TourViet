@@ -3,7 +3,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@model IEnumerable<TourViet.Models.Promotion>
+@model TourViet.ViewModels.PromotionDashboardViewModel
 
 <style>
     .promotion-header {
@@ -41,6 +41,10 @@
     
     .stats-card-3 {
         background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stats-card-4 {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     }
     
     .badge-custom {
@@ -129,41 +133,96 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-1">@(Model?.Count() ?? 0)</h3>
+                        <h3 class="mb-1">@Model.TotalPromotions</h3>
                         <p class="mb-0 opacity-75">Tổng chương trình</p>
                     </div>
                     <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card stats-card-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-1">@(Model?.Count(p => p.IsActive) ?? 0)</h3>
+                        <h3 class="mb-1">@Model.ActivePromotions</h3>
                         <p class="mb-0 opacity-75">Đang hoạt động</p>
                     </div>
                     <i class="bi bi-check-circle-fill" style="font-size: 3rem; opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stats-card stats-card-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-1">@(Model?.Count(p => !p.IsActive) ?? 0)</h3>
-                        <p class="mb-0 opacity-75">Tạm dừng</p>
+                        <h3 class="mb-1">@Model.TotalRedemptions</h3>
+                        <p class="mb-0 opacity-75">Tổng lượt sử dụng</p>
                     </div>
-                    <i class="bi bi-pause-circle-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <i class="bi bi-graph-up-arrow" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.TotalDiscountAmount.ToString("N0") VND</h3>
+                        <p class="mb-0 opacity-75">Tổng giảm giá</p>
+                    </div>
+                    <i class="bi bi-cash-coin" style="font-size: 3rem; opacity: 0.3;"></i>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Top Promotions -->
+    @if (Model.TopPromotions.Any())
+    {
+        <div class="card promotion-card mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 text-primary">
+                    <i class="bi bi-trophy-fill me-2"></i>Top 5 Khuyến mãi hiệu quả nhất
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên chương trình</th>
+                                <th class="text-center">Lượt sử dụng</th>
+                                <th class="text-end">Tổng giảm giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var promo in Model.TopPromotions)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@promo.PromotionID" class="text-decoration-none fw-bold">
+                                            @promo.Name
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">@promo.RedemptionCount</span>
+                                    </td>
+                                    <td class="text-end text-success fw-bold">
+                                        @promo.TotalDiscount.ToString("N0") @promo.Currency
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Promotions List -->
     <!-- Main Content Card -->
     <div class="promotion-card card mb-4">
         <div class="card-body p-4">
@@ -216,9 +275,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
+                        @if (Model != null && Model.Promotions.Any())
                         {
-                            @foreach (var promotion in Model)
+                            @foreach (var promotion in Model.Promotions)
                             {
                                 <tr>
                                     <td>

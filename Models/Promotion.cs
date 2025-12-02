@@ -42,6 +42,8 @@ namespace TourViet.Models
 
         public int? MinSeats { get; set; }
 
+        public int UsageCount { get; set; } = 0;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }

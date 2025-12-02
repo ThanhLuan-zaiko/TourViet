@@ -8,7 +8,9 @@ public class BookingDetailsDto
     public DateTime BookingDate { get; set; }
     public int Seats { get; set; }
     public decimal TotalAmount { get; set; }
-    public string Currency { get; set; } = string.Empty;
+    public string Currency { get; set; } = "VND";
+    public decimal DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
     public string? SpecialRequests { get; set; }
     
     // Customer Info
@@ -63,6 +65,11 @@ public class PriceCalculationDto
     public decimal ServicesTotal { get; set; }
     public decimal GrandTotal { get; set; }
     public string Currency { get; set; } = "VND";
+    
+    public decimal DiscountAmount { get; set; }
+    public Guid? AppliedPromotionId { get; set; }
+    public Guid? AppliedCouponId { get; set; }
+    public string? PromotionMessage { get; set; }
 }
 
 public class ServicePriceDto

@@ -26,10 +26,54 @@ public class PromotionController : Controller
         }
 
         var promotions = await _context.Promotions
+            .Include(p => p.PromotionRedemptions)
+                .ThenInclude(r => r.User)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
-        return View("../AdministrativeStaffPage/Promotion/Index", promotions);
+        // Calculate dashboard statistics
+        var allRedemptions = promotions.SelectMany(p => p.PromotionRedemptions).ToList();
+        
+        var viewModel = new ViewModels.PromotionDashboardViewModel
+        {
+            Promotions = promotions,
+            TotalPromotions = promotions.Count,
+            ActivePromotions = promotions.Count(p => p.IsActive),
+            TotalRedemptions = allRedemptions.Count,
+            TotalDiscountAmount = allRedemptions.Sum(r => r.DiscountAmount),
+            AverageDiscountPerRedemption = allRedemptions.Any() ? allRedemptions.Average(r => r.DiscountAmount) : 0,
+            
+            // Top 5 promotions by redemption count
+            TopPromotions = promotions
+                .Select(p => new ViewModels.PromotionStatItem
+                {
+                    PromotionID = p.PromotionID,
+                    Name = p.Name,
+                    RedemptionCount = p.PromotionRedemptions.Count,
+                    TotalDiscount = p.PromotionRedemptions.Sum(r => r.DiscountAmount),
+                    Currency = p.PromotionRedemptions.FirstOrDefault()?.Currency ?? "VND"
+                })
+                .OrderByDescending(p => p.RedemptionCount)
+                .Take(5)
+                .ToList(),
+                
+            // Recent 10 redemptions
+            RecentRedemptions = allRedemptions
+                .OrderByDescending(r => r.AppliedAt)
+                .Take(10)
+                .Select(r => new ViewModels.RecentRedemptionItem
+                {
+                    PromotionName = r.Promotion?.Name ?? "Unknown",
+                    UserName = r.User?.FullName ?? "Guest",
+                    DiscountAmount = r.DiscountAmount,
+                    Currency = r.Currency,
+                    AppliedAt = r.AppliedAt,
+                    Status = r.Status
+                })
+                .ToList()
+        };
+
+        return View("../AdministrativeStaffPage/Promotion/Index", viewModel);
     }
 
     // GET: Promotion/Create
@@ -305,4 +349,181 @@ public class PromotionController : Controller
 
         return slug;
     }
+
+    #region Promotion Rules Management
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddRule([FromForm] Guid promotionId, [FromForm] string ruleType, [FromForm] decimal value, [FromForm] string? conditions)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var promotion = await _context.Promotions.FindAsync(promotionId);
+        if (promotion == null) return Json(new { success = false, message = "Promotion not found" });
+
+        var rule = new PromotionRule
+        {
+            PromotionID = promotionId,
+            RuleType = ruleType,
+            Value = value,
+            Conditions = conditions,
+            Promotion = promotion
+        };
+
+        _context.PromotionRules.Add(rule);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Rule added successfully" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteRule([FromForm] Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var rule = await _context.PromotionRules.FindAsync(id);
+        if (rule == null) return Json(new { success = false, message = "Rule not found" });
+
+        _context.PromotionRules.Remove(rule);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Rule deleted successfully" });
+    }
+
+    #endregion
+
+    #region Promotion Targets Management
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddTarget([FromForm] Guid promotionId, [FromForm] string targetType, [FromForm] Guid? targetId)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var promotion = await _context.Promotions.FindAsync(promotionId);
+        if (promotion == null) return Json(new { success = false, message = "Promotion not found" });
+
+        var target = new PromotionTarget
+        {
+            PromotionID = promotionId,
+            TargetType = targetType,
+            TargetID = targetId,
+            Promotion = promotion
+        };
+
+        _context.PromotionTargets.Add(target);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Target added successfully" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteTarget([FromForm] Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var target = await _context.PromotionTargets.FindAsync(id);
+        if (target == null) return Json(new { success = false, message = "Target not found" });
+
+        _context.PromotionTargets.Remove(target);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Target deleted successfully" });
+    }
+
+    #endregion
+
+    #region Coupons Management
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateCoupons([FromForm] Guid promotionId, [FromForm] int quantity, [FromForm] string prefix, [FromForm] int length)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var promotion = await _context.Promotions.FindAsync(promotionId);
+        if (promotion == null) return Json(new { success = false, message = "Promotion not found" });
+
+        if (quantity <= 0 || quantity > 1000) return Json(new { success = false, message = "Quantity must be between 1 and 1000" });
+        if (length < 4 || length > 20) return Json(new { success = false, message = "Length must be between 4 and 20" });
+
+        var coupons = new List<Coupon>();
+        var random = new Random();
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+        for (int i = 0; i < quantity; i++)
+        {
+            var code = prefix + new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+            
+            // Ensure uniqueness (simple check, in production might need DB check loop)
+            if (!await _context.Coupons.AnyAsync(c => c.Code == code))
+            {
+                coupons.Add(new Coupon
+                {
+                    PromotionID = promotionId,
+                    Code = code,
+                    IsActive = true,
+                    Promotion = promotion
+                });
+            }
+        }
+
+        _context.Coupons.AddRange(coupons);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = $"{coupons.Count} coupons generated successfully" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteCoupon([FromForm] Guid id)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Json(new { success = false, message = "Unauthorized" });
+
+        var coupon = await _context.Coupons.FindAsync(id);
+        if (coupon == null) return Json(new { success = false, message = "Coupon not found" });
+
+        _context.Coupons.Remove(coupon);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Coupon deleted successfully" });
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> ExportCoupons(Guid promotionId)
+    {
+        var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];
+        if (!userRoles.Contains("AdministrativeStaff")) return Unauthorized();
+
+        var promotion = await _context.Promotions
+            .Include(p => p.Coupons)
+            .FirstOrDefaultAsync(p => p.PromotionID == promotionId);
+
+        if (promotion == null) return NotFound();
+
+        // Generate CSV
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Mã giảm giá,Trạng thái,Ngày tạo,Ngày bắt đầu,Ngày hết hạn,Số lần sử dụng tối đa,Số lần đã dùng,Mô tả");
+
+        foreach (var coupon in promotion.Coupons)
+        {
+            csv.AppendLine($"\"{coupon.Code}\",\"{(coupon.IsActive ? "Hoạt động" : "Vô hiệu")}\",\"{coupon.CreatedAt:dd/MM/yyyy HH:mm}\",\"{coupon.StartsAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A"}\",\"{coupon.ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A"}\",\"{coupon.MaxUses?.ToString() ?? "Không giới hạn"}\",\"{coupon.UsageCount}\",\"{coupon.Description ?? ""}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var fileName = $"Coupons_{promotion.Slug ?? promotion.Name}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+        return File(bytes, "text/csv", fileName);
+    }
+
+    #endregion
 }

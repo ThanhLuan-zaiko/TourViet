@@ -251,7 +251,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
         // Configure PromotionRule entity
         modelBuilder.Entity<PromotionRule>(entity =>
         {
-            entity.HasKey(e => e.PromotionRuleID);
+            entity.HasKey(e => e.RuleID);
             entity.HasOne(e => e.Promotion)
                 .WithMany(p => p.PromotionRules)
                 .HasForeignKey(e => e.PromotionID)

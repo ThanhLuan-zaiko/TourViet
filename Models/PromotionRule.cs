@@ -7,7 +7,7 @@ namespace TourViet.Models
     public class PromotionRule
     {
         [Key]
-        public Guid PromotionRuleID { get; set; } = Guid.NewGuid();
+        public Guid RuleID { get; set; } = Guid.NewGuid();
 
         [Required]
         public Guid PromotionID { get; set; }
@@ -27,6 +27,8 @@ namespace TourViet.Models
 
         [StringLength(50)]
         public string? AppliesToSeatType { get; set; }
+
+        public string? Conditions { get; set; }
 
         // Navigation properties
         [ForeignKey("PromotionID")]

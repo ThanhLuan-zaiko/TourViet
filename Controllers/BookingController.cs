@@ -57,7 +57,8 @@ public class BookingController : ControllerBase
             var calculation = await _bookingService.CalculatePriceAsync(
                 request.InstanceId,
                 request.Seats,
-                selectedServices);
+                selectedServices,
+                request.CouponCode);
 
             if (calculation == null)
             {
@@ -107,6 +108,7 @@ public class BookingController : ControllerBase
                 return BadRequest(new { success = false, message = "Số lượng chỗ phải lớn hơn 0." });
             }
 
+            // DTO now includes CouponCode, which is handled inside CreateBookingAsync
             var result = await _bookingService.CreateBookingAsync(dto, userId);
 
             if (result.Success)
@@ -312,6 +314,7 @@ public class PriceCalculationRequest
     public Guid InstanceId { get; set; }
     public int Seats { get; set; }
     public List<Guid>? SelectedServiceIds { get; set; }
+    public string? CouponCode { get; set; }
 }
 
 public class UpdateStatusRequest
