@@ -797,6 +797,58 @@
                 messageElem.text(message);
                 modal.modal('show');
             }
+            
+            // Helper function to show confirm modal
+            function showConfirmModal(title, message, type, onConfirm) {
+                // Create modal HTML dynamically
+                const modalId = 'confirmModal' + Date.now();
+                const headerBg = type === 'danger' 
+                    ? 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)' 
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                const icon = type === 'danger' ? '⚠️' : '❓';
+                
+                const modalHtml = `
+                    <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg">
+                                <div class="modal-header border-0" style="background: ${headerBg};">
+                                    <h5 class="modal-title text-white">${icon} ${title}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="mb-0">${message}</p>
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-circle me-1"></i>Hủy
+                                    </button>
+                                    <button type="button" class="btn btn-${type === 'danger' ? 'danger' : 'primary'}" id="${modalId}ConfirmBtn">
+                                        <i class="bi bi-check-circle me-1"></i>Xác nhận
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Append to body
+                $('body').append(modalHtml);
+                
+                // Show modal
+                const $modal = $('#' + modalId);
+                $modal.modal('show');
+                
+                // Handle confirm
+                $('#' + modalId + 'ConfirmBtn').click(function() {
+                    $modal.modal('hide');
+                    if (onConfirm) onConfirm();
+                });
+                
+                // Remove from DOM when hidden
+                $modal.on('hidden.bs.modal', function() {
+                    $modal.remove();
+                });
+            }
 
             // Target Type Change Handler
             $('#targetTypeSelect').change(function() {
@@ -821,31 +873,46 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    $('#addRuleModal').modal('hide');
+                    
                     if (data.success) {
-                        location.reload();
+                        showResultModal('success', 'Thành công!', data.message);
+                        setTimeout(() => location.reload(), 1500);
                     } else {
-                        alert(data.message);
+                        showResultModal('error', 'Lỗi!', data.message);
                     }
                 });
             });
 
             // Delete Rule
             $('.delete-rule-btn').click(function() {
-                if (!confirm('Bạn có chắc muốn xóa quy tắc này?')) return;
-                var id = $(this).data('id');
-                var formData = new FormData();
-                formData.append('id', id);
-                formData.append('__RequestVerificationToken', token);
+                const ruleId = $(this).data('id');
+                
+                // Show confirmation modal
+                showConfirmModal(
+                    'Xóa quy tắc?',
+                    'Bạn có chắc muốn xóa quy tắc giảm giá này? Hành động này không thể hoàn tác.',
+                    'danger',
+                    function() {
+                        var formData = new FormData();
+                        formData.append('id', ruleId);
+                        formData.append('__RequestVerificationToken', token);
 
-                fetch('@Url.Action("DeleteRule", "Promotion")', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) location.reload();
-                    else alert(data.message);
-                });
+                        fetch('@Url.Action("DeleteRule", "Promotion")', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showResultModal('success', 'Đã xóa!', data.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showResultModal('error', 'Lỗi!', data.message);
+                            }
+                        });
+                    }
+                );
             });
 
             // Add Target
@@ -859,31 +926,46 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    $('#addTargetModal').modal('hide');
+                    
                     if (data.success) {
-                        location.reload();
+                        showResultModal('success', 'Thành công!', data.message);
+                        setTimeout(() => location.reload(), 1500);
                     } else {
-                        alert(data.message);
+                        showResultModal('error', 'Lỗi!', data.message);
                     }
                 });
             });
 
             // Delete Target
             $('.delete-target-btn').click(function() {
-                if (!confirm('Bạn có chắc muốn xóa đối tượng này?')) return;
-                var id = $(this).data('id');
-                var formData = new FormData();
-                formData.append('id', id);
-                formData.append('__RequestVerificationToken', token);
+                const targetId = $(this).data('id');
+                
+                // Show confirmation modal
+                showConfirmModal(
+                    'Xóa đối tượng?',
+                    'Bạn có chắc muốn xóa đối tượng áp dụng này? Hành động này không thể hoàn tác.',
+                    'danger',
+                    function() {
+                        var formData = new FormData();
+                        formData.append('id', targetId);
+                        formData.append('__RequestVerificationToken', token);
 
-                fetch('@Url.Action("DeleteTarget", "Promotion")', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) location.reload();
-                    else alert(data.message);
-                });
+                        fetch('@Url.Action("DeleteTarget", "Promotion")', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showResultModal('success', 'Đã xóa!', data.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showResultModal('error', 'Lỗi!', data.message);
+                            }
+                        });
+                    }
+                );
             });
 
             // Generate Coupons
@@ -912,21 +994,33 @@
 
             // Delete Coupon
             $('.delete-coupon-btn').click(function() {
-                if (!confirm('Bạn có chắc muốn xóa mã này?')) return;
-                var id = $(this).data('id');
-                var formData = new FormData();
-                formData.append('id', id);
-                formData.append('__RequestVerificationToken', token);
+                const couponId = $(this).data('id');
+                
+                // Show confirmation modal
+                showConfirmModal(
+                    'Xóa mã giảm giá?',
+                    'Bạn có chắc muốn xóa mã giảm giá này? Hành động này không thể hoàn tác.',
+                    'danger',
+                    function() {
+                        var formData = new FormData();
+                        formData.append('id', couponId);
+                        formData.append('__RequestVerificationToken', token);
 
-                fetch('@Url.Action("DeleteCoupon", "Promotion")', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) location.reload();
-                    else alert(data.message);
-                });
+                        fetch('@Url.Action("DeleteCoupon", "Promotion")', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showResultModal('success', 'Đã xóa!', data.message);
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showResultModal('error', 'Lỗi!', data.message);
+                            }
+                        });
+                    }
+                );
             });
             
             // Export Coupons

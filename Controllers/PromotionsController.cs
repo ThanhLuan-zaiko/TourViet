@@ -24,6 +24,8 @@ namespace TourViet.Controllers
         public async Task<IActionResult> Index(string type = "")
         {
             var now = DateTime.UtcNow;
+            var userId = HttpContext.Session.GetString("UserId");
+            Guid? userGuid = string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId);
             
             var query = _context.Promotions
                 .Include(p => p.PromotionRules)
@@ -32,6 +34,18 @@ namespace TourViet.Controllers
                 .Where(p => p.IsActive 
                     && (!p.StartAt.HasValue || p.StartAt <= now)
                     && (!p.EndAt.HasValue || p.EndAt >= now));
+
+            // Filter out promotions already used by this user (if logged in)
+            if (userGuid.HasValue)
+            {
+                var usedPromotionIds = await _context.PromotionRedemptions
+                    .Where(r => r.UserID == userGuid.Value && r.Status == "Confirmed")
+                    .Select(r => r.PromotionID)
+                    .Distinct()
+                    .ToListAsync();
+                
+                query = query.Where(p => !usedPromotionIds.Contains(p.PromotionID));
+            }
 
             // Filter by type if specified
             if (!string.IsNullOrEmpty(type))
@@ -69,6 +83,23 @@ namespace TourViet.Controllers
 
             if (promotion == null)
                 return NotFound();
+
+            // Check if logged-in user already used this promotion
+            var userId = HttpContext.Session.GetString("UserId");
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userGuid = Guid.Parse(userId);
+                var hasUsed = await _context.PromotionRedemptions
+                    .AnyAsync(r => r.PromotionID == promotion.PromotionID 
+                                && r.UserID == userGuid 
+                                && r.Status == "Confirmed");
+                
+                ViewBag.AlreadyUsed = hasUsed;
+            }
+            else
+            {
+                ViewBag.AlreadyUsed = false;
+            }
 
             return View(promotion);
         }

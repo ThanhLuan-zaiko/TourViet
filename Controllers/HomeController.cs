@@ -296,66 +296,89 @@ public class HomeController : Controller
         // Fetch all bookings with complete details
         var bookingsDto = await _bookingService.GetAllBookingsAsync();
         
+        // Get all promotion redemptions for these bookings
+        var bookingIds = bookingsDto.Select(b => b.BookingID).ToList();
+        var promotionRedemptions = await _context.PromotionRedemptions
+            .Include(r => r.Promotion)
+            .Include(r => r.Coupon)
+            .Where(r => r.BookingID.HasValue && bookingIds.Contains(r.BookingID.Value))
+            .ToListAsync();
+        
         // Transform to ViewModel
-        var bookings = bookingsDto.Select(b => new TourViet.ViewModels.BookingViewModel
+        var bookings = bookingsDto.Select(b =>
         {
-            BookingID = b.BookingID,
-            BookingRef = b.BookingRef,
-            Status = b.Status,
-            StatusBadgeClass = GetStatusBadgeClass(b.Status),
-            StatusIcon = GetStatusIcon(b.Status),
-            CreatedAt = b.BookingDate,
-            FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+            var redemption = promotionRedemptions.FirstOrDefault(r => r.BookingID == b.BookingID);
+            var subTotalBeforeDiscount = b.PriceBase * b.Seats + b.ServicesTotal;
+            var discountAmount = redemption?.DiscountAmount ?? 0;
             
-            // Customer
-            UserID = b.UserID,
-            CustomerName = b.CustomerName,
-            CustomerEmail = b.CustomerEmail,
-            CustomerPhone = b.CustomerPhone,
-            CustomerAddress = b.CustomerAddress,
-            CustomerInitials = string.IsNullOrEmpty(b.CustomerName) ? "U" : b.CustomerName.Substring(0, 1).ToUpper(),
-            
-            // Tour
-            TourID = b.TourID,
-            TourName = b.TourName,
-            TourCategory = b.TourCategory ?? "N/A",
-            
-            // Instance
-            InstanceID = b.InstanceID,
-            StartDate = b.StartDate,
-            EndDate = b.EndDate,
-            FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
-            FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
-            DurationDays = b.DurationDays,
-            GuideName = b.GuideName,
-            
-            // Location
-            LocationName = b.LocationName,
-            City = b.City,
-            Country = b.Country,
-            
-            // Pricing
-            Seats = b.Seats,
-            BasePrice = b.PriceBase,
-            BasePriceTotal = b.PriceBase * b.Seats,
-            ServicesTotal = b.ServicesTotal,
-            TotalAmount = b.TotalAmount,
-            Currency = b.Currency,
-            FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
-            SpecialRequests = b.SpecialRequests,
-            
-            // Services
-            BookedServices = b.BookedServices.Select(s => new TourViet.ViewModels.BookedServiceViewModel
+            return new TourViet.ViewModels.BookingViewModel
             {
-                ServiceID = s.ServiceID,
-                ServiceName = s.ServiceName,
-                Quantity = s.Quantity,
-                PriceAtBooking = s.PriceAtBooking,
-                SubTotal = s.SubTotal,
-                Currency = s.Currency,
-                FormattedSubTotal = $"{s.SubTotal.ToString("N0")} {s.Currency}"
-            }).ToList(),
-            ServicesCount = b.BookedServices.Count
+                BookingID = b.BookingID,
+                BookingRef = b.BookingRef,
+                Status = b.Status,
+                StatusBadgeClass = GetStatusBadgeClass(b.Status),
+                StatusIcon = GetStatusIcon(b.Status),
+                CreatedAt = b.BookingDate,
+                FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+                
+                // Customer
+                UserID = b.UserID,
+                CustomerName = b.CustomerName,
+                CustomerEmail = b.CustomerEmail,
+                CustomerPhone = b.CustomerPhone,
+                CustomerAddress = b.CustomerAddress,
+                CustomerInitials = string.IsNullOrEmpty(b.CustomerName) ? "U" : b.CustomerName.Substring(0, 1).ToUpper(),
+                
+                // Tour
+                TourID = b.TourID,
+                TourName = b.TourName,
+                TourCategory = b.TourCategory ?? "N/A",
+                
+                // Instance
+                InstanceID = b.InstanceID,
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+                FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
+                FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
+                DurationDays = b.DurationDays,
+                GuideName = b.GuideName,
+                
+                // Location
+                LocationName = b.LocationName,
+                City = b.City,
+                Country = b.Country,
+                
+                // Pricing
+                Seats = b.Seats,
+                BasePrice = b.PriceBase,
+                BasePriceTotal = b.PriceBase * b.Seats,
+                ServicesTotal = b.ServicesTotal,
+                SubTotalBeforeDiscount = subTotalBeforeDiscount,
+                FormattedSubTotalBeforeDiscount = $"{subTotalBeforeDiscount.ToString("N0")} {b.Currency}",
+                TotalAmount = b.TotalAmount,
+                Currency = b.Currency,
+                FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
+                SpecialRequests = b.SpecialRequests,
+                
+                // Promotion Info
+                PromotionName = redemption?.Promotion?.Name,
+                DiscountAmount = discountAmount,
+                FormattedDiscountAmount = discountAmount > 0 ? $"-{discountAmount.ToString("N0")} {b.Currency}" : null,
+                CouponCode = redemption?.Coupon?.Code,
+                
+                // Services
+                BookedServices = b.BookedServices.Select(s => new TourViet.ViewModels.BookedServiceViewModel
+                {
+                    ServiceID = s.ServiceID,
+                    ServiceName = s.ServiceName,
+                    Quantity = s.Quantity,
+                    PriceAtBooking = s.PriceAtBooking,
+                    SubTotal = s.SubTotal,
+                    Currency = s.Currency,
+                    FormattedSubTotal = $"{s.SubTotal.ToString("N0")} {s.Currency}"
+                }).ToList(),
+                ServicesCount = b.BookedServices.Count
+            };
         }).ToList();
         
         return View("../AdministrativeStaffPage/ManageBookings", bookings);
@@ -429,68 +452,91 @@ public class HomeController : Controller
         // Fetch user's bookings
         var bookingsDto = await _bookingService.GetUserBookingsAsync(userId);
         
+        // Get promotion redemptions for these bookings
+        var bookingIds = bookingsDto.Select(b => b.BookingID).ToList();
+        var promotionRedemptions = await _context.PromotionRedemptions
+            .Include(r => r.Promotion)
+            .Include(r => r.Coupon)
+            .Where(r => r.BookingID.HasValue && bookingIds.Contains(r.BookingID.Value))
+            .ToListAsync();
+        
         // Transform to ViewModel
-        var bookings = bookingsDto.Select(b => new TourViet.ViewModels.BookingViewModel
+        var bookings = bookingsDto.Select(b =>
         {
-            BookingID = b.BookingID,
-            BookingRef = b.BookingRef,
-            Status = b.Status,
-            StatusBadgeClass = GetStatusBadgeClass(b.Status),
-            StatusIcon = GetStatusIcon(b.Status),
-            CreatedAt = b.BookingDate,
-            FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+            var redemption = promotionRedemptions.FirstOrDefault(r => r.BookingID == b.BookingID);
+            var subTotalBeforeDiscount = b.PriceBase * b.Seats + b.ServicesTotal;
+            var discountAmount = redemption?.DiscountAmount ?? 0;
             
-            // Customer
-            UserID = b.UserID,
-            CustomerName = b.CustomerName,
-            CustomerEmail = b.CustomerEmail,
-            CustomerPhone = b.CustomerPhone,
-            CustomerAddress = b.CustomerAddress,
-            CustomerInitials = string.IsNullOrEmpty(b.CustomerName) ? "U" : b.CustomerName.Substring(0, 1).ToUpper(),
-            
-            // Tour
-            TourID = b.TourID,
-            TourName = b.TourName,
-            TourCategory = b.TourCategory ?? "N/A",
-            TourImageUrl = b.TourImageUrl,
-            TourImages = b.TourImages,
-            
-            // Instance
-            InstanceID = b.InstanceID,
-            StartDate = b.StartDate,
-            EndDate = b.EndDate,
-            FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
-            FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
-            DurationDays = b.DurationDays,
-            GuideName = b.GuideName,
-            
-            // Location
-            LocationName = b.LocationName,
-            City = b.City,
-            Country = b.Country,
-            
-            // Pricing
-            Seats = b.Seats,
-            BasePrice = b.PriceBase,
-            BasePriceTotal = b.PriceBase * b.Seats,
-            ServicesTotal = b.ServicesTotal,
-            TotalAmount = b.TotalAmount,
-            Currency = b.Currency,
-            FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
-            SpecialRequests = b.SpecialRequests,
-            
-            // Services
-            BookedServices = b.BookedServices.Select(s => new TourViet.ViewModels.BookedServiceViewModel
+            return new TourViet.ViewModels.BookingViewModel
             {
-                ServiceID = s.ServiceID,
-                ServiceName = s.ServiceName,
-                Quantity = s.Quantity,
-                PriceAtBooking = s.PriceAtBooking,
-                SubTotal = s.SubTotal,
-                Currency = s.Currency,
-                FormattedSubTotal = $"{s.SubTotal.ToString("N0")} {s.Currency}"
-            }).ToList(),
-            ServicesCount = b.BookedServices.Count
+                BookingID = b.BookingID,
+                BookingRef = b.BookingRef,
+                Status = b.Status,
+                StatusBadgeClass = GetStatusBadgeClass(b.Status),
+                StatusIcon = GetStatusIcon(b.Status),
+                CreatedAt = b.BookingDate,
+                FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+                
+                // Customer
+                UserID = b.UserID,
+                CustomerName = b.CustomerName,
+                CustomerEmail = b.CustomerEmail,
+                CustomerPhone = b.CustomerPhone,
+                CustomerAddress = b.CustomerAddress,
+                CustomerInitials = string.IsNullOrEmpty(b.CustomerName) ? "U" : b.CustomerName.Substring(0, 1).ToUpper(),
+                
+                // Tour
+                TourID = b.TourID,
+                TourName = b.TourName,
+                TourCategory = b.TourCategory ?? "N/A",
+                TourImageUrl = b.TourImageUrl,
+                TourImages = b.TourImages,
+                
+                // Instance
+                InstanceID = b.InstanceID,
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+                FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
+                FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
+                DurationDays = b.DurationDays,
+                GuideName = b.GuideName,
+                
+                // Location
+                LocationName = b.LocationName,
+                City = b.City,
+                Country = b.Country,
+                
+                // Pricing
+                Seats = b.Seats,
+                BasePrice = b.PriceBase,
+                BasePriceTotal = b.PriceBase * b.Seats,
+                ServicesTotal = b.ServicesTotal,
+                SubTotalBeforeDiscount = subTotalBeforeDiscount,
+                FormattedSubTotalBeforeDiscount = $"{subTotalBeforeDiscount.ToString("N0")} {b.Currency}",
+                TotalAmount = b.TotalAmount,
+                Currency = b.Currency,
+                FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
+                SpecialRequests = b.SpecialRequests,
+                
+                // Promotion Info
+                PromotionName = redemption?.Promotion?.Name,
+                DiscountAmount = discountAmount,
+                FormattedDiscountAmount = discountAmount > 0 ? $"-{discountAmount.ToString("N0")} {b.Currency}" : null,
+                CouponCode = redemption?.Coupon?.Code,
+                
+                // Services
+                BookedServices = b.BookedServices.Select(s => new TourViet.ViewModels.BookedServiceViewModel
+                {
+                    ServiceID = s.ServiceID,
+                    ServiceName = s.ServiceName,
+                    Quantity = s.Quantity,
+                    PriceAtBooking = s.PriceAtBooking,
+                    SubTotal = s.SubTotal,
+                    Currency = s.Currency,
+                    FormattedSubTotal = $"{s.SubTotal.ToString("N0")} {s.Currency}"
+                }).ToList(),
+                ServicesCount = b.BookedServices.Count
+            };
         }).ToList();
         
         return View(bookings);

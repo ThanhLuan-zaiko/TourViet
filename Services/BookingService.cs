@@ -427,6 +427,18 @@ public class BookingService : IBookingService
 
         await _context.SaveChangesAsync();
         
+        // Sync promotion redemption status with booking status
+        if (oldStatus == "Pending" && newStatus == "Confirmed")
+        {
+            // Confirm the promotion redemption when booking is approved
+            await _promotionService.ConfirmRedemptionAsync(bookingId);
+        }
+        else if ((oldStatus == "Pending" || oldStatus == "Confirmed") && newStatus == "Cancelled")
+        {
+            // Void the promotion redemption to free up usage when booking is cancelled
+            await _promotionService.VoidRedemptionAsync(bookingId);
+        }
+        
         // After confirming, auto-reject excess pending bookings if needed
         if (oldStatus == "Pending" && newStatus == "Confirmed")
         {

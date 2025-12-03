@@ -25,6 +25,9 @@ public interface IPromotionService
         Guid promotionId, 
         decimal discountAmount, 
         Guid? couponId = null);
+    
+    Task ConfirmRedemptionAsync(Guid bookingId);
+    Task VoidRedemptionAsync(Guid bookingId);
 }
 
 public class PromotionCalculationResult

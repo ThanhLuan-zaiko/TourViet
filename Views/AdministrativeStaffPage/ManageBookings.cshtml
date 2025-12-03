@@ -112,6 +112,13 @@
                                 </td>
                                 <td>
                                     <strong class="text-primary">@booking.FormattedTotalAmount</strong>
+                                    @if (booking.DiscountAmount.HasValue && booking.DiscountAmount > 0)
+                                    {
+                                        <br />
+                                        <span class="badge bg-success bg-gradient">
+                                            <i class="bi bi-tag-fill"></i> Giảm @booking.DiscountAmount.Value.ToString("N0")
+                                        </span>
+                                    }
                                     @if (booking.ServicesCount > 0)
                                     {
                                         <br />
@@ -279,6 +286,26 @@
                                                         <div class="d-flex justify-content-between mb-2">
                                                             <span>Dịch vụ bổ sung</span>
                                                             <span>@booking.ServicesTotal.ToString("N0") @booking.Currency</span>
+                                                        </div>
+                                                    }
+                                                    @if (booking.DiscountAmount.HasValue && booking.DiscountAmount > 0)
+                                                    {
+                                                        <hr class="border-white opacity-25 my-2" />
+                                                        <div class="d-flex justify-content-between mb-1">
+                                                            <span class="small">Tổng trước giảm</span>
+                                                            <span class="small text-decoration-line-through">@booking.FormattedSubTotalBeforeDiscount</span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between text-warning mb-2">
+                                                            <div>
+                                                                <i class="bi bi-tag-fill me-1"></i>
+                                                                <span>Giảm giá: @booking.PromotionName</span>
+                                                                @if (!string.IsNullOrEmpty(booking.CouponCode))
+                                                                {
+                                                                    <br />
+                                                                    <small class="ms-3">Mã: <span class="badge bg-warning text-dark">@booking.CouponCode</span></small>
+                                                                }
+                                                            </div>
+                                                            <strong>@booking.FormattedDiscountAmount</strong>
                                                         </div>
                                                     }
                                                     <hr class="border-white opacity-25 my-2" />

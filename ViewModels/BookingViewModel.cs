@@ -52,6 +52,14 @@ public class BookingViewModel
     public string FormattedTotalAmount { get; set; } = string.Empty;
     public string? SpecialRequests { get; set; }
     
+    // Promotion Info
+    public string? PromotionName { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
+    public string? FormattedDiscountAmount { get; set; }
+    public decimal SubTotalBeforeDiscount { get; set; }
+    public string? FormattedSubTotalBeforeDiscount { get; set; }
+    
     // Services
     public List<BookedServiceViewModel> BookedServices { get; set; } = new();
     public int ServicesCount { get; set; }

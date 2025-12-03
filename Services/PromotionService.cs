@@ -68,11 +68,11 @@ public class PromotionService : IPromotionService
             if (promo.MinSeats.HasValue && seatCount < promo.MinSeats.Value) continue;
             if (promo.MinTotalAmount.HasValue && totalAmount < promo.MinTotalAmount.Value) continue;
 
-            // Check User Usage Limit
+            // Check User Usage Limit - only count CONFIRMED redemptions
             if (promo.MaxUsesPerUser.HasValue)
             {
                 var userUsage = await _context.PromotionRedemptions
-                    .CountAsync(r => r.PromotionID == promo.PromotionID && r.UserID == userId && r.Status != "Voided");
+                    .CountAsync(r => r.PromotionID == promo.PromotionID && r.UserID == userId && r.Status == "Confirmed");
                 if (userUsage >= promo.MaxUsesPerUser.Value) continue;
             }
 
@@ -94,11 +94,11 @@ public class PromotionService : IPromotionService
                     if (coupon.StartsAt.HasValue && coupon.StartsAt > now) continue;
                     if (coupon.MaxUses.HasValue && coupon.UsageCount >= coupon.MaxUses) continue;
                     
-                    // Check coupon user limit
+                    // Check coupon user limit - only count CONFIRMED redemptions
                     if (coupon.MaxUsesPerUser.HasValue)
                     {
                         var couponUserUsage = await _context.PromotionRedemptions
-                            .CountAsync(r => r.CouponID == coupon.CouponID && r.UserID == userId && r.Status != "Voided");
+                            .CountAsync(r => r.CouponID == coupon.CouponID && r.UserID == userId && r.Status == "Confirmed");
                         if (couponUserUsage >= coupon.MaxUsesPerUser.Value) continue;
                     }
 
@@ -226,5 +226,60 @@ public class PromotionService : IPromotionService
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Confirms a promotion redemption when booking is approved by admin
+    /// </summary>
+    public async Task ConfirmRedemptionAsync(Guid bookingId)
+    {
+        var redemption = await _context.PromotionRedemptions
+            .FirstOrDefaultAsync(r => r.BookingID == bookingId && r.Status == "Applied");
+        
+        if (redemption != null)
+        {
+            redemption.Status = "Confirmed";
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation(
+                "Promotion redemption confirmed for booking {BookingId}",
+                bookingId);
+        }
+    }
+
+    /// <summary>
+    /// Voids a promotion redemption when booking is cancelled
+    /// </summary>
+    public async Task VoidRedemptionAsync(Guid bookingId)
+    {
+        var redemption = await _context.PromotionRedemptions
+            .FirstOrDefaultAsync(r => r.BookingID == bookingId);
+        
+        if (redemption != null && redemption.Status == "Applied")
+        {
+            redemption.Status = "Voided";
+            
+            // Decrement usage counts to free up the promotion
+            var promo = await _context.Promotions.FindAsync(redemption.PromotionID);
+            if (promo != null)
+            {
+                promo.UsageCount = Math.Max(0, promo.UsageCount - 1);
+            }
+            
+            if (redemption.CouponID.HasValue)
+            {
+                var coupon = await _context.Coupons.FindAsync(redemption.CouponID.Value);
+                if (coupon != null)
+                {
+                    coupon.UsageCount = Math.Max(0, coupon.UsageCount - 1);
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation(
+                "Promotion redemption voided for booking {BookingId}",
+                bookingId);
+        }
     }
 }

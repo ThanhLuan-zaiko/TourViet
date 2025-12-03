@@ -176,7 +176,7 @@
             @if (Model.PromotionType == "Coupon" && Model.Coupons.Any())
             {
                 var isLoggedIn = Context.Session.GetString("UserId") != null;
-                var randomCoupon = Model.Coupons.OrderBy(x => Guid.NewGuid()).First();
+                var alreadyUsed = ViewBag.AlreadyUsed ?? false;
                 
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-white">
@@ -190,14 +190,24 @@
                                 <small>Vui lòng <a href="#" onclick="showLoginModal(); return false;" class="alert-link">đăng nhập</a> để lấy mã giảm giá</small>
                             </div>
                         }
-                        
-                        <div class="coupon-code-box mb-3" id="couponBox" onclick="claimCoupon('@randomCoupon.Code', '@randomCoupon.CouponID')">
-                            <div class="coupon-code" id="mainCouponCode">••••••••</div>
-                            <small class="text-muted" id="couponHint">Click để lấy mã</small>
-                        </div>
-                        
-                        @if (isLoggedIn)
+                        else if (alreadyUsed)
                         {
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Bạn đã sử dụng chương trình khuyến mãi này rồi!</strong>
+                                <br>
+                                <small>Mỗi khách hàng chỉ được sử dụng 1 lần cho mỗi chương trình khuyến mãi.</small>
+                            </div>
+                        }
+                        else
+                        {
+                            var randomCoupon = Model.Coupons.OrderBy(x => Guid.NewGuid()).First();
+                            
+                            <div class="coupon-code-box mb-3" id="couponBox" onclick="claimCoupon('@randomCoupon.Code', '@randomCoupon.CouponID')">
+                                <div class="coupon-code" id="mainCouponCode">••••••••</div>
+                                <small class="text-muted" id="couponHint">Click để lấy mã</small>
+                            </div>
+                            
                             <small class="text-muted">
                                 <i class="bi bi-info-circle me-1"></i>
                                 Mỗi tài khoản chỉ được lấy 1 mã giảm giá

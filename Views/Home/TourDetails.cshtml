@@ -1491,14 +1491,41 @@
                                 <span>Dịch vụ bổ sung:</span>
                                 <span id="servicesTotalDisplay">0 VND</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-2 d-none" id="discountRow">
-                                <span class="text-warning">Giảm giá:</span>
-                                <span id="discountDisplay" class="text-warning">-0 VND</span>
+                            
+                            <!-- Promotion Section -->
+                            <div id="promotionSection" class="d-none">
+                                <hr class="border-white opacity-25 my-2">
+                                
+                                <!-- Subtotal before discount -->
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span class="opacity-75">Tổng trước giảm:</span>
+                                    <span class="text-decoration-line-through opacity-75" id="subtotalBeforeDiscount">0 VND</span>
+                                </div>
+                                
+                                <!-- Discount row with promotion name -->
+                                <div class="bg-warning bg-opacity-25 rounded p-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-tag-fill text-warning me-1"></i>
+                                            <strong class="text-warning" id="promotionNameDisplay">Giảm giá</strong>
+                                            <div class="small opacity-75" id="couponCodeDisplay"></div>
+                                        </div>
+                                        <strong class="text-warning" id="discountDisplay">-0 VND</strong>
+                                    </div>
+                                </div>
                             </div>
+                            
                             <hr class="border-white opacity-25 my-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0 fw-bold">Tổng cộng:</h5>
                                 <h4 class="mb-0 fw-bold" id="grandTotalDisplay">0 VND</h4>
+                            </div>
+                            
+                            <!-- Savings Badge (shown when discount applied) -->
+                            <div id="savingsBadge" class="d-none mt-3 text-center">
+                                <div class="badge bg-success bg-opacity-75 px-3 py-2 fs-6">
+                                    <i class="bi bi-piggy-bank me-2"></i>Bạn tiết kiệm được <strong id="savingsAmount">0 VND</strong>!
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1902,13 +1929,42 @@
                 }
 
                 // Discount handling
-                const discountRow = document.getElementById('discountRow');
+                const promotionSection = document.getElementById('promotionSection');
+                const subtotalBeforeDiscount = document.getElementById('subtotalBeforeDiscount');
+                const promotionNameDisplay = document.getElementById('promotionNameDisplay');
+                const couponCodeDisplay = document.getElementById('couponCodeDisplay');
                 const discountDisplay = document.getElementById('discountDisplay');
+                const savingsBadge = document.getElementById('savingsBadge');
+                const savingsAmount = document.getElementById('savingsAmount');
                 
                 if (data.discountAmount > 0) {
-                    discountRow.classList.remove('d-none');
-                    discountDisplay.textContent = `-${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
+                    // Calculate subtotal before discount
+                    const subtotal = data.basePriceTotal + data.servicesTotal;
                     
+                    // Show promotion section
+                    promotionSection.classList.remove('d-none');
+                    savingsBadge.classList.remove('d-none');
+                    
+                    // Populate promotion details
+                    subtotalBeforeDiscount.textContent = `${subtotal.toLocaleString('vi-VN')} ${currency}`;
+                    discountDisplay.textContent = `-${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
+                    savingsAmount.textContent = `${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
+                    
+                    // Set promotion name (from API response if available)
+                    if (data.promotionName) {
+                        promotionNameDisplay.textContent = data.promotionName;
+                    } else {
+                        promotionNameDisplay.textContent = 'Giảm giá';
+                    }
+                    
+                    // Show coupon code if used
+                    if (requestData.couponCode && data.couponCode) {
+                        couponCodeDisplay.textContent = `Mã: ${data.couponCode}`;
+                    } else {
+                        couponCodeDisplay.textContent = '';
+                    }
+                    
+                    // Show success message
                     if (data.promotionMessage) {
                         couponMessage.textContent = data.promotionMessage;
                         couponMessage.className = 'form-text small mt-1 text-success fw-bold';
@@ -1916,7 +1972,11 @@
                          couponMessage.textContent = '';
                     }
                 } else {
-                    discountRow.classList.add('d-none');
+                    // Hide promotion section
+                    promotionSection.classList.add('d-none');
+                    savingsBadge.classList.add('d-none');
+                    
+                    // Show error message if coupon was entered but not valid
                     if (requestData.couponCode && data.promotionMessage) {
                          couponMessage.textContent = data.promotionMessage;
                          couponMessage.className = 'form-text small mt-1 text-danger';
