@@ -542,6 +542,109 @@ public class HomeController : Controller
         return View(bookings);
     }
 
+    public async Task<IActionResult> TrackItinerary()
+    {
+        var userIdString = HttpContext.Session.GetString("UserId");
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        {
+            return View(new List<TourViet.ViewModels.TourItineraryViewModel>());
+        }
+        
+        // Fetch user's bookings
+        var bookingsDto = await _bookingService.GetUserBookingsAsync(userId);
+        
+        // Filter only Confirmed and Completed bookings
+        var confirmedBookings = bookingsDto
+            .Where(b => b.Status == "Confirmed" || b.Status == "Completed")
+            .ToList();
+        
+        // Get TourIDs to fetch itineraries and location info
+        var tourIds = confirmedBookings.Select(b => b.TourID).Distinct().ToList();
+        
+        // Fetch itineraries for these tours
+        var itineraries = await _context.Itineraries
+            .Where(i => tourIds.Contains(i.TourID))
+            .OrderBy(i => i.TourID)
+            .ThenBy(i => i.DayIndex)
+            .ToListAsync();
+
+        // Fetch location info for these tours
+        var toursLocation = await _context.Tours
+            .Include(t => t.Location)
+            .Where(t => tourIds.Contains(t.TourID))
+            .ToDictionaryAsync(t => t.TourID, t => t.Location);
+        
+        // Transform to ViewModel
+        var tourItineraries = confirmedBookings.Select(b =>
+        {
+            // Get itineraries for this specific tour
+            var tourItineraryItems = itineraries
+                .Where(i => i.TourID == b.TourID)
+                .Select(i => new TourViet.ViewModels.ItineraryItemViewModel
+                {
+                    ItineraryID = i.ItineraryID,
+                    DayIndex = i.DayIndex,
+                    Title = i.Title,
+                    Description = i.Description
+                })
+                .ToList();
+            
+            // Get location info
+            var location = toursLocation.ContainsKey(b.TourID) ? toursLocation[b.TourID] : null;
+
+            return new TourViet.ViewModels.TourItineraryViewModel
+            {
+                BookingID = b.BookingID,
+                BookingRef = b.BookingRef,
+                Status = b.Status,
+                StatusBadgeClass = GetStatusBadgeClass(b.Status),
+                StatusIcon = GetStatusIcon(b.Status),
+                CreatedAt = b.BookingDate,
+                FormattedCreatedAt = b.BookingDate.ToString("dd/MM/yyyy HH:mm"),
+                
+                // Customer
+                CustomerName = b.CustomerName,
+                CustomerEmail = b.CustomerEmail,
+                CustomerPhone = b.CustomerPhone,
+                
+                // Tour
+                TourID = b.TourID,
+                TourName = b.TourName,
+                TourCategory = b.TourCategory ?? "N/A",
+                TourImageUrl = b.TourImageUrl,
+                TourImages = b.TourImages,
+                
+                // Instance
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+                FormattedStartDate = b.StartDate.ToString("dd/MM/yyyy"),
+                FormattedEndDate = b.EndDate.ToString("dd/MM/yyyy"),
+                DurationDays = b.DurationDays,
+                GuideName = b.GuideName,
+                
+                // Location
+                LocationName = b.LocationName,
+                City = b.City,
+                Country = b.Country,
+                DestinationLat = location?.Latitude,
+                DestinationLng = location?.Longitude,
+                DestinationAddress = location?.Address,
+                
+                // Booking Details
+                Seats = b.Seats,
+                TotalAmount = b.TotalAmount,
+                Currency = b.Currency,
+                FormattedTotalAmount = $"{b.TotalAmount.ToString("N0")} {b.Currency}",
+                
+                // Itineraries
+                Itineraries = tourItineraryItems
+            };
+        }).ToList();
+        
+        return View(tourItineraries);
+    }
+
+
     public async Task<IActionResult> CustomerList()
     {
         var userRoles = HttpContext.Session.GetString("Roles")?.Split(',') ?? new string[0];

@@ -1,0 +1,416 @@
+@model List<TourViet.ViewModels.TourItineraryViewModel>
+
+@{
+    ViewData["Title"] = "Theo dõi lịch trình";
+    Layout = "_Layout";
+    var isLoggedIn = Context.Session.GetString("UserId") != null;
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-calendar-check text-primary me-2"></i>Theo dõi lịch trình
+                </h1>
+                @if (isLoggedIn && Model != null && Model.Any())
+                {
+                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                        <i class="bi bi-list-check me-2"></i>@Model.Count tour đã xác nhận
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!isLoggedIn)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 4rem;"></i>
+                <h5 class="text-muted">Bạn cần đăng nhập</h5>
+                <p class="text-muted mb-4">Vui lòng đăng nhập để xem lịch trình tour của bạn.</p>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary px-4">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 4rem;"></i>
+                <h5 class="text-muted">Bạn chưa có tour nào được xác nhận</h5>
+                <p class="text-muted mb-4">Lịch trình chỉ hiển thị cho các tour đã được xác nhận hoặc hoàn thành.</p>
+                <a asp-controller="Home" asp-action="BookingHistory" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-clock-history me-2"></i>Xem lịch sử đặt tour
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i>Khám phá tour
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Quick Navigation for Multiple Tours -->
+        @if (Model.Count > 1)
+        {
+            <div class="card border-0 shadow-sm mb-4 sticky-top" style="z-index: 100; top: 70px;">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center overflow-auto">
+                        <span class="text-muted me-3 text-nowrap"><i class="bi bi-list-ul me-1"></i>Chọn tour:</span>
+                        <div class="d-flex flex-nowrap gap-2">
+                            @foreach (var tour in Model)
+                            {
+                                <a href="#tour-@tour.BookingID" class="btn btn-outline-primary btn-sm text-nowrap rounded-pill">
+                                    @tour.TourName
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @foreach (var tour in Model)
+        {
+            <div id="tour-@tour.BookingID" class="card border-0 shadow-sm mb-5 scroll-margin-top">
+                <div class="card-header bg-gradient bg-primary text-white py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-1">
+                                <i class="bi bi-geo-alt-fill me-2"></i>@tour.TourName
+                            </h5>
+                            <small class="opacity-75">
+                                <i class="bi bi-tag me-1"></i>Mã đặt tour: <strong>@tour.BookingRef</strong>
+                                <span class="mx-2">|</span>
+                                <span class="badge @tour.StatusBadgeClass">
+                                    <i class="bi @tour.StatusIcon me-1"></i>@tour.Status
+                                </span>
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                            <div class="small opacity-75">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                <strong>@tour.FormattedStartDate</strong> → <strong>@tour.FormattedEndDate</strong>
+                            </div>
+                            <div class="small opacity-75">
+                                <i class="bi bi-clock me-1"></i>@tour.DurationDays ngày
+                                <span class="mx-2">|</span>
+                                <i class="bi bi-people me-1"></i>@tour.Seats người
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Tour Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            @if (tour.TourImages != null && tour.TourImages.Count > 1)
+                            {
+                                <div id="carousel-@tour.BookingID" class="carousel slide shadow-sm rounded overflow-hidden" data-bs-ride="carousel" style="height: 200px;">
+                                    <div class="carousel-indicators">
+                                        @for (int i = 0; i < tour.TourImages.Count; i++)
+                                        {
+                                            <button type="button" data-bs-target="#carousel-@tour.BookingID" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                                        }
+                                    </div>
+                                    <div class="carousel-inner h-100">
+                                        @for (int i = 0; i < tour.TourImages.Count; i++)
+                                        {
+                                            <div class="carousel-item h-100 @(i == 0 ? "active" : "")">
+                                                <img src="@tour.TourImages[i]" class="d-block w-100 h-100" alt="@tour.TourName" style="object-fit: cover;">
+                                            </div>
+                                        }
+                                    </div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@tour.BookingID" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-@tour.BookingID" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(tour.TourImageUrl))
+                            {
+                                <img src="@tour.TourImageUrl" alt="@tour.TourName" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     style="width: 100%; height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="width: 100%; height: 200px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-8 mt-3 mt-md-0">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="border-start border-primary border-3 ps-3">
+                                        <small class="text-muted d-block">Địa điểm</small>
+                                        <strong>@tour.LocationName</strong>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="border-start border-success border-3 ps-3">
+                                        <small class="text-muted d-block">Danh mục</small>
+                                        <strong>@tour.TourCategory</strong>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="border-start border-info border-3 ps-3">
+                                        <small class="text-muted d-block">Nơi khởi hành</small>
+                                        <strong>@tour.City</strong>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="border-start border-warning border-3 ps-3">
+                                        <small class="text-muted d-block">Hướng dẫn viên</small>
+                                        <strong>@(string.IsNullOrEmpty(tour.GuideName) ? "Đang cập nhật" : tour.GuideName)</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Journey Tracking Button -->
+                                <div class="col-12 mt-4">
+                                    @if (tour.DestinationLat.HasValue && tour.DestinationLng.HasValue)
+                                    {
+                                        <button onclick="trackJourney(@tour.DestinationLat, @tour.DestinationLng)" class="btn btn-success w-100 shadow-sm">
+                                            <i class="bi bi-map-fill me-2"></i>Theo dõi chuyến đi (Chỉ đường)
+                                        </button>
+                                        <small class="text-muted d-block mt-1 text-center">
+                                            <i class="bi bi-info-circle me-1"></i>Mở Google Maps chỉ đường từ vị trí của bạn đến điểm tham quan
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <button disabled class="btn btn-secondary w-100">
+                                            <i class="bi bi-map me-2"></i>Chưa có thông tin tọa độ
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Itinerary Timeline -->
+                    <h6 class="mb-4 text-primary">
+                        <i class="bi bi-map me-2"></i>Lịch trình chi tiết
+                    </h6>
+
+                    @if (tour.Itineraries != null && tour.Itineraries.Any())
+                    {
+                        <div class="timeline">
+                            @for (int i = 0; i < tour.Itineraries.Count; i++)
+                            {
+                                var itinerary = tour.Itineraries[i];
+                                var isLast = i == tour.Itineraries.Count - 1;
+                                
+                                <div class="timeline-item @(isLast ? "timeline-item-last" : "")">
+                                    <div class="timeline-marker">
+                                        <div class="timeline-marker-circle">
+                                            <span>@itinerary.DayIndex</span>
+                                        </div>
+                                        @if (!isLast)
+                                        {
+                                            <div class="timeline-marker-line"></div>
+                                        }
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="card border-0 shadow-sm mb-3">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-primary mb-2">
+                                                    <i class="bi bi-calendar-day me-2"></i>@itinerary.DayLabel
+                                                    @if (!string.IsNullOrEmpty(itinerary.Title))
+                                                    {
+                                                        <span class="text-dark">- @itinerary.Title</span>
+                                                    }
+                                                </h6>
+                                                @if (!string.IsNullOrEmpty(itinerary.Description))
+                                                {
+                                                    <p class="card-text text-muted mb-0" style="white-space: pre-line;">@itinerary.Description</p>
+                                                }
+                                                else
+                                                {
+                                                    <p class="card-text text-muted fst-italic mb-0">Chưa có mô tả chi tiết</p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Lịch trình chi tiết cho tour này đang được cập nhật.
+                        </div>
+                    }
+                </div>
+
+                <div class="card-footer bg-light text-muted small">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <i class="bi bi-clock-history me-1"></i>Đặt ngày: @tour.FormattedCreatedAt
+                        </div>
+                        <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                            <i class="bi bi-cash-stack me-1"></i>Tổng chi phí: 
+                            <strong class="text-primary">@tour.FormattedTotalAmount</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function trackJourney(destLat, destLng) {
+            if (navigator.geolocation) {
+                // Show loading state or toast if needed
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang lấy vị trí...';
+                btn.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const currentLat = position.coords.latitude;
+                        const currentLng = position.coords.longitude;
+                        
+                        // Open Google Maps Directions
+                        const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${destLat},${destLng}&travelmode=driving`;
+                        window.open(url, '_blank');
+                        
+                        // Reset button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    (error) => {
+                        console.error("Error getting location:", error);
+                        alert("Không thể lấy vị trí hiện tại của bạn. Vui lòng kiểm tra quyền truy cập vị trí.");
+                        
+                        // Reset button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                );
+            } else {
+                alert("Trình duyệt của bạn không hỗ trợ định vị.");
+            }
+        }
+    </script>
+}
+
+<style>
+    .scroll-margin-top {
+        scroll-margin-top: 140px; /* Adjust for sticky header + nav */
+    }
+
+    /* Timeline Styles */
+    .timeline {
+        position: relative;
+        padding-left: 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        display: flex;
+        padding-bottom: 2rem;
+    }
+
+    .timeline-item-last {
+        padding-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .timeline-marker-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        z-index: 2;
+    }
+
+    .timeline-marker-line {
+        width: 3px;
+        flex-grow: 1;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        margin-top: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .timeline-content {
+        flex-grow: 1;
+        padding-top: 0.25rem;
+    }
+
+    .timeline-content .card {
+        transition: all 0.3s ease;
+    }
+
+    .timeline-content .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .timeline-marker-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 0.9rem;
+        }
+
+        .timeline-marker {
+            margin-right: 1rem;
+        }
+    }
+
+    /* Card header gradient */
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+
+    /* Smooth animations */
+    .card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
