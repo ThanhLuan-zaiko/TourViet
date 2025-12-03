@@ -485,13 +485,15 @@ VALUES (
   @salt,
   N'SHA2_512+iter1000',
   SYSUTCDATETIME(),
-  N'Administrator'
+  N'Thành Luân'
 );
 
 SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'AdministrativeStaff';
 
 INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
 VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);
+
+GO
 
 -- Performance Optimization Indexes for Overbooking System
 -- Run this SQL script to add indexes for faster queries
@@ -536,3 +538,119 @@ select * from PromotionRules;
 select * from PromotionTargets;
 select * from Coupons;
 select * from PromotionRedemptions;
+select * from Notifications;
+
+-- USER 1: Lê Quyên
+DECLARE 
+  @plain NVARCHAR(4000) = N'AdminPassword456!',
+  @salt VARBINARY(32) = CRYPT_GEN_RANDOM(32),
+  @hash VARBINARY(MAX),
+  @i INT = 0,
+  @iterations INT = 1000,
+  @adminUserID UNIQUEIDENTIFIER,
+  @adminRoleID UNIQUEIDENTIFIER;
+
+SET @hash = CONVERT(VARBINARY(MAX), @plain) + @salt;
+
+WHILE @i < @iterations
+BEGIN
+  SET @hash = HASHBYTES('SHA2_512', @hash);
+  SET @i += 1;
+END
+
+SET @adminUserID = NEWID();
+
+INSERT INTO dbo.Users (UserID, Username, Email, PasswordHash, PasswordSalt, PasswordAlgo, CreatedAt, FullName)
+VALUES (
+  @adminUserID,
+  N'admin_lequyen', -- Đã sửa để tránh trùng lặp
+  N'LeQuyenAdmin@gmail.com',
+  @hash,
+  @salt,
+  N'SHA2_512+iter1000',
+  SYSUTCDATETIME(),
+  N'Lê Quyên'
+);
+
+SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'AdministrativeStaff';
+
+INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
+VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);
+
+GO -- <--- NGẮT BATCH TẠI ĐÂY
+
+-- USER 2: Tạ Linh
+DECLARE 
+  @plain NVARCHAR(4000) = N'AdminPassword789!',
+  @salt VARBINARY(32) = CRYPT_GEN_RANDOM(32),
+  @hash VARBINARY(MAX),
+  @i INT = 0,
+  @iterations INT = 1000,
+  @adminUserID UNIQUEIDENTIFIER,
+  @adminRoleID UNIQUEIDENTIFIER;
+
+SET @hash = CONVERT(VARBINARY(MAX), @plain) + @salt;
+
+WHILE @i < @iterations
+BEGIN
+  SET @hash = HASHBYTES('SHA2_512', @hash);
+  SET @i += 1;
+END
+
+SET @adminUserID = NEWID();
+
+INSERT INTO dbo.Users (UserID, Username, Email, PasswordHash, PasswordSalt, PasswordAlgo, CreatedAt, FullName)
+VALUES (
+  @adminUserID,
+  N'admin_talinh', -- Đã sửa để tránh trùng lặp
+  N'TaLinhAdmin@gmail.com',
+  @hash,
+  @salt,
+  N'SHA2_512+iter1000',
+  SYSUTCDATETIME(),
+  N'Tạ Linh'
+);
+
+SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'AdministrativeStaff';
+
+INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
+VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);
+
+GO -- <--- NGẮT BATCH TẠI ĐÂY
+
+-- USER 3: Ngọc Phương
+DECLARE 
+  @plain NVARCHAR(4000) = N'AdminPasswordjqk!',
+  @salt VARBINARY(32) = CRYPT_GEN_RANDOM(32),
+  @hash VARBINARY(MAX),
+  @i INT = 0,
+  @iterations INT = 1000,
+  @adminUserID UNIQUEIDENTIFIER,
+  @adminRoleID UNIQUEIDENTIFIER;
+
+SET @hash = CONVERT(VARBINARY(MAX), @plain) + @salt;
+
+WHILE @i < @iterations
+BEGIN
+  SET @hash = HASHBYTES('SHA2_512', @hash);
+  SET @i += 1;
+END
+
+SET @adminUserID = NEWID();
+
+INSERT INTO dbo.Users (UserID, Username, Email, PasswordHash, PasswordSalt, PasswordAlgo, CreatedAt, FullName)
+VALUES (
+  @adminUserID,
+  N'admin_ngocphuong', -- Đã sửa để tránh trùng lặp
+  N'NgocPhuongAdmin@gmail.com',
+  @hash,
+  @salt,
+  N'SHA2_512+iter1000',
+  SYSUTCDATETIME(),
+  N'Ngọc Phương'
+);
+
+SELECT @adminRoleID = RoleID FROM dbo.Roles WHERE RoleName = N'AdministrativeStaff';
+
+INSERT INTO dbo.UserRoles (UserID, RoleID, AssignedAt, AssignedBy)
+VALUES (@adminUserID, @adminRoleID, SYSUTCDATETIME(), NULL);

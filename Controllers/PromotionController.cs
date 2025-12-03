@@ -151,6 +151,8 @@ public class PromotionController : Controller
             .Include(p => p.PromotionRules)
             .Include(p => p.PromotionTargets)
             .Include(p => p.Coupons)
+            .Include(p => p.PromotionRedemptions)
+                .ThenInclude(r => r.User)
             .FirstOrDefaultAsync(p => p.PromotionID == id);
 
         if (promotion == null)

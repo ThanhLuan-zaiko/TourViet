@@ -28,6 +28,7 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
     public DbSet<PromotionTarget> PromotionTargets { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<PromotionRedemption> PromotionRedemptions { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -302,6 +303,18 @@ public class TourBookingDbContext(DbContextOptions<TourBookingDbContext> options
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(e => e.PromotionID);
             entity.HasIndex(e => e.UserID);
+        });
+
+        // Configure Notification entity
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationID);
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.UserID, e.SentAt });
+            entity.HasIndex(e => new { e.IsRead, e.SentAt });
         });
     }
 }

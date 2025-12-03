@@ -37,21 +37,44 @@
 
                 <!-- Search Box - Centered -->
                 <div class="col d-flex justify-content-center">
-                    <div class="input-group w-75 w-lg-50">
-                        <input type="text" class="form-control border-0 bg-light" placeholder="Tìm kiếm tour, địa điểm..." aria-label="Search">
-                        <button class="btn btn-link border-0 bg-light" type="button" aria-label="Search">
+                    <div class="input-group w-75 w-lg-50 position-relative">
+                        <input type="text" id="tourSearchInput" class="form-control border-0 bg-light" placeholder="Tìm kiếm tour, địa điểm..." aria-label="Search" autocomplete="off">
+                        <button class="btn btn-link border-0 bg-light" type="button" id="searchBtn" aria-label="Search">
                             <i class="bi bi-search"></i>
                         </button>
+                        
+                        <!-- Search Results Dropdown -->
+                        <div id="searchResultsDropdown" class="position-absolute bg-white shadow-lg rounded" style="display: none; top: 100%; left: 0; right: 0; z-index: 1050; max-height: 400px; overflow-y: auto; margin-top: 5px;">
+                            <div id="searchResultsList"></div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Notification Bell and User Icon - Right side -->
                 <div class="col-auto d-flex align-items-center">
                     <!-- Notification Bell -->
-                    <div class="me-3">
-                        <button class="btn btn-link p-2" type="button" id="notificationBtn" aria-label="Notifications">
+                    <div class="me-3 dropdown">
+                        <button class="btn btn-link p-2 position-relative" type="button" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                             <i class="bi bi-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">
+                                0
+                            </span>
                         </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" id="notificationDropdown" aria-labelledby="notificationBtn" style="min-width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li>
+                                <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                                    <span>Thông báo</span>
+                                    <small class="text-muted" id="unreadCount"></small>
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li id="notificationList" class="px-2">
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-bell-slash"></i>
+                                    <p class="mb-0 small">Chưa có thông báo nào</p>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
 
                     <!-- User Icon -->
@@ -206,6 +229,410 @@
         userConnection.start().catch(function (err) {
             console.error("SignalR UserHub Connection Error: ", err.toString());
         });
+
+        // ===== Notification System =====
+        
+        // Load notifications on page load
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/api/notification/list?limit=10');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    displayNotifications(data.data);
+                    updateUnreadCount();
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        // Display notifications in dropdown
+        function displayNotifications(notifications) {
+            const notificationList = document.getElementById('notificationList');
+            
+            if (!notifications || notifications.length === 0) {
+                notificationList.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-bell-slash"></i>
+                        <p class="mb-0 small">Chưa có thông báo nào</p>
+                    </div>`;
+                return;
+            }
+            
+            notificationList.innerHTML = notifications.map(n => createNotificationItem(n)).join('');
+            
+            // Attach click handlers for mark as read
+            notifications.forEach(n => {
+                if (!n.isRead) {
+                    const item = document.getElementById(`notif-${n.notificationId}`);
+                    if (item) {
+                        item.addEventListener('click', () => markAsRead(n.notificationId));
+                    }
+                }
+            });
+        }
+        
+        // Create HTML for a notification item
+        function createNotificationItem(notification) {
+            const timeAgo = getTimeAgo(new Date(notification.sentAt));
+            const readClass = notification.isRead ? '' : 'bg-light';
+            const icon = getNotificationIcon(notification.notificationType);
+            
+            return `
+                <div id="notif-${notification.notificationId}" class="dropdown-item ${readClass}" style="cursor: pointer; white-space: normal;">
+                    <div class="d-flex align-items-start">
+                        <div class="me-2">
+                            <i class="bi ${icon} text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-bold small">${notification.title}</p>
+                            <p class="mb-1 small text-muted">${notification.message}</p>
+                            <small class="text-muted"><i class="bi bi-clock me-1"></i>${timeAgo}</small>
+                        </div>
+                    </div>
+                </div>
+                <li><hr class="dropdown-divider"></li>
+            `;
+        }
+        
+        // Get icon based on notification type
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'Booking': return 'bi-ticket-perforated';
+                case 'Promotion': return 'bi-tag';
+                default: return 'bi-bell';
+            }
+        }
+        
+        // Calculate relative time
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Vừa xong';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' phút trước';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' giờ trước';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' ngày trước';
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        // Update unread count badge
+        async function updateUnreadCount() {
+            try {
+                const response = await fetch('/api/notification/unread-count');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const badge = document.getElementById('notificationBadge');
+                    const countText = document.getElementById('unreadCount');
+                    
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'inline';
+                        countText.textContent = `${data.count} chưa đọc`;
+                    } else {
+                        badge.style.display = 'none';
+                        countText.textContent = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating unread count:', error);
+            }
+        }
+        
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/api/notification/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update UI
+                    const item = document.getElementById(`notif-${notificationId}`);
+                    if (item) {
+                        item.classList.remove('bg-light');
+                    }
+                    
+                    // Refresh count
+                    await updateUnreadCount();
+                }
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+        
+        // Listen for real-time notifications via SignalR
+        userConnection.on("ReceiveNotification", function (notification) {
+            console.log('Received notification:', notification);
+            
+            // Show toast notification (optional)
+            showNotificationToast(notification);
+            
+            // Reload notifications and update count
+            loadNotifications();
+        });
+        
+        // Show toast notification (optional)
+        function showNotificationToast(notification) {
+            const toastHtml = `
+                <div class="toast align-items-center border-0 shadow-sm" role="alert" aria-live="assertive" aria-atomic="true" style="position:fixed; top:70px; right:20px; z-index:9999;">
+                    <div class="d-flex">
+                        <div class="toast-body bg-primary text-white rounded">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-bell-fill me-2"></i>
+                                <div>
+                                    <strong class="d-block">${notification.title}</strong>
+                                    <span class="small">${notification.message}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>`;
+            
+            const container = document.createElement('div');
+            container.innerHTML = toastHtml;
+            document.body.appendChild(container);
+            
+            const toastElement = container.querySelector('.toast');
+            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+            toast.show();
+            
+            // Remove element after hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                container.remove();
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only load notifications if user is logged in
+            const userId = '@Context.Session.GetString("UserId")';
+            if (userId) {
+                loadNotifications();
+            }
+        });
+    </script>
+
+    <!-- Tour Search JavaScript -->
+    <script>
+        (function() {
+            const searchInput = document.getElementById('tourSearchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const resultsDropdown = document.getElementById('searchResultsDropdown');
+            const resultsList = document.getElementById('searchResultsList');
+            
+            let debounceTimer;
+            let currentSelectedIndex = -1;
+            let searchResults = [];
+            
+            if (!searchInput) return; // Guard clause
+            
+            // Debounced search function
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                
+                clearTimeout(debounceTimer);
+                
+                if (query.length < 2) {
+                    hideResults();
+                    return;
+                }
+                
+                // Show loading state
+                showLoading();
+                
+                // Debounce API call
+                debounceTimer = setTimeout(() => {
+                    performSearch(query);
+                }, 300);
+            });
+            
+            // Perform search API call
+            async function performSearch(query) {
+                try {
+                    const response = await fetch(`/api/search/tours?query=${encodeURIComponent(query)}&limit=8`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        searchResults = data.data;
+                        displayResults(searchResults);
+                    } else {
+                        showError();
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    showError();
+                }
+            }
+            
+            // Display search results
+            function displayResults(results) {
+                currentSelectedIndex = -1;
+                
+                if (!results || results.length === 0) {
+                    resultsList.innerHTML = `
+                        <div class="p-3 text-center text-muted">
+                            <i class="bi bi-search"></i>
+                            <p class="mb-0 small">Không tìm thấy tour nào</p>
+                        </div>`;
+                    resultsDropdown.style.display = 'block';
+                    return;
+                }
+                
+                resultsList.innerHTML = results.map((tour, index) => createResultItem(tour, index)).join('');
+                resultsDropdown.style.display = 'block';
+                
+                // Attach click handlers
+                results.forEach((tour, index) => {
+                    const item = document.getElementById(`search-result-${index}`);
+                    if (item) {
+                        item.addEventListener('click', () => navigateToTour(tour.tourID));
+                    }
+                });
+            }
+            
+            // Create HTML for a result item
+            function createResultItem(tour, index) {
+                const price = tour.minPrice ? formatPrice(tour.minPrice, tour.currency) : 'Liên hệ';
+                const location = [tour.city, tour.countryName].filter(x => x).join(', ') || tour.locationName || '';
+                const defaultImage = '/images/tour-placeholder.jpg';
+                
+                return `
+                    <div id="search-result-${index}" class="search-result-item p-3 border-bottom" data-index="${index}" style="cursor: pointer; transition: background-color 0.2s;">
+                        <div class="d-flex align-items-center">
+                            <img src="${tour.imageUrl || defaultImage}" alt="${tour.tourName}" 
+                                 class="rounded me-3" 
+                                 style="width: 60px; height: 60px; object-fit: cover;"
+                                 onerror="this.src='${defaultImage}'">
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <h6 class="mb-1 text-truncate fw-bold">${tour.tourName}</h6>
+                                <p class="mb-1 small text-muted text-truncate">
+                                    <i class="bi bi-geo-alt"></i> ${location}
+                                    ${tour.categoryName ? `<span class="ms-2"><i class="bi bi-tag"></i> ${tour.categoryName}</span>` : ''}
+                                </p>
+                                <p class="mb-0 small text-primary fw-semibold">
+                                    <i class="bi bi-cash"></i> Từ ${price}
+                                </p>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            
+            // Format price
+            function formatPrice(price, currency) {
+                return new Intl.NumberFormat('vi-VN').format(price) + ' ' + currency;
+            }
+            
+            // Show loading state
+            function showLoading() {
+                resultsList.innerHTML = `
+                    <div class="p-3 text-center">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Đang tìm...</span>
+                        </div>
+                        <p class="mb-0 small text-muted mt-2">Đang tìm kiếm...</p>
+                    </div>`;
+                resultsDropdown.style.display = 'block';
+            }
+            
+            // Show error
+            function showError() {
+                resultsList.innerHTML = `
+                    <div class="p-3 text-center text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p class="mb-0 small">Đã xảy ra lỗi khi tìm kiếm</p>
+                    </div>`;
+                resultsDropdown.style.display = 'block';
+            }
+            
+            // Hide results
+            function hideResults() {
+                resultsDropdown.style.display = 'none';
+                currentSelectedIndex = -1;
+            }
+            
+            // Navigate to tour details
+            function navigateToTour(tourId) {
+                window.location.href = `/Home/TourDetails/${tourId}`;
+            }
+            
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', function(e) {
+                const items = document.querySelectorAll('.search-result-item');
+                
+                if (items.length === 0) return;
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
+                        updateSelection(items);
+                        break;
+                        
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+                        updateSelection(items);
+                        break;
+                        
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentSelectedIndex >= 0 && currentSelectedIndex < searchResults.length) {
+                            navigateToTour(searchResults[currentSelectedIndex].tourID);
+                        }
+                        break;
+                        
+                    case 'Escape':
+                        hideResults();
+                        searchInput.blur();
+                        break;
+                }
+            });
+            
+            // Update selection highlight
+            function updateSelection(items) {
+                items.forEach((item, index) => {
+                    if (index === currentSelectedIndex) {
+                        item.style.backgroundColor = '#f0f0f0';
+                        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    } else {
+                        item.style.backgroundColor = '';
+                    }
+                });
+            }
+            
+            // Hover effect
+            document.addEventListener('mouseover', function(e) {
+                if (e.target.closest('.search-result-item')) {
+                    const item = e.target.closest('.search-result-item');
+                    const index = parseInt(item.getAttribute('data-index'));
+                    currentSelectedIndex = index;
+                    
+                    const items = document.querySelectorAll('.search-result-item');
+                    updateSelection(items);
+                }
+            });
+            
+            // Click outside to close
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsDropdown.contains(e.target)) {
+                    hideResults();
+                }
+            });
+            
+            // Search button click
+            if (searchBtn) {
+                searchBtn.addEventListener('click', function() {
+                    const query = searchInput.value.trim();
+                    if (query.length >= 2) {
+                        performSearch(query);
+                    }
+                });
+            }
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

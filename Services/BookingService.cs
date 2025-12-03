@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TourViet.Data;
 using TourViet.DTOs;
+using TourViet.Hubs;
 using TourViet.Models;
 using TourViet.Services.Interfaces;
 
@@ -11,15 +13,21 @@ public class BookingService : IBookingService
     private readonly TourBookingDbContext _context;
     private readonly ILogger<BookingService> _logger;
     private readonly IPromotionService _promotionService;
+    private readonly INotificationService _notificationService;
+    private readonly IHubContext<UserHub> _hubContext;
 
     public BookingService(
         TourBookingDbContext context, 
         ILogger<BookingService> logger,
-        IPromotionService promotionService)
+        IPromotionService promotionService,
+        INotificationService notificationService,
+        IHubContext<UserHub> hubContext)
     {
         _context = context;
         _logger = logger;
         _promotionService = promotionService;
+        _notificationService = notificationService;
+        _hubContext = hubContext;
     }
 
     public async Task<(bool Success, string Message, Guid? BookingId, string? BookingRef)> CreateBookingAsync(
@@ -444,6 +452,49 @@ public class BookingService : IBookingService
         {
             await AutoRejectOverbookedPendingBookingsAsync(booking.TourInstance.InstanceID);
         }
+        
+        // Create and send real-time notification to customer
+        if (ShouldNotifyCustomer(oldStatus, newStatus))
+        {
+            try
+            {
+                // Load tour info for notification message
+                var tour = await _context.TourInstances
+                    .Where(ti => ti.InstanceID == booking.InstanceID)
+                    .Select(ti => ti.Tour.TourName)
+                    .FirstOrDefaultAsync();
+                
+                var notification = await _notificationService.CreateBookingNotificationAsync(
+                    booking.UserID,
+                    booking.BookingID,
+                    newStatus,
+                    booking.BookingRef,
+                    tour ?? "Tour"
+                );
+                
+                // Broadcast notification to user via SignalR
+                await _hubContext.Clients.Group($"user_{booking.UserID}")
+                    .SendAsync("ReceiveNotification", new
+                    {
+                        notificationId = notification.NotificationID,
+                        title = notification.Title,
+                        message = notification.Message,
+                        notificationType = notification.NotificationType,
+                        sentAt = notification.SentAt,
+                        isRead = notification.IsRead,
+                        payload = notification.Payload
+                    });
+                    
+                _logger.LogInformation(
+                    "Sent notification to user {UserId} for booking {BookingRef} status change to {NewStatus}",
+                    booking.UserID, booking.BookingRef, newStatus);
+            }
+            catch (Exception notifEx)
+            {
+                _logger.LogError(notifEx, "Failed to send notification for booking {BookingId}", bookingId);
+                // Don't fail the entire operation if notification fails
+            }
+        }
 
         _logger.LogInformation(
             "Booking status updated: {BookingRef} from {OldStatus} to {NewStatus}",
@@ -713,5 +764,16 @@ private async Task AutoRejectOverbookedPendingBookingsAsync(Guid instanceId)
     public async Task<bool> IsBookingPaidAsync(Guid bookingId)
     {
         return await _context.Payments.AnyAsync(p => p.BookingID == bookingId && p.Status == "Completed");
+    }
+
+    private bool ShouldNotifyCustomer(string oldStatus, string newStatus)
+    {
+        // Notify on these status transitions:
+        // Pending -> Confirmed (approved)
+        // Pending -> Cancelled (rejected/cancelled)
+        // Confirmed -> Cancelled (cancelled after confirmation)
+        return (oldStatus == "Pending" && newStatus == "Confirmed") ||
+               (oldStatus == "Pending" && newStatus == "Cancelled") ||
+               (oldStatus == "Confirmed" && newStatus == "Cancelled");
     }
 }
