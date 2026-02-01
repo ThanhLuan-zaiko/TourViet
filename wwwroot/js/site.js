@@ -38,29 +38,57 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Search functionality
-    const searchInput = document.querySelector('.search-input');
-    const searchBtn = document.querySelector('.search-btn');
-    
-    if (searchBtn) {
-        searchBtn.addEventListener('click', function() {
-            const searchTerm = searchInput.value.trim();
-            if (searchTerm) {
-                // Implement search functionality here
-                console.log('Searching for:', searchTerm);
-                // You can redirect to a search page or filter results
-            }
+    // Search functionality - Syncing desktop and mobile search
+    const desktopSearch = document.getElementById('tourSearchInput');
+    const mobileSearch = document.getElementById('mobileSearchInput');
+    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+    const mobileSearchToggle = document.getElementById('mobileSearchToggle');
+    const closeMobileSearch = document.getElementById('closeMobileSearch');
+    const mobileSearchContainer = document.getElementById('mobileSearchContainer');
+
+    // Toggle Mobile Search
+    if (mobileSearchToggle && mobileSearchContainer) {
+        mobileSearchToggle.addEventListener('click', function() {
+            mobileSearchContainer.classList.add('active');
+            setTimeout(() => {
+                if (mobileSearch) mobileSearch.focus();
+            }, 100);
         });
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
+    if (closeMobileSearch && mobileSearchContainer) {
+        closeMobileSearch.addEventListener('click', function() {
+            mobileSearchContainer.classList.remove('active');
+        });
+    }
+
+    // Sync search inputs
+    if (desktopSearch && mobileSearch) {
+        mobileSearch.addEventListener('input', function() {
+            desktopSearch.value = mobileSearch.value;
+            // Trigger input event on desktop search to activate existing search logic
+            desktopSearch.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        desktopSearch.addEventListener('input', function() {
+            mobileSearch.value = desktopSearch.value;
+        });
+    }
+
+    // Handle mobile search button click
+    if (mobileSearchBtn && desktopSearch) {
+        mobileSearchBtn.addEventListener('click', function() {
+            const searchBtn = document.getElementById('searchBtn');
+            if (searchBtn) searchBtn.click();
+        });
+    }
+
+    // Handle mobile search enter key
+    if (mobileSearch) {
+        mobileSearch.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                const searchTerm = searchInput.value.trim();
-                if (searchTerm) {
-                    // Implement search functionality here
-                    console.log('Searching for:', searchTerm);
-                }
+                const searchBtn = document.getElementById('searchBtn');
+                if (searchBtn) searchBtn.click();
             }
         });
     }

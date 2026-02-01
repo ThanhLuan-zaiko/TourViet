@@ -37,9 +37,20 @@ namespace TourViet.Services
             var fileName = $"{Guid.NewGuid()}.webp";
             var filePath = Path.Combine(uploadDir, fileName);
 
+            int width = 0;
+            int height = 0;
+
             using (var image = await Image.LoadAsync(file.OpenReadStream()))
             {
-                await image.SaveAsWebpAsync(filePath);
+                width = image.Width;
+                height = image.Height;
+
+                var encoder = new WebpEncoder
+                {
+                    Quality = 90,
+                    FileFormat = WebpFileFormatType.Lossy
+                };
+                await image.SaveAsWebpAsync(filePath, encoder);
             }
 
             // Create TourImage entity
@@ -50,7 +61,9 @@ namespace TourViet.Services
                 MimeType = "image/webp",
                 SortOrder = sortOrder,
                 FileName = fileName,
-                FileSize = (int)file.Length,
+                FileSize = (int)new FileInfo(filePath).Length,
+                Width = width,
+                Height = height,
                 UploadedAt = DateTime.UtcNow
             };
 
@@ -96,7 +109,7 @@ namespace TourViet.Services
 
             // Try to delete file from file system
             var filePath = Path.Combine(UploadsBasePath, image.TourID.ToString(), image.FileName ?? "");
-            
+
             if (File.Exists(filePath))
             {
                 try

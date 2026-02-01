@@ -18,18 +18,20 @@
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb breadcrumb-light mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-white">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-white">Trang
+                            chủ</a></li>
                     <li class="breadcrumb-item"><a href="#" class="text-white">Tours</a></li>
                     <li class="breadcrumb-item text-white opacity-75">@Model.Category?.CategoryName</li>
                 </ol>
             </nav>
 
             <!-- Category Badge -->
-            <span class="badge bg-primary bg-gradient mb-3 px-3 py-2 rounded-pill fs-6" 
-                  @if (!string.IsNullOrEmpty(Model.Category?.Description))
-                  {
-                      <text>data-bs-toggle="tooltip" data-bs-placement="bottom" title="@Model.Category.Description"</text>
-                  }>
+            <span class="badge bg-primary bg-gradient mb-3 px-3 py-2 rounded-pill fs-6" @if
+                                (!string.IsNullOrEmpty(Model.Category?.Description)) {
+                <text>data-bs-toggle="tooltip"
+                    data-bs-placement="bottom" title="@Model.Category.Description"</text>
+                }
+>
                 <i class="bi bi-tag-fill me-1"></i>@Model.Category?.CategoryName
             </span>
 
@@ -69,7 +71,8 @@
                 }
                 else
                 {
-                    <a href="#reviews" id="heroReviewLink" class="text-white text-decoration-none hover-opacity d-flex align-items-center">
+                    <a href="#reviews" id="heroReviewLink"
+                        class="text-white text-decoration-none hover-opacity d-flex align-items-center">
                         <i class="bi bi-star me-2"></i>
                         <span>Viết đánh giá đầu tiên</span>
                     </a>
@@ -176,23 +179,28 @@
             <!-- Tabs Navigation -->
             <ul class="nav nav-tabs nav-fill mb-4" id="tourTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
+                        type="button" role="tab">
                         <i class="bi bi-info-circle me-2"></i>Tổng quan
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary" type="button" role="tab">
+                    <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary"
+                        type="button" role="tab">
                         <i class="bi bi-list-check me-2"></i>Lịch trình
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="departures-tab" data-bs-toggle="tab" data-bs-target="#departures" type="button" role="tab">
+                    <button class="nav-link" id="departures-tab" data-bs-toggle="tab" data-bs-target="#departures"
+                        type="button" role="tab">
                         <i class="bi bi-calendar-event me-2"></i>Ngày khởi hành
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
-                        <i class="bi bi-star me-2"></i>Đánh giá<span id="reviewCountBadge" class="badge bg-primary ms-1">@reviewCount</span>
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
+                        type="button" role="tab">
+                        <i class="bi bi-star me-2"></i>Đánh giá<span id="reviewCountBadge"
+                            class="badge bg-primary ms-1">@reviewCount</span>
                     </button>
                 </li>
             </ul>
@@ -252,7 +260,8 @@
                                                         @Model.Location.Country.CountryName
                                                         @if (!string.IsNullOrEmpty(Model.Location.Country.ISO2))
                                                         {
-                                                            <span class="badge bg-secondary ms-1">@Model.Location.Country.ISO2</span>
+                                                            <span
+                                                                class="badge bg-secondary ms-1">@Model.Location.Country.ISO2</span>
                                                         }
                                                     </p>
                                                 </div>
@@ -278,7 +287,7 @@
                                         <p class="text-muted mb-0">@Model.Location.Description</p>
                                     </div>
                                 }
-                                
+
                                 <!-- Google Maps Embed -->
                                 @if (Model.Location.Latitude.HasValue && Model.Location.Longitude.HasValue)
                                 {
@@ -287,23 +296,19 @@
                                             <i class="bi bi-map-fill text-primary me-2"></i>Xem trên bản đồ
                                         </h5>
                                         <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm mb-3">
-                                            <iframe 
+                                            <iframe
                                                 src="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude&hl=vi&z=14&output=embed"
-                                                style="border:0;" 
-                                                allowfullscreen="" 
-                                                loading="lazy" 
+                                                style="border:0;" allowfullscreen="" loading="lazy"
                                                 referrerpolicy="no-referrer-when-downgrade">
                                             </iframe>
                                         </div>
                                         <div class="d-flex gap-2">
-                                            <a href="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude" 
-                                               target="_blank" 
-                                               class="btn btn-outline-primary btn-sm">
+                                            <a href="https://www.google.com/maps?q=@Model.Location.Latitude,@Model.Location.Longitude"
+                                                target="_blank" class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-geo-alt me-1"></i>Mở trong Google Maps
                                             </a>
-                                            <a href="https://www.google.com/maps/dir/?api=1&destination=@Model.Location.Latitude,@Model.Location.Longitude" 
-                                               target="_blank" 
-                                               class="btn btn-outline-success btn-sm">
+                                            <a href="https://www.google.com/maps/dir/?api=1&destination=@Model.Location.Latitude,@Model.Location.Longitude"
+                                                target="_blank" class="btn btn-outline-success btn-sm">
                                                 <i class="bi bi-signpost-2 me-1"></i>Chỉ đường
                                             </a>
                                         </div>
@@ -328,7 +333,9 @@
                                             var imageIndex = 0;
                                             foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
                                             {
-                                                <button type="button" data-bs-target="#tourImageCarousel" data-bs-slide-to="@imageIndex" class="@(imageIndex == 0 ? "active" : "")" aria-label="Slide @(imageIndex + 1)"></button>
+                                                <button type="button" data-bs-target="#tourImageCarousel"
+                                                    data-bs-slide-to="@imageIndex" class="@(imageIndex == 0 ? "active" : "")"
+                                                    aria-label="Slide @(imageIndex + 1)"></button>
                                                 imageIndex++;
                                             }
                                         }
@@ -341,7 +348,8 @@
                                             foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
                                             {
                                                 <div class="carousel-item @(slideIndex == 0 ? "active" : "")">
-                                                    <img src="@img.Url" class="d-block w-100 carousel-image" alt="@(img.AltText ?? $"Tour image {slideIndex + 1}")">
+                                                    <img src="@img.Url" class="d-block w-100 carousel-image"
+                                                        alt="@(img.AltText ?? $"Tour image {slideIndex + 1}")">
                                                     @if (img.IsPrimary)
                                                     {
                                                         <div class="position-absolute top-0 end-0 m-3">
@@ -352,7 +360,8 @@
                                                     }
                                                     @if (!string.IsNullOrEmpty(img.AltText))
                                                     {
-                                                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded-3 p-2">
+                                                        <div
+                                                            class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded-3 p-2">
                                                             <p class="mb-0">@img.AltText</p>
                                                         </div>
                                                     }
@@ -363,11 +372,13 @@
                                     </div>
 
                                     <!-- Controls -->
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#tourImageCarousel" data-bs-slide="prev">
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#tourImageCarousel"
+                                        data-bs-slide="prev">
                                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                         <span class="visually-hidden">Previous</span>
                                     </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#tourImageCarousel" data-bs-slide="next">
+                                    <button class="carousel-control-next" type="button" data-bs-target="#tourImageCarousel"
+                                        data-bs-slide="next">
                                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                         <span class="visually-hidden">Next</span>
                                     </button>
@@ -380,12 +391,11 @@
                                         foreach (var img in Model.TourImages.OrderBy(i => i.SortOrder).Skip(1))
                                         {
                                             <div class="col-2">
-                                                <img src="@img.Url" 
-                                                     class="img-thumbnail carousel-thumbnail @(thumbIndex == 0 ? "active" : "")" 
-                                                     data-bs-target="#tourImageCarousel" 
-                                                     data-bs-slide-to="@thumbIndex"
-                                                     alt="Thumbnail @(thumbIndex + 1)"
-                                                     style="cursor: pointer; height: 60px; object-fit: cover;">
+                                                <img src="@img.Url"
+                                                    class="img-thumbnail carousel-thumbnail @(thumbIndex == 0 ? "active" : "")"
+                                                    data-bs-target="#tourImageCarousel" data-bs-slide-to="@thumbIndex"
+                                                    alt="Thumbnail @(thumbIndex + 1)"
+                                                    style="cursor: pointer; height: 60px; object-fit: cover;">
                                             </div>
                                             thumbIndex++;
                                         }
@@ -460,7 +470,8 @@
                                         <tbody>
                                             @foreach (var instance in Model.TourInstances.OrderBy(i => i.StartDate))
                                             {
-                                                var seatsAvailable = instance.Capacity - instance.SeatsBooked - instance.SeatsHeld;
+                                                var seatsAvailable = instance.Capacity - instance.SeatsBooked -
+                                                instance.SeatsHeld;
                                                 var duration = (instance.EndDate - instance.StartDate).Days + 1;
                                                 <tr>
                                                     <td>@instance.StartDate.ToString("dd/MM/yyyy")</td>
@@ -484,7 +495,8 @@
                                                     <td>
                                                         @if (seatsAvailable > 0)
                                                         {
-                                                            <span class="text-success fw-bold">@seatsAvailable/@instance.Capacity</span>
+                                                            <span
+                                                                class="text-success fw-bold">@seatsAvailable/@instance.Capacity</span>
                                                         }
                                                         else
                                                         {
@@ -510,7 +522,8 @@
                                                     <div class="card bg-light border-0">
                                                         <div class="card-body text-center">
                                                             <h6 class="text-muted mb-2">@price.PriceType</h6>
-                                                            <h4 class="text-primary fw-bold mb-0">@price.Amount.ToString("N0") @price.Currency</h4>
+                                                            <h4 class="text-primary fw-bold mb-0">@price.Amount.ToString("N0")
+                                                                @price.Currency</h4>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -535,19 +548,23 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <!-- Reviews Header with Stats -->
-                            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4 pb-4 border-bottom">
+                            <div
+                                class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4 pb-4 border-bottom">
                                 <!-- Rating Summary - Full width on mobile, sidebar on desktop -->
                                 <div class="text-center mb-4 mb-md-0 me-md-5 pe-md-5 border-md-end w-100 w-md-auto">
-                                    <h2 class="display-4 fw-bold mb-2 text-primary" id="averageRatingDisplay">@averageRating.ToString("0.0")</h2>
+                                    <h2 class="display-4 fw-bold mb-2 text-primary" id="averageRatingDisplay">
+                                        @averageRating.ToString("0.0")</h2>
                                     <div class="mb-2 fs-5" id="averageStarsDisplay">
                                         @for (int i = 1; i <= 5; i++)
                                         {
-                                            <i class="bi bi-star-fill @(i <= averageRating ? "text-warning" : "text-muted opacity-25")"></i>
+                                            <i
+                                                class="bi bi-star-fill @(i <= averageRating ? "text-warning" : "text-muted opacity-25")"></i>
                                         }
                                     </div>
-                                    <div class="text-muted fw-medium"><span id="reviewCountDisplay">@reviewCount</span> đánh giá</div>
+                                    <div class="text-muted fw-medium"><span id="reviewCountDisplay">@reviewCount</span>
+                                        đánh giá</div>
                                 </div>
-                                
+
                                 <!-- Review Input Section - Full width on mobile and desktop -->
                                 <div class="flex-grow-1 w-100">
                                     <!-- Review Input Section (YouTube Style) -->
@@ -561,14 +578,18 @@
 
                                         <!-- Unauthenticated State -->
                                         <div id="reviewLoginPrompt" class="d-none">
-                                            <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border-0">
-                                                <div class="avatar-circle bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <div
+                                                class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border-0">
+                                                <div class="avatar-circle bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width: 40px; height: 40px;">
                                                     <i class="bi bi-person-fill"></i>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <span class="text-muted">Đăng nhập để chia sẻ trải nghiệm của bạn.</span>
+                                                    <span class="text-muted">Đăng nhập để chia sẻ trải nghiệm của
+                                                        bạn.</span>
                                                 </div>
-                                                <button class="btn btn-outline-primary rounded-pill px-4 fw-medium" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                                <button class="btn btn-outline-primary rounded-pill px-4 fw-medium"
+                                                    data-bs-toggle="modal" data-bs-target="#loginModal">
                                                     Đăng nhập
                                                 </button>
                                             </div>
@@ -579,51 +600,69 @@
                                             <div class="d-flex gap-3">
                                                 <!-- User Avatar -->
                                                 <div class="flex-shrink-0">
-                                                    <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                                    <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                                        style="width: 40px; height: 40px;">
                                                         <span id="currentUserInitial" class="fw-bold">U</span>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Input Area -->
                                                 <div class="flex-grow-1">
                                                     <form id="reviewSubmissionForm">
                                                         <input type="hidden" id="editReviewId" value="">
-                                                        
+
                                                         <!-- Star Rating (Always visible) -->
                                                         <div class="mb-3">
-                                                            <div class="star-rating-selector d-flex align-items-center flex-wrap gap-2">
-                                                                <span class="text-muted small fw-medium">Đánh giá:</span>
+                                                            <div
+                                                                class="star-rating-selector d-flex align-items-center flex-wrap gap-2">
+                                                                <span class="text-muted small fw-medium">Đánh
+                                                                    giá:</span>
                                                                 <div class="rating-group">
-                                                                    <input type="radio" name="rating" id="star5" value="5" checked />
-                                                                    <label for="star5" title="5 sao"><i class="bi bi-star-fill"></i></label>
-                                                                    <input type="radio" name="rating" id="star4" value="4" />
-                                                                    <label for="star4" title="4 sao"><i class="bi bi-star-fill"></i></label>
-                                                                    <input type="radio" name="rating" id="star3" value="3" />
-                                                                    <label for="star3" title="3 sao"><i class="bi bi-star-fill"></i></label>
-                                                                    <input type="radio" name="rating" id="star2" value="2" />
-                                                                    <label for="star2" title="2 sao"><i class="bi bi-star-fill"></i></label>
-                                                                    <input type="radio" name="rating" id="star1" value="1" />
-                                                                    <label for="star1" title="1 sao"><i class="bi bi-star-fill"></i></label>
+                                                                    <input type="radio" name="rating" id="star5"
+                                                                        value="5" checked />
+                                                                    <label for="star5" title="5 sao"><i
+                                                                            class="bi bi-star-fill"></i></label>
+                                                                    <input type="radio" name="rating" id="star4"
+                                                                        value="4" />
+                                                                    <label for="star4" title="4 sao"><i
+                                                                            class="bi bi-star-fill"></i></label>
+                                                                    <input type="radio" name="rating" id="star3"
+                                                                        value="3" />
+                                                                    <label for="star3" title="3 sao"><i
+                                                                            class="bi bi-star-fill"></i></label>
+                                                                    <input type="radio" name="rating" id="star2"
+                                                                        value="2" />
+                                                                    <label for="star2" title="2 sao"><i
+                                                                            class="bi bi-star-fill"></i></label>
+                                                                    <input type="radio" name="rating" id="star1"
+                                                                        value="1" />
+                                                                    <label for="star1" title="1 sao"><i
+                                                                            class="bi bi-star-fill"></i></label>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <!-- Comment Input -->
                                                         <div class="mb-3">
-                                                            <textarea class="form-control border rounded-3 shadow-sm" 
-                                                                      placeholder="Chia sẻ cảm nghĩ của bạn..." 
-                                                                      id="reviewComment" 
-                                                                      rows="3"
-                                                                      style="resize: none;"
-                                                                      oninput="document.getElementById('reviewActions').classList.remove('d-none');"></textarea>
+                                                            <textarea class="form-control border rounded-3 shadow-sm"
+                                                                placeholder="Chia sẻ cảm nghĩ của bạn..."
+                                                                id="reviewComment" rows="3" style="resize: none;"
+                                                                oninput="document.getElementById('reviewActions').classList.remove('d-none');"></textarea>
                                                         </div>
 
                                                         <!-- Actions -->
-                                                        <div id="reviewActions" class="d-flex justify-content-between align-items-center d-none">
-                                                            <div id="reviewFormAlert" class="alert alert-danger py-1 px-2 mb-0 d-none small"></div>
+                                                        <div id="reviewActions"
+                                                            class="d-flex justify-content-between align-items-center d-none">
+                                                            <div id="reviewFormAlert"
+                                                                class="alert alert-danger py-1 px-2 mb-0 d-none small">
+                                                            </div>
                                                             <div class="d-flex gap-2 ms-auto">
-                                                                <button type="button" class="btn btn-text rounded-pill px-3" id="btnCancelReview">Hủy</button>
-                                                                <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSubmitReview">
+                                                                <button type="button"
+                                                                    class="btn btn-text rounded-pill px-3"
+                                                                    id="btnCancelReview">Hủy</button>
+                                                                <button type="submit"
+                                                                    class="btn btn-primary rounded-pill px-4"
+                                                                    id="btnSubmitReview">
                                                                     <span id="btnSubmitReviewText">Gửi</span>
                                                                 </button>
                                                             </div>
@@ -640,13 +679,17 @@
                             <div class="d-flex align-items-center justify-content-between mb-4">
                                 <h4 class="fw-bold mb-0">Đánh giá từ khách hàng</h4>
                                 <div class="dropdown">
-                                    <button id="sortDropdownBtn" class="btn btn-light btn-sm dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
+                                    <button id="sortDropdownBtn"
+                                        class="btn btn-light btn-sm dropdown-toggle rounded-pill" type="button"
+                                        data-bs-toggle="dropdown">
                                         <i class="bi bi-sort-down me-1"></i><span id="currentSortText">Mới nhất</span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                        <li><a class="dropdown-item active" href="#" data-sort="newest">Mới nhất</a></li>
+                                        <li><a class="dropdown-item active" href="#" data-sort="newest">Mới nhất</a>
+                                        </li>
                                         <li><a class="dropdown-item" href="#" data-sort="oldest">Cũ nhất</a></li>
-                                        <li><a class="dropdown-item" href="#" data-sort="highest_rating">Điểm cao nhất</a></li>
+                                        <li><a class="dropdown-item" href="#" data-sort="highest_rating">Điểm cao
+                                                nhất</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -660,7 +703,8 @@
                             <div id="reviewsList" class="reviews-list">
                                 @if (reviewCount > 0)
                                 {
-                                    @foreach (var review in (Model.Reviews ?? Enumerable.Empty<TourViet.Models.Review>()).OrderByDescending(r => r.CreatedAt))
+                                    @foreach (var review in (Model.Reviews ??
+                                                                    Enumerable.Empty<TourViet.Models.Review>()).OrderByDescending(r => r.CreatedAt))
                                     {
                                         <div class="review-item p-3 mb-3 bg-light rounded" data-review-id="@review.ReviewID">
                                             <div class="d-flex align-items-center mb-2">
@@ -672,9 +716,11 @@
                                                     <div class="small">
                                                         @for (int i = 1; i <= 5; i++)
                                                         {
-                                                            <i class="bi bi-star-fill @(i <= review.Rating ? "text-warning" : "text-muted opacity-25")"></i>
+                                                            <i
+                                                                class="bi bi-star-fill @(i <= review.Rating ? "text-warning" : "text-muted opacity-25")"></i>
                                                         }
-                                                        <span class="text-muted ms-2">@review.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                                        <span
+                                                            class="text-muted ms-2">@review.CreatedAt.ToString("dd/MM/yyyy")</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -702,7 +748,8 @@
                             </div>
 
                             <!-- Pagination Controls -->
-                            <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-4 d-none">
+                            <div id="paginationControls"
+                                class="d-flex justify-content-between align-items-center mt-4 d-none">
                                 <button id="prevPageBtn" class="btn btn-outline-primary" disabled>
                                     <i class="bi bi-chevron-left me-1"></i>Trang trước
                                 </button>
@@ -751,18 +798,18 @@
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar-event text-primary me-2"></i>Chọn ngày khởi hành
                                 </label>
-                                <select class="form-select form-select-lg" id="instanceSelector" onchange="highlightBookingButton()">
+                                <select class="form-select form-select-lg" id="instanceSelector"
+                                    onchange="highlightBookingButton()">
                                     <option value="">-- Chọn ngày --</option>
-                                    @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status == "SoldOut").OrderBy(i => i.StartDate))
+                                    @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status
+                                                                    == "SoldOut").OrderBy(i => i.StartDate))
                                     {
                                         var actualAvailable = instance.Capacity - instance.SeatsBooked;
-                                        
-                                        <option value="@instance.InstanceID" 
-                                                data-seats-available="@instance.Capacity" 
-                                                data-capacity="@instance.Capacity"
-                                                data-seats-booked="@instance.SeatsBooked"
-                                                data-seats-held="@instance.SeatsHeld">
-                                            @instance.StartDate.ToString("dd/MM/yyyy") - 
+
+                                        <option value="@instance.InstanceID" data-seats-available="@instance.Capacity"
+                                            data-capacity="@instance.Capacity" data-seats-booked="@instance.SeatsBooked"
+                                            data-seats-held="@instance.SeatsHeld">
+                                            @instance.StartDate.ToString("dd/MM/yyyy") -
                                             @if (actualAvailable > 0)
                                             {
                                                 @($"{actualAvailable} chỗ trống")
@@ -775,14 +822,16 @@
                                     }
                                 </select>
                                 <div class="form-text small text-muted mt-2">
-                                    <i class="bi bi-info-circle me-1"></i>Lựa chọn của bạn sẽ được tự động điền vào form đặt tour
+                                    <i class="bi bi-info-circle me-1"></i>Lựa chọn của bạn sẽ được tự động điền vào form đặt
+                                    tour
                                 </div>
                             </div>
                         }
 
                         <!-- CTA Buttons -->
                         <div class="d-grid gap-3 mb-4">
-                            <button id="btnBookNow" class="btn btn-primary btn-lg rounded-pill shadow-sm" type="button" onclick="checkAuthAndShowBooking()">
+                            <button id="btnBookNow" class="btn btn-primary btn-lg rounded-pill shadow-sm" type="button"
+                                onclick="checkAuthAndShowBooking()">
                                 <i class="bi bi-cart-plus me-2"></i>Đặt tour ngay
                             </button>
                             <button class="btn btn-outline-primary btn-lg rounded-pill" type="button">
@@ -803,7 +852,8 @@
                                         <i class="bi bi-check-circle-fill me-2"></i>Bao gồm
                                     </h6>
                                     <ul class="list-unstyled small">
-                                        @foreach (var service in Model.TourServices.Where(s => s.IsIncluded).OrderBy(s => s.SortOrder))
+                                        @foreach (var service in Model.TourServices.Where(s => s.IsIncluded).OrderBy(s =>
+                                                                        s.SortOrder))
                                         {
                                             <li class="mb-2 d-flex justify-content-between align-items-start">
                                                 <span>
@@ -813,7 +863,8 @@
                                                 @if ((service.PriceOverride ?? service.Service?.Price ?? 0) > 0)
                                                 {
                                                     <small class="text-muted">
-                                                        @((service.PriceOverride ?? service.Service?.Price ?? 0).ToString("N0")) @(service.Currency ?? service.Service?.Currency)
+                                                        @((service.PriceOverride ?? service.Service?.Price ?? 0).ToString("N0"))
+                                                        @(service.Currency ?? service.Service?.Currency)
                                                     </small>
                                                 }
                                             </li>
@@ -830,19 +881,19 @@
                                         <i class="bi bi-plus-circle-fill me-2"></i>Dịch vụ bổ sung (Tùy chọn)
                                     </h6>
                                     <div class="vstack gap-2">
-                                        @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s => s.SortOrder))
+                                        @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s =>
+                                                                        s.SortOrder))
                                         {
                                             var price = service.PriceOverride ?? service.Service?.Price ?? 0;
                                             <div class="form-check card border-0 bg-light p-2 rounded-3">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <div class="d-flex align-items-center">
-                                                        <input class="form-check-input me-3 mt-0 fs-5" type="checkbox" 
-                                                               name="SelectedServices" 
-                                                               value="@service.ServiceID" 
-                                                               id="svc_@service.ServiceID"
-                                                               data-price="@price"
-                                                               onchange="highlightBookingButton()">
-                                                        <label class="form-check-label fw-medium cursor-pointer" for="svc_@service.ServiceID">
+                                                        <input class="form-check-input me-3 mt-0 fs-5" type="checkbox"
+                                                            name="SelectedServices" value="@service.ServiceID"
+                                                            id="svc_@service.ServiceID" data-price="@price"
+                                                            onchange="highlightBookingButton()">
+                                                        <label class="form-check-label fw-medium cursor-pointer"
+                                                            for="svc_@service.ServiceID">
                                                             @service.Service?.ServiceName
                                                         </label>
                                                     </div>
@@ -924,6 +975,8 @@
     .hero-image {
         height: 100%;
         object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
     }
 
     .hero-overlay {
@@ -932,7 +985,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
     }
 
     .hero-content {
@@ -944,8 +997,8 @@
         z-index: 10;
     }
 
-    .breadcrumb-light .breadcrumb-item + .breadcrumb-item::before {
-        color: rgba(255,255,255,0.7);
+    .breadcrumb-light .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.7);
     }
 
     /* Quick Stats Cards */
@@ -963,7 +1016,7 @@
 
     .hover-lift:hover {
         transform: translateY(-5px);
-        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.15)!important;
+        box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .15) !important;
     }
 
     /* Tabs */
@@ -1036,6 +1089,8 @@
     .carousel-image {
         height: 500px;
         object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
     }
 
     .carousel-thumbnail {
@@ -1121,8 +1176,8 @@
     }
 
     .star-rating-selector label:hover,
-    .star-rating-selector label:hover ~ label,
-    .star-rating-selector input:checked ~ label {
+    .star-rating-selector label:hover~label,
+    .star-rating-selector input:checked~label {
         color: #ffc107;
         transform: scale(1.1);
     }
@@ -1136,7 +1191,7 @@
         .hero-content {
             padding: 2rem 0;
         }
-        
+
         .display-3 {
             font-size: 2.5rem;
         }
@@ -1180,19 +1235,22 @@
 </style>
 
 <!-- Login Modal -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true" data-bs-focus="true">
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true"
+    data-bs-focus="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary bg-gradient text-white border-0">
                 <h5 class="modal-title" id="loginModalLabel">
                     <i class="bi bi-lock-fill me-2"></i>Yêu cầu đăng nhập
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 text-center">
                 <i class="bi bi-person-circle text-primary mb-3" style="font-size: 4rem;"></i>
                 <h6 class="fw-bold mb-3">Vui lòng đăng nhập để đặt tour</h6>
-                <p class="text-muted mb-4">Bạn cần có tài khoản để thực hiện đặt tour. Nếu chưa có tài khoản, vui lòng đăng ký ngay!</p>
+                <p class="text-muted mb-4">Bạn cần có tài khoản để thực hiện đặt tour. Nếu chưa có tài khoản, vui lòng
+                    đăng ký ngay!</p>
                 <div class="d-grid gap-2">
                     <a href="/Account/Login?returnUrl=@Context.Request.Path" class="btn btn-primary btn-lg">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
@@ -1211,11 +1269,13 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-body p-5 text-center">
-                <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle mx-auto mb-4" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle mx-auto mb-4"
+                    style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
                     <i class="bi bi-emoji-frown fs-1"></i>
                 </div>
                 <h4 class="fw-bold mb-3">Rất tiếc, tour đã hết chỗ!</h4>
-                <p class="text-muted mb-4">Ngày khởi hành bạn chọn đã hết chỗ trống. Vui lòng chọn ngày khác hoặc liên hệ với chúng tôi để được hỗ trợ.</p>
+                <p class="text-muted mb-4">Ngày khởi hành bạn chọn đã hết chỗ trống. Vui lòng chọn ngày khác hoặc liên
+                    hệ với chúng tôi để được hỗ trợ.</p>
                 <div class="d-grid gap-2">
                     <button type="button" class="btn btn-primary btn-lg rounded-pill" data-bs-dismiss="modal">
                         <i class="bi bi-calendar-check me-2"></i>Chọn ngày khác
@@ -1234,16 +1294,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-body p-5 text-center">
-                <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-4" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-4"
+                    style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
                     <i class="bi bi-clock-history fs-1"></i>
                 </div>
                 <h4 class="fw-bold mb-3">Đơn đặt tour đang chờ xử lý</h4>
-                <p class="text-muted mb-4">Bạn hiện đang có một đơn đặt tour cho chuyến đi này đang ở trạng thái chờ xác nhận. Vui lòng đợi nhân viên của chúng tôi liên hệ hoặc kiểm tra lại lịch sử đặt tour.</p>
+                <p class="text-muted mb-4">Bạn hiện đang có một đơn đặt tour cho chuyến đi này đang ở trạng thái chờ xác
+                    nhận. Vui lòng đợi nhân viên của chúng tôi liên hệ hoặc kiểm tra lại lịch sử đặt tour.</p>
                 <div class="d-grid gap-2">
                     <a href="/Home/BookingHistory" class="btn btn-primary btn-lg rounded-pill">
                         <i class="bi bi-list-check me-2"></i>Xem lịch sử đặt tour
                     </a>
-                    <button type="button" class="btn btn-outline-danger btn-lg rounded-pill" id="btnCancelPendingBooking" onclick="showCancelConfirmation()">
+                    <button type="button" class="btn btn-outline-danger btn-lg rounded-pill"
+                        id="btnCancelPendingBooking" onclick="showCancelConfirmation()">
                         <i class="bi bi-x-circle me-2"></i>Hủy đơn đặt tour này
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-lg rounded-pill" data-bs-dismiss="modal">
@@ -1298,21 +1361,22 @@
 </div>
 
 <!-- Booking Modal -->
-<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" data-bs-focus="true">
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true"
+    data-bs-focus="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
+            <div class="modal-header bg-gradient text-white border-0"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative;">
                 <h5 class="modal-title fw-bold" id="bookingModalLabel">
                     <i class="bi bi-ticket-perforated-fill me-2"></i>Đặt tour: @Model.TourName
                 </h5>
-                <button type="button" data-bs-dismiss="modal" aria-label="Close" 
-                        style="position: absolute; top: 10px; right: 10px; background: #FFD700; border: 3px solid #FF0000; 
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 10px; right: 10px; background: #FFD700; border: 3px solid #FF0000; 
                                border-radius: 4px; width: 40px; height: 40px; display: flex; align-items: center; 
                                justify-content: center; color: #FF0000; font-size: 28px; font-weight: bold; 
                                cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
                                transition: all 0.2s;"
-                        onmouseover="this.style.background='#FF0000'; this.style.color='#FFFFFF'; this.style.transform='scale(1.15)';"
-                        onmouseout="this.style.background='#FFD700'; this.style.color='#FF0000'; this.style.transform='scale(1)';">×</button>
+                    onmouseover="this.style.background='#FF0000'; this.style.color='#FFFFFF'; this.style.transform='scale(1.15)';"
+                    onmouseout="this.style.background='#FFD700'; this.style.color='#FF0000'; this.style.transform='scale(1)';">×</button>
             </div>
             <div class="modal-body p-4">
                 <!-- Success Message (Hidden by default) -->
@@ -1339,21 +1403,22 @@
                         </label>
                         @if (Model.TourInstances != null && Model.TourInstances.Any(i => i.Status == "Open"))
                         {
-                            <select class="form-select form-select-lg" id="bookingInstanceId" required onchange="updatePriceCalculation()">
+                            <select class="form-select form-select-lg" id="bookingInstanceId" required
+                                onchange="updatePriceCalculation()">
                                 <option value="">-- Vui lòng chọn ngày --</option>
-                                @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status == "SoldOut").OrderBy(i => i.StartDate))
+                                @foreach (var instance in Model.TourInstances.Where(i => i.Status == "Open" || i.Status ==
+                                                            "SoldOut").OrderBy(i => i.StartDate))
                                 {
                                     var actualAvailable = instance.Capacity - instance.SeatsBooked;
-                                    
-                                    <option value="@instance.InstanceID" 
-                                            data-price="@instance.PriceBase.ToString(System.Globalization.CultureInfo.InvariantCulture)" 
-                                            data-currency="@instance.Currency"
-                                            data-seats-available="@instance.Capacity"
-                                            data-capacity="@instance.Capacity"
-                                            data-seats-booked="@instance.SeatsBooked"
-                                            data-seats-held="@instance.SeatsHeld">
-                                        @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy") 
-                                        (@(actualAvailable > 0 ? $"{actualAvailable} chỗ trống" : "Hết chỗ")) - @instance.PriceBase.ToString("N0") @instance.Currency
+
+                                    <option value="@instance.InstanceID"
+                                        data-price="@instance.PriceBase.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                        data-currency="@instance.Currency" data-seats-available="@instance.Capacity"
+                                        data-capacity="@instance.Capacity" data-seats-booked="@instance.SeatsBooked"
+                                        data-seats-held="@instance.SeatsHeld">
+                                        @instance.StartDate.ToString("dd/MM/yyyy") - @instance.EndDate.ToString("dd/MM/yyyy")
+                                        (@(actualAvailable > 0 ? $"{actualAvailable} chỗ trống" : "Hết chỗ")) -
+                                        @instance.PriceBase.ToString("N0") @instance.Currency
                                     </option>
                                 }
                             </select>
@@ -1376,10 +1441,11 @@
                             <i class="bi bi-people-fill text-primary me-2"></i>Số lượng người
                             <span class="text-danger">*</span>
                         </label>
-                        <input type="number" class="form-control form-control-lg" id="bookingSeats" 
-                               min="1" value="1" required onchange="updatePriceCalculation()">
+                        <input type="number" class="form-control form-control-lg" id="bookingSeats" min="1" value="1"
+                            required onchange="updatePriceCalculation()">
                         <div class="form-text small">
-                            <i class="bi bi-info-circle me-1"></i>Chỗ trống: <strong id="seatsAvailableDisplay">Vui lòng chọn ngày khởi hành</strong>
+                            <i class="bi bi-info-circle me-1"></i>Chỗ trống: <strong id="seatsAvailableDisplay">Vui lòng
+                                chọn ngày khởi hành</strong>
                         </div>
                     </div>
 
@@ -1392,23 +1458,25 @@
                             </label>
                             <div class="card border-0 bg-light p-3">
                                 <div id="optionalServicesContainer" class="vstack gap-2">
-                                    @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s => s.SortOrder))
+                                    @foreach (var service in Model.TourServices.Where(s => !s.IsIncluded).OrderBy(s =>
+                                                                    s.SortOrder))
                                     {
                                         var price = service.PriceOverride ?? service.Service?.Price ?? 0;
                                         <div class="form-check">
-                                            <input class="form-check-input booking-service-checkbox" type="checkbox" 
-                                                   value="@service.ServiceID" 
-                                                   id="booking_svc_@service.ServiceID"
-                                                   data-price="@price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                                   data-currency="@(service.Currency ?? service.Service?.Currency)"
-                                                   onchange="updatePriceCalculation()">
-                                            <label class="form-check-label w-100 d-flex justify-content-between align-items-center" 
-                                                   for="booking_svc_@service.ServiceID">
+                                            <input class="form-check-input booking-service-checkbox" type="checkbox"
+                                                value="@service.ServiceID" id="booking_svc_@service.ServiceID"
+                                                data-price="@price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                data-currency="@(service.Currency ?? service.Service?.Currency)"
+                                                onchange="updatePriceCalculation()">
+                                            <label
+                                                class="form-check-label w-100 d-flex justify-content-between align-items-center"
+                                                for="booking_svc_@service.ServiceID">
                                                 <span>@service.Service?.ServiceName</span>
                                                 @if (price > 0)
                                                 {
                                                     <span class="badge bg-primary">
-                                                        +@price.ToString("N0") @(service.Currency ?? service.Service?.Currency)/người
+                                                        +@price.ToString("N0") @(service.Currency ??
+                                                                                                    service.Service?.Currency)/người
                                                     </span>
                                                 }
                                             </label>
@@ -1423,7 +1491,8 @@
                     }
 
                     @* Automatic Promotions Banner *@
-                    @if (ViewBag.ApplicablePromotions != null && ((List<TourViet.Models.Promotion>)ViewBag.ApplicablePromotions).Any())
+                    @if (ViewBag.ApplicablePromotions != null &&
+                                        ((List<TourViet.Models.Promotion>)ViewBag.ApplicablePromotions).Any())
                     {
                         <div class="alert alert-success mb-4" style="border-left: 4px solid #28a745;">
                             <div class="d-flex align-items-center">
@@ -1443,7 +1512,8 @@
                                                 }
                                                 else if (rule.RuleType == "Fixed")
                                                 {
-                                                    <span class="text-danger fw-bold">Giảm @rule.Value.ToString("N0") @rule.Currency</span>
+                                                    <span class="text-danger fw-bold">Giảm @rule.Value.ToString("N0")
+                                                        @rule.Currency</span>
                                                 }
                                             }
                                             - Tự động áp dụng khi đặt tour
@@ -1460,21 +1530,24 @@
                             <i class="bi bi-tag-fill text-secondary me-2"></i>Mã giảm giá (Nếu có)
                         </label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="couponCode" placeholder="Nhập mã giảm giá" onchange="updatePriceCalculation()">
+                            <input type="text" class="form-control" id="couponCode" placeholder="Nhập mã giảm giá"
+                                onchange="updatePriceCalculation()">
                             <button class="btn btn-outline-secondary" type="button" onclick="updatePriceCalculation()">
                                 Áp dụng
                             </button>
                         </div>
                         <div id="couponMessage" class="form-text small mt-1"></div>
                         <div class="mt-2">
-                            <a asp-controller="Promotions" asp-action="Index" class="small text-decoration-none" target="_blank">
+                            <a asp-controller="Promotions" asp-action="Index" class="small text-decoration-none"
+                                target="_blank">
                                 <i class="bi bi-ticket-perforated me-1"></i>Xem danh sách khuyến mãi →
                             </a>
                         </div>
                     </div>
 
                     <!-- Price Summary -->
-                    <div class="card border-0 bg-gradient text-white shadow mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+                    <div class="card border-0 bg-gradient text-white shadow mb-4"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
                         <div class="card-body p-4">
                             <h6 class="fw-bold mb-3">
                                 <i class="bi bi-calculator me-2"></i>Tổng chi phí
@@ -1491,17 +1564,18 @@
                                 <span>Dịch vụ bổ sung:</span>
                                 <span id="servicesTotalDisplay">0 VND</span>
                             </div>
-                            
+
                             <!-- Promotion Section -->
                             <div id="promotionSection" class="d-none">
                                 <hr class="border-white opacity-25 my-2">
-                                
+
                                 <!-- Subtotal before discount -->
                                 <div class="d-flex justify-content-between mb-1 small">
                                     <span class="opacity-75">Tổng trước giảm:</span>
-                                    <span class="text-decoration-line-through opacity-75" id="subtotalBeforeDiscount">0 VND</span>
+                                    <span class="text-decoration-line-through opacity-75" id="subtotalBeforeDiscount">0
+                                        VND</span>
                                 </div>
-                                
+
                                 <!-- Discount row with promotion name -->
                                 <div class="bg-warning bg-opacity-25 rounded p-2 mb-2">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -1514,17 +1588,18 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <hr class="border-white opacity-25 my-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0 fw-bold">Tổng cộng:</h5>
                                 <h4 class="mb-0 fw-bold" id="grandTotalDisplay">0 VND</h4>
                             </div>
-                            
+
                             <!-- Savings Badge (shown when discount applied) -->
                             <div id="savingsBadge" class="d-none mt-3 text-center">
                                 <div class="badge bg-success bg-opacity-75 px-3 py-2 fs-6">
-                                    <i class="bi bi-piggy-bank me-2"></i>Bạn tiết kiệm được <strong id="savingsAmount">0 VND</strong>!
+                                    <i class="bi bi-piggy-bank me-2"></i>Bạn tiết kiệm được <strong id="savingsAmount">0
+                                        VND</strong>!
                                 </div>
                             </div>
                         </div>
@@ -1535,8 +1610,8 @@
                         <label class="form-label fw-semibold" for="specialRequests">
                             <i class="bi bi-chat-dots text-secondary me-2"></i>Yêu cầu đặc biệt (Tùy chọn)
                         </label>
-                        <textarea class="form-control" id="specialRequests" rows="3" 
-                                  placeholder="Ví dụ: Cần giường đôi, ăn chay, ..."></textarea>
+                        <textarea class="form-control" id="specialRequests" rows="3"
+                            placeholder="Ví dụ: Cần giường đôi, ăn chay, ..."></textarea>
                     </div>
                 </form>
             </div>
@@ -1544,7 +1619,8 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-2"></i>Hủy
                 </button>
-                <button type="button" class="btn btn-primary btn-lg px-4" id="btnSubmitBooking" onclick="submitBooking()">
+                <button type="button" class="btn btn-primary btn-lg px-4" id="btnSubmitBooking"
+                    onclick="submitBooking()">
                     <span id="btnSubmitText">
                         <i class="bi bi-check-circle-fill me-2"></i>Xác nhận đặt tour
                     </span>
@@ -1568,7 +1644,7 @@
         if (sidebarInstanceSelector && sidebarInstanceSelector.value) {
             const selectedOption = sidebarInstanceSelector.options[sidebarInstanceSelector.selectedIndex];
             const seatsAvailable = parseInt(selectedOption.getAttribute('data-seats-available') || '0');
-            
+
             if (seatsAvailable <= 0) {
                 const soldOutModal = new bootstrap.Modal(document.getElementById('soldOutModal'));
                 soldOutModal.show();
@@ -1581,7 +1657,7 @@
             const tourId = '@Model.TourID';
             const response = await fetch(`/api/booking/check-auth?tourId=${tourId}`);
             const data = await response.json();
-            
+
             if (data.isAuthenticated) {
                 if (data.hasPendingBooking) {
                     currentPendingBookingId = data.pendingBookingId;
@@ -1593,7 +1669,7 @@
 
                 // Reset form first before showing modal
                 resetBookingForm();
-                
+
                 // Show booking modal with proper options
                 const bookingModalEl = document.getElementById('bookingModal');
                 const bookingModal = new bootstrap.Modal(bookingModalEl, {
@@ -1601,16 +1677,16 @@
                     keyboard: true,
                     focus: true
                 });
-                
+
                 // Wait for modal to be fully shown before any operations
                 bookingModalEl.addEventListener('shown.bs.modal', function onModalShown() {
                     // Remove this listener after first trigger
                     bookingModalEl.removeEventListener('shown.bs.modal', onModalShown);
-                    
+
                     // Focus management is now handled by Bootstrap
                     // Price calculation already done in resetBookingForm
                 }, { once: true });
-                
+
                 bookingModal.show();
             } else {
                 // Show login modal
@@ -1635,14 +1711,14 @@
         if (pendingModal) {
             pendingModal.hide();
         }
-        
+
         // Show confirmation modal
         const confirmModal = new bootstrap.Modal(document.getElementById('cancelConfirmationModalTour'));
         confirmModal.show();
     }
 
     // Handle actual cancellation when user confirms
-    document.getElementById('confirmCancelBtnTour').addEventListener('click', function() {
+    document.getElementById('confirmCancelBtnTour').addEventListener('click', function () {
         if (!currentPendingBookingId) return;
 
         // Hide confirmation modal
@@ -1657,26 +1733,26 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotificationTour(true, 'Hủy đặt tour thành công. Bạn có thể đặt lại ngay bây giờ.');
-                
-                // When notification modal is closed, open booking modal
-                const notifModalEl = document.getElementById('notificationModalTour');
-                notifModalEl.addEventListener('hidden.bs.modal', function () {
-                    resetBookingForm();
-                    const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-                    bookingModal.show();
-                }, { once: true });
-            } else {
-                showNotificationTour(false, data.message || 'Đã xảy ra lỗi khi hủy đặt tour.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotificationTour(false, 'Đã xảy ra lỗi kết nối.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotificationTour(true, 'Hủy đặt tour thành công. Bạn có thể đặt lại ngay bây giờ.');
+
+                    // When notification modal is closed, open booking modal
+                    const notifModalEl = document.getElementById('notificationModalTour');
+                    notifModalEl.addEventListener('hidden.bs.modal', function () {
+                        resetBookingForm();
+                        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+                        bookingModal.show();
+                    }, { once: true });
+                } else {
+                    showNotificationTour(false, data.message || 'Đã xảy ra lỗi khi hủy đặt tour.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotificationTour(false, 'Đã xảy ra lỗi kết nối.');
+            });
     });
 
     function showNotificationTour(isSuccess, message) {
@@ -1702,14 +1778,14 @@
 
         // Ensure header has relative positioning for absolute close button
         header.style.position = 'relative';
-        
+
         // FIX: Create highly visible custom close button
         // Remove any existing custom close button first
         const existingClose = header.querySelector('.modal-close-custom');
         if (existingClose) {
             existingClose.remove();
         }
-        
+
         // Create new visible close button with explicit styles
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
@@ -1717,7 +1793,7 @@
         closeBtn.setAttribute('data-bs-dismiss', 'modal');
         closeBtn.setAttribute('aria-label', 'Close');
         closeBtn.innerHTML = '<span style="font-size: 24px; font-weight: bold; line-height: 1;">×</span>';
-        
+
         // Use inline styles with HIGH CONTRAST colors for visibility
         closeBtn.style.position = 'absolute';
         closeBtn.style.top = '10px';
@@ -1741,28 +1817,28 @@
         closeBtn.style.padding = '0';
         closeBtn.style.margin = '0';
         closeBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-        
+
         // Add hover effect
-        closeBtn.addEventListener('mouseenter', function() {
+        closeBtn.addEventListener('mouseenter', function () {
             this.style.background = '#FF0000'; // Red on hover
             this.style.color = '#FFFFFF'; // White X on hover
             this.style.transform = 'scale(1.15)';
         });
-        closeBtn.addEventListener('mouseleave', function() {
+        closeBtn.addEventListener('mouseleave', function () {
             this.style.background = '#FFD700';
             this.style.color = '#FF0000';
             this.style.transform = 'scale(1)';
         });
-        
+
         header.appendChild(closeBtn);
-        
+
         // Debug: log to console to verify button was created
         console.log('Close button created:', closeBtn);
 
         const notifModal = new bootstrap.Modal(modal);
         notifModal.show();
     }
-    
+
     // Legacy function for compatibility
     function cancelPendingBooking() {
         showCancelConfirmation();
@@ -1773,14 +1849,14 @@
         document.getElementById('bookingForm').reset();
         document.getElementById('bookingSuccess').classList.add('d-none');
         document.getElementById('bookingError').classList.add('d-none');
-        
+
         // Sync tour instance from sidebar to modal
         const sidebarInstanceSelector = document.getElementById('instanceSelector');
         const modalInstanceSelector = document.getElementById('bookingInstanceId');
         if (sidebarInstanceSelector && modalInstanceSelector && sidebarInstanceSelector.value) {
             modalInstanceSelector.value = sidebarInstanceSelector.value;
         }
-        
+
         // Sync selected services from sidebar to modal
         const sidebarServiceCheckboxes = document.querySelectorAll('input[name="SelectedServices"]:checked');
         sidebarServiceCheckboxes.forEach(sidebarCheckbox => {
@@ -1790,19 +1866,19 @@
                 modalCheckbox.checked = true;
             }
         });
-        
+
         // Setup two-way sync listeners (modal → sidebar)
         setupTwoWaySync();
-        
+
         // Update price calculation with synced selections
         updatePriceCalculation();
     }
-    
+
     // Setup two-way sync between modal and sidebar
     function setupTwoWaySync() {
         const modalInstanceSelector = document.getElementById('bookingInstanceId');
         const sidebarInstanceSelector = document.getElementById('instanceSelector');
-        
+
         // Sync instance changes from modal to sidebar
         if (modalInstanceSelector && sidebarInstanceSelector) {
             // Remove old listener if exists
@@ -1810,7 +1886,7 @@
             // Add new listener
             modalInstanceSelector.addEventListener('change', syncInstanceToSidebar);
         }
-        
+
         // Sync service changes from modal to sidebar
         const modalServiceCheckboxes = document.querySelectorAll('.booking-service-checkbox');
         modalServiceCheckboxes.forEach(modalCheckbox => {
@@ -1820,31 +1896,31 @@
             modalCheckbox.addEventListener('change', syncServiceToSidebar);
         });
     }
-    
+
     // Sync instance selection from modal to sidebar
     function syncInstanceToSidebar(event) {
         const modalValue = event.target.value;
         const sidebarInstanceSelector = document.getElementById('instanceSelector');
-        
+
         if (sidebarInstanceSelector) {
             sidebarInstanceSelector.value = modalValue;
-            
+
             // Trigger visual feedback on sidebar
             if (modalValue) {
                 highlightBookingButton();
             }
         }
     }
-    
+
     // Sync service checkbox from modal to sidebar
     function syncServiceToSidebar(event) {
         const modalCheckbox = event.target;
         const serviceId = modalCheckbox.value;
         const sidebarCheckbox = document.getElementById('svc_' + serviceId);
-        
+
         if (sidebarCheckbox) {
             sidebarCheckbox.checked = modalCheckbox.checked;
-            
+
             // Trigger visual feedback on sidebar
             if (modalCheckbox.checked) {
                 highlightBookingButton();
@@ -1859,13 +1935,13 @@
             const seatsInput = document.getElementById('bookingSeats');
             const couponInput = document.getElementById('couponCode');
             const couponMessage = document.getElementById('couponMessage');
-            
+
             if (!instanceSelect || !seatsInput) return;
-            
+
             const instanceId = instanceSelect.value;
             let seats = parseInt(seatsInput.value);
             if (isNaN(seats) || seats < 1) seats = 1;
-            
+
             // Basic UI updates (seats available)
             const selectedOption = instanceSelect.options[instanceSelect.selectedIndex];
             if (instanceId && selectedOption && selectedOption.dataset) {
@@ -1874,7 +1950,7 @@
                 const actualAvailable = capacity - seatsBooked;
                 document.getElementById('seatsAvailableDisplay').textContent = `${actualAvailable} chỗ`;
                 seatsInput.max = capacity;
-                
+
                 // VALIDATION: Check if seats exceed available
                 if (seats > actualAvailable) {
                     seatsInput.classList.add('is-invalid');
@@ -1936,52 +2012,52 @@
                 const discountDisplay = document.getElementById('discountDisplay');
                 const savingsBadge = document.getElementById('savingsBadge');
                 const savingsAmount = document.getElementById('savingsAmount');
-                
+
                 if (data.discountAmount > 0) {
                     // Calculate subtotal before discount
                     const subtotal = data.basePriceTotal + data.servicesTotal;
-                    
+
                     // Show promotion section
                     promotionSection.classList.remove('d-none');
                     savingsBadge.classList.remove('d-none');
-                    
+
                     // Populate promotion details
                     subtotalBeforeDiscount.textContent = `${subtotal.toLocaleString('vi-VN')} ${currency}`;
                     discountDisplay.textContent = `-${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
                     savingsAmount.textContent = `${data.discountAmount.toLocaleString('vi-VN')} ${currency}`;
-                    
+
                     // Set promotion name (from API response if available)
                     if (data.promotionName) {
                         promotionNameDisplay.textContent = data.promotionName;
                     } else {
                         promotionNameDisplay.textContent = 'Giảm giá';
                     }
-                    
+
                     // Show coupon code if used
                     if (requestData.couponCode && data.couponCode) {
                         couponCodeDisplay.textContent = `Mã: ${data.couponCode}`;
                     } else {
                         couponCodeDisplay.textContent = '';
                     }
-                    
+
                     // Show success message
                     if (data.promotionMessage) {
                         couponMessage.textContent = data.promotionMessage;
                         couponMessage.className = 'form-text small mt-1 text-success fw-bold';
                     } else {
-                         couponMessage.textContent = '';
+                        couponMessage.textContent = '';
                     }
                 } else {
                     // Hide promotion section
                     promotionSection.classList.add('d-none');
                     savingsBadge.classList.add('d-none');
-                    
+
                     // Show error message if coupon was entered but not valid
                     if (requestData.couponCode && data.promotionMessage) {
-                         couponMessage.textContent = data.promotionMessage;
-                         couponMessage.className = 'form-text small mt-1 text-danger';
+                        couponMessage.textContent = data.promotionMessage;
+                        couponMessage.className = 'form-text small mt-1 text-danger';
                     } else {
-                         couponMessage.textContent = '';
+                        couponMessage.textContent = '';
                     }
                 }
             }
@@ -1998,40 +2074,40 @@
         const submitLoading = document.getElementById('btnSubmitLoading');
         const successAlert = document.getElementById('bookingSuccess');
         const errorAlert = document.getElementById('bookingError');
-        
+
         // Validate form
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
         }
-        
+
         const instanceId = document.getElementById('bookingInstanceId').value;
         const seats = parseInt(document.getElementById('bookingSeats').value);
         const specialRequests = document.getElementById('specialRequests').value;
-        
+
         if (!instanceId) {
             showError('Vui lòng chọn ngày khởi hành.');
             return;
         }
-        
+
         if (seats <= 0) {
             showError('Số lượng người phải lớn hơn 0.');
             return;
         }
-        
+
         // VALIDATION: Validate seats against available capacity
         const selectedOption = document.querySelector(`#bookingInstanceId option[value="${instanceId}"]`);
         if (selectedOption) {
             const capacity = parseInt(selectedOption.getAttribute('data-capacity') || '0');
             const seatsBooked = parseInt(selectedOption.getAttribute('data-seats-booked') || '0');
             const seatsAvailable = capacity - seatsBooked;
-            
+
             if (seats > seatsAvailable) {
                 showError(`Chỉ còn ${seatsAvailable} chỗ trống. Vui lòng giảm số lượng người.`);
                 return;
             }
         }
-        
+
         // Get selected services
         const selectedServices = [];
         document.querySelectorAll('.booking-service-checkbox:checked').forEach(checkbox => {
@@ -2040,7 +2116,7 @@
                 quantity: seats  // Match the number of seats/people
             });
         });
-        
+
         // Prepare booking data
         const bookingData = {
             tourInstanceID: instanceId,
@@ -2049,14 +2125,14 @@
             specialRequests: specialRequests,
             couponCode: document.getElementById('couponCode').value.trim()
         };
-        
+
         // Show loading state
         submitBtn.disabled = true;
         submitText.classList.add('d-none');
         submitLoading.classList.remove('d-none');
         successAlert.classList.add('d-none');
         errorAlert.classList.add('d-none');
-        
+
         try {
             const response = await fetch('/api/booking/create', {
                 method: 'POST',
@@ -2065,21 +2141,21 @@
                 },
                 body: JSON.stringify(bookingData)
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 // Show success message
                 document.getElementById('bookingRefDisplay').textContent = data.bookingRef;
                 successAlert.classList.remove('d-none');
-                
+
                 // Scroll to top of modal to show success message
                 document.querySelector('#bookingModal .modal-body').scrollTop = 0;
-                
+
                 // Disable form after successful booking
                 form.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
                 submitBtn.classList.add('d-none');
-                
+
                 // Reload page after 3 seconds to update booking status
                 setTimeout(() => {
                     window.location.reload();
@@ -2102,25 +2178,25 @@
     function showError(message) {
         const errorAlert = document.getElementById('bookingError');
         const errorMessage = document.getElementById('bookingErrorMessage');
-        
+
         errorMessage.textContent = message;
         errorAlert.classList.remove('d-none');
-        
+
         // Scroll to top of modal to show error message
         document.querySelector('#bookingModal .modal-body').scrollTop = 0;
     }
-    
+
     // Highlight booking button when user makes selections in sidebar
     function highlightBookingButton() {
         const bookButton = document.getElementById('btnBookNow');
         const instanceSelector = document.getElementById('instanceSelector');
         const selectedServices = document.querySelectorAll('input[name="SelectedServices"]:checked');
-        
+
         if (bookButton) {
             // Add pulse animation if instance is selected or services are checked
             if ((instanceSelector && instanceSelector.value) || selectedServices.length > 0) {
                 bookButton.classList.add('btn-pulse');
-                
+
                 // Remove animation after 2 seconds
                 setTimeout(() => {
                     bookButton.classList.remove('btn-pulse');
@@ -2135,84 +2211,95 @@
     .modal.fade .modal-dialog {
         transition: transform 0.3s ease-out;
     }
-    
+
     /* Hover effects for form elements */
     .form-select:focus,
     .form-control:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
     }
-    
+
     .form-check-input:checked {
         background-color: #667eea;
         border-color: #667eea;
     }
-    
+
     /* Button animations */
     .btn {
         transition: all 0.3s ease;
     }
-    
+
     .btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-    
+
     /* Alert animations */
     .alert {
         animation: slideIn 0.3s ease-out;
     }
-    
+
     @@keyframes slideIn {
         from {
             opacity: 0;
             transform: translateY(-10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
-    
+
     /* Price summary card gradient shimmer */
     .bg-gradient {
         background-size: 200% 200%;
         animation: gradientShift 3s ease infinite;
     }
-    
+
     @@keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100%50%; }
-        100% { background-position: 0% 50%; }
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100%50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
     }
-    
+
     /* Pulse animation for booking button */
     .btn-pulse {
         animation: pulse 1s ease-in-out 2;
         box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
     }
-    
+
     @@keyframes pulse {
         0% {
             transform: scale(1);
             box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
         }
+
         50% {
             transform: scale(1.05);
             box-shadow: 0 0 0 10px rgba(var(--bs-primary-rgb), 0);
         }
+
         100% {
             transform: scale(1);
             box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
         }
     }
-    
+
     /* Smooth transitions for selections */
-    #instanceSelector, 
+    #instanceSelector,
     input[name="SelectedServices"] {
         transition: all 0.3s ease;
     }
-    
+
     #instanceSelector:focus,
     input[name="SelectedServices"]:checked {
         border-color: var(--bs-primary);
@@ -2240,7 +2327,7 @@
 
 <script>
     // Initialize Bootstrap tooltips
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -2250,13 +2337,13 @@
         var carouselEl = document.getElementById('tourImageCarousel');
         if (carouselEl) {
             var carousel = new bootstrap.Carousel(carouselEl);
-            
+
             var thumbnails = document.querySelectorAll('.carousel-thumbnail');
-            thumbnails.forEach(function(thumb, index) {
-                thumb.addEventListener('click', function() {
+            thumbnails.forEach(function (thumb, index) {
+                thumb.addEventListener('click', function () {
                     var slideTo = parseInt(this.getAttribute('data-bs-slide-to'));
                     carousel.to(slideTo);
-                    
+
                     // Update active thumbnail
                     thumbnails.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
@@ -2278,13 +2365,13 @@
         // Handle hero review link click
         const heroReviewLink = document.getElementById('heroReviewLink');
         if (heroReviewLink) {
-            heroReviewLink.addEventListener('click', function(e) {
+            heroReviewLink.addEventListener('click', function (e) {
                 e.preventDefault();
                 const reviewsTab = document.getElementById('reviews-tab');
                 if (reviewsTab) {
                     new bootstrap.Tab(reviewsTab).show();
                     reviewsTab.scrollIntoView({ behavior: 'smooth' });
-                    
+
                     // Optional: Open the form automatically if they clicked "Write first review"
                     // but maybe better to let them see the existing reviews first
                 }
@@ -2295,8 +2382,8 @@
 </script>
 
 <!-- SignalR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
-    <script src="~/js/review-websocket.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script src="~/js/review-websocket.js"></script>
 
 <script>
     // Global review variables
@@ -2309,14 +2396,14 @@
     let currentPage = 1;
     let totalPages = 1;
 
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', async function () {
         const tourId = '@Model.TourID';
         let reviewStatusChecked = false;
-        
+
         // Check status when reviews tab is clicked
         const reviewsTab = document.getElementById('reviews-tab');
         if (reviewsTab) {
-            reviewsTab.addEventListener('click', async function() {
+            reviewsTab.addEventListener('click', async function () {
                 // Check review status on first click
                 if (!reviewStatusChecked) {
                     reviewStatusChecked = true;
@@ -2335,7 +2422,7 @@
         // Cancel review form
         const cancelBtn = document.getElementById('btnCancelReview');
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
+            cancelBtn.addEventListener('click', function () {
                 resetReviewForm();
                 const actions = document.getElementById('reviewActions');
                 if (actions) actions.classList.add('d-none');
@@ -2345,9 +2432,9 @@
         // Submit review form
         const reviewForm = document.getElementById('reviewSubmissionForm');
         if (reviewForm) {
-            reviewForm.addEventListener('submit', async function(e) {
+            reviewForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
-                
+
                 const rating = document.querySelector('input[name="rating"]:checked');
                 if (!rating) {
                     showAlert('Vui lòng chọn số sao đánh giá', 'warning');
@@ -2358,7 +2445,7 @@
                 const editReviewId = document.getElementById('editReviewId').value;
                 const btnSubmit = document.getElementById('btnSubmitReview');
                 const btnText = document.getElementById('btnSubmitReviewText');
-                
+
                 // Disable button
                 if (btnSubmit) btnSubmit.disabled = true;
                 if (btnText) btnText.textContent = 'Đang gửi...';
@@ -2382,11 +2469,11 @@
                     }
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         // Success - update UI dynamically
                         // alert(editReviewId ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
-                        
+
                         if (editReviewId) {
                             // Update existing review
                             updateReviewInUI(result.data);
@@ -2395,15 +2482,15 @@
                             // Add new review
                             addReviewToUI(result.data, true);
                             currentUserReview = result.data;
-                            
+
                             // Switch form to edit mode
                             populateReviewForm(result.data);
                             document.getElementById('reviewComment').placeholder = "Chỉnh sửa đánh giá của bạn...";
                             document.getElementById('btnSubmitReviewText').textContent = 'Cập nhật';
                         }
-                        
+
                         updateReviewStats();
-                        
+
                         // Show success message
                         showAlert(editReviewId ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!', 'success');
                     } else {
@@ -2420,28 +2507,28 @@
         }
         // Load reviews
         loadReviews(tourId, currentSort, currentPage);
-        
+
         // Set up sorting dropdown
         document.querySelectorAll('[data-sort]').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
                 e.preventDefault();
                 const sortValue = this.getAttribute('data-sort');
                 const sortText = this.textContent.trim();
-                
+
                 // Update current sort
                 currentSort = sortValue;
                 currentPage = 1; // Reset to page 1
-                
+
                 // Update UI
                 document.getElementById('currentSortText').textContent = sortText;
                 document.querySelectorAll('[data-sort]').forEach(el => el.classList.remove('active'));
                 this.classList.add('active');
-                
+
                 // Reload reviews
                 loadReviews(tourId, currentSort, currentPage);
             });
         });
-        
+
         // Set up pagination buttons
         document.getElementById('prevPageBtn')?.addEventListener('click', () => {
             if (currentPage > 1) {
@@ -2449,7 +2536,7 @@
                 loadReviews(tourId, currentSort, currentPage);
             }
         });
-        
+
         document.getElementById('nextPageBtn')?.addEventListener('click', () => {
             if (currentPage < totalPages) {
                 currentPage++;
@@ -2462,7 +2549,7 @@
     async function loadReviews(tourId, sort = 'newest', page = 1) {
         const reviewsList = document.getElementById('reviewsList');
         if (!reviewsList) return;
-        
+
         // Show loading state if empty
         if (reviewsList.children.length === 0 || reviewsList.querySelector('#emptyReviewsMessage')) {
             reviewsList.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -2495,13 +2582,13 @@
                     reviews.forEach(review => {
                         addReviewToUI(review, false); // Append
                     });
-                    
+
                     // Update pagination controls
                     updatePaginationControls(reviews.length);
                 }
-                
+
                 reviewsLoaded = true;
-                
+
                 // Update stats after loading reviews
                 await updateReviewStats();
             } else {
@@ -2520,22 +2607,22 @@
         const nextBtn = document.getElementById('nextPageBtn');
         const currentPageNum = document.getElementById('currentPageNum');
         const totalPagesNum = document.getElementById('totalPagesNum');
-        
+
         if (!paginationControls) return;
-        
+
         // If we got fewer reviews than the page size, we're on the last page
         if (reviewCount < REVIEWS_PER_PAGE) {
             totalPages = currentPage;
         }
-        
+
         // Show pagination only if multiple pages exist or if we're not on page 1
         if (currentPage > 1 || reviewCount === REVIEWS_PER_PAGE) {
             paginationControls.classList.remove('d-none');
-            
+
             // Update page numbers
             currentPageNum.textContent = currentPage;
             totalPagesNum.textContent = totalPages;
-            
+
             // Update button states
             prevBtn.disabled = currentPage <= 1;
             nextBtn.disabled = reviewCount < REVIEWS_PER_PAGE; // Disable if less than full page
@@ -2549,7 +2636,7 @@
         const loading = document.getElementById('reviewAuthLoading');
         const loginPrompt = document.getElementById('reviewLoginPrompt');
         const formContainer = document.getElementById('reviewFormContainer');
-        
+
         if (!loading || !loginPrompt || !formContainer) return;
 
         loading.classList.remove('d-none');
@@ -2559,7 +2646,7 @@
         try {
             const authResponse = await fetch('/api/booking/check-auth');
             const authData = await authResponse.json();
-            
+
             if (!authData.isAuthenticated) {
                 loading.classList.add('d-none');
                 loginPrompt.classList.remove('d-none');
@@ -2571,15 +2658,15 @@
             const initial = authData.userName ? authData.userName.charAt(0).toUpperCase() : 'U';
             const avatarEl = document.getElementById('currentUserInitial');
             if (avatarEl) avatarEl.textContent = initial;
-            
+
             // Check if user has already reviewed
             const myReviewResponse = await fetch(`/Review/MyReview/${tourId}`);
             const myReviewData = await myReviewResponse.json();
-            
+
             // Check if user can review
             const canReviewResponse = await fetch(`/Review/CanReview/${tourId}`);
             const canReviewData = await canReviewResponse.json();
-            
+
             // Debug logging
             console.log('CanReview API Response:', canReviewData);
             console.log('MyReview API Response:', myReviewData);
@@ -2620,9 +2707,9 @@
     // Initialize WebSocket connection
     async function initializeReviewWebSocket(tourId) {
         // document.getElementById('websocketStatus').classList.remove('d-none');
-        
+
         reviewWS = new ReviewWebSocket(tourId);
-        
+
         // Set up handlers
         reviewWS
             .onConnected(() => {
@@ -2665,7 +2752,7 @@
     function addReviewToUI(review, prepend = true) {
         const reviewsList = document.getElementById('reviewsList');
         const emptyMessage = document.getElementById('emptyReviewsMessage');
-        
+
         if (emptyMessage) {
             emptyMessage.remove();
         }
@@ -2676,7 +2763,7 @@
         }
 
         const reviewHTML = ReviewUI.createReviewHTML(review, review.userID === currentUserId);
-        
+
         if (prepend) {
             reviewsList.insertAdjacentHTML('afterbegin', reviewHTML);
         } else {
@@ -2719,12 +2806,12 @@
         try {
             const response = await fetch(`/Review/Stats/@Model.TourID`);
             const data = await response.json();
-            
+
             if (data.success) {
                 document.getElementById('reviewCountDisplay').textContent = data.data.totalReviews;
                 document.getElementById('reviewCountBadge').textContent = data.data.totalReviews;
                 document.getElementById('averageRatingDisplay').textContent = data.data.averageRating.toFixed(1);
-                
+
                 // Update stars
                 const starsContainer = document.getElementById('averageStarsDisplay');
                 starsContainer.innerHTML = '';
@@ -2750,13 +2837,13 @@
     function resetReviewForm() {
         const form = document.getElementById('reviewSubmissionForm');
         if (form) form.reset();
-        
+
         const editId = document.getElementById('editReviewId');
         if (editId) editId.value = '';
-        
+
         const alert = document.getElementById('reviewFormAlert');
         if (alert) alert.classList.add('d-none');
-        
+
         const btnText = document.getElementById('btnSubmitReviewText');
         if (btnText) btnText.textContent = 'Gửi';
     }
@@ -2767,7 +2854,7 @@
         alert.className = `alert alert-${type}`;
         alert.textContent = message;
         alert.classList.remove('d-none');
-        
+
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
 
@@ -2793,7 +2880,7 @@
             const response = await fetch(`/Review/Delete/${reviewId}?tourId=@Model.TourID`, {
                 method: 'DELETE'
             });
-            
+
             const result = await response.json();
 
             if (result.success) {
@@ -2811,4 +2898,3 @@
         }
     }
 </script>
-

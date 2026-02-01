@@ -12,8 +12,8 @@
         </div>
         
         <!-- Loading Spinner -->
-        <div id="loading-spinner" class="text-center py-4 d-none">
-            <div class="spinner-border text-primary" role="status">
+        <div id="loading-spinner" class="text-center py-4">
+            <div id="spinner-border" class="spinner-border text-primary d-none" role="status">
                 <span class="visually-hidden">Đang tải...</span>
             </div>
         </div>
@@ -66,6 +66,7 @@
         
         const container = document.getElementById('tour-container');
         const loadingSpinner = document.getElementById('loading-spinner');
+        const spinnerBorder = document.getElementById('spinner-border');
         const endOfList = document.getElementById('end-of-list');
 
         if (!container) return;
@@ -74,7 +75,7 @@
             if (isLoading || !hasMore) return;
             
             isLoading = true;
-            loadingSpinner.classList.remove('d-none');
+            spinnerBorder.classList.remove('d-none');
 
             try {
                 page++;
@@ -95,7 +96,7 @@
                 console.error('Error loading tours:', error);
             } finally {
                 isLoading = false;
-                loadingSpinner.classList.add('d-none');
+                spinnerBorder.classList.add('d-none');
             }
         };
 

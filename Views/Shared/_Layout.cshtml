@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,74 +12,88 @@
     <link rel="stylesheet" href="~/TourViet.styles.css" asp-append-version="true" />
     <script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
 </head>
+
 <body>
     @await Html.PartialAsync("_Sidebar")
 
     <!-- Header -->
     <header class="main-header border-bottom">
-        <div class="container-fluid">
-            <div class="row align-items-center g-2">
-                <!-- Sidebar Toggle Button -->
-                <div class="col-auto">
-                    <button class="btn btn-link sidebar-toggle p-2" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+        <div class="container-fluid h-100">
+            <div class="d-flex align-items-center justify-content-between w-100 h-100 position-relative">
+
+                <!-- Left Section: Toggle & Logo -->
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-link sidebar-toggle p-2 me-1" id="sidebarToggle" type="button"
+                        aria-label="Toggle sidebar">
                         <i class="bi bi-list fs-4"></i>
                     </button>
+                    <div class="d-flex align-items-center me-2">
+                        <img src="~/images/LogoTourSystem.svg" alt="TourViet Logo" class="logo-img me-2"
+                            style="height: 32px;" />
+                        <span class="brand-name">TourViet</span>
+                    </div>
                 </div>
 
-                <!-- Logo -->
-                <div class="col-auto d-none d-md-block">
-                    <img src="~/images/LogoTourSystem.svg" alt="TourViet Logo" class="logo-img" />
-                </div>
-
-                <!-- Brand Name -->
-                <div class="col-auto">
-                    <span class="fw-bold text-primary">TourViet</span>
-                </div>
-
-                <!-- Search Box - Centered -->
-                <div class="col d-flex justify-content-center">
-                    <div class="input-group w-75 w-lg-50 position-relative">
-                        <input type="text" id="tourSearchInput" class="form-control border-0 bg-light" placeholder="Tìm kiếm tour, địa điểm..." aria-label="Search" autocomplete="off">
-                        <button class="btn btn-link border-0 bg-light" type="button" id="searchBtn" aria-label="Search">
+                <!-- Center Section: Search (Desktop/Tablet) -->
+                <div class="header-search-container flex-grow-1 d-none d-md-flex justify-content-center mx-3 mx-lg-5"
+                    style="max-width: 600px;">
+                    <div class="search-input-group input-group position-relative w-100 shadow-sm">
+                        <input type="text" id="tourSearchInput" class="form-control border-0"
+                            placeholder="Tìm kiếm tour, địa điểm..." aria-label="Search" autocomplete="off">
+                        <button class="btn btn-link" type="button" id="searchBtn" aria-label="Search">
                             <i class="bi bi-search"></i>
                         </button>
-                        
+
                         <!-- Search Results Dropdown -->
-                        <div id="searchResultsDropdown" class="position-absolute bg-white shadow-lg rounded" style="display: none; top: 100%; left: 0; right: 0; z-index: 1050; max-height: 400px; overflow-y: auto; margin-top: 5px;">
+                        <div id="searchResultsDropdown" class="position-absolute bg-white shadow-lg rounded"
+                            style="display: none; top: 100%; left: 0; right: 0; z-index: 1100; max-height: 400px; overflow-y: auto; margin-top: 8px; border: 1px solid #eee;">
                             <div id="searchResultsList"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Notification Bell and User Icon - Right side -->
-                <div class="col-auto d-flex align-items-center">
-                    <!-- Notification Bell -->
-                    <div class="me-3 dropdown">
-                        <button class="btn btn-link p-2 position-relative" type="button" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                <!-- Right Section: Actions -->
+                <div class="d-flex align-items-center">
+                    <!-- Mobile Search Trigger -->
+                    <button class="btn btn-link p-2 me-1 d-md-none" id="mobileSearchToggle" type="button"
+                        aria-label="Tìm kiếm">
+                        <i class="bi bi-search fs-5"></i>
+                    </button>
+
+                    <!-- Notifications -->
+                    <div class="me-2 dropdown text-center">
+                        <button class="btn btn-link p-2 position-relative" type="button" id="notificationBtn"
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                             <i class="bi bi-bell fs-5"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                id="notificationBadge" style="display: none; font-size: 0.65rem;">
                                 0
                             </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" id="notificationDropdown" aria-labelledby="notificationBtn" style="min-width: 350px; max-height: 400px; overflow-y: auto;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" id="notificationDropdown"
+                            aria-labelledby="notificationBtn"
+                            style="min-width: 320px; max-height: 400px; overflow-y: auto; border-radius: 12px;">
                             <li>
-                                <h6 class="dropdown-header d-flex justify-content-between align-items-center">
-                                    <span>Thông báo</span>
+                                <h6 class="dropdown-header d-flex justify-content-between align-items-center py-3">
+                                    <span class="fw-bold">Thông báo</span>
                                     <small class="text-muted" id="unreadCount"></small>
                                 </h6>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li id="notificationList" class="px-2">
-                                <div class="text-center text-muted py-3">
-                                    <i class="bi bi-bell-slash"></i>
+                            <li>
+                                <hr class="dropdown-divider m-0">
+                            </li>
+                            <li id="notificationList" class="p-2">
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-bell-slash fs-2 mb-2 d-block"></i>
                                     <p class="mb-0 small">Chưa có thông báo nào</p>
                                 </div>
                             </li>
                         </ul>
                     </div>
 
-                    <!-- User Icon -->
-                    <div>
+                    <!-- User Account -->
+                    <div class="text-center">
                         @{
                             var userId = Context.Session.GetString("UserId");
                             var fullName = Context.Session.GetString("FullName");
@@ -86,25 +101,34 @@
                         }
                         @if (userId != null)
                         {
-                            <!-- User is logged in - Show dropdown menu -->
                             <div class="dropdown">
-                                <button class="btn btn-link p-2 dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                                <button class="btn btn-link p-2 dropdown-toggle" type="button" id="userDropdown"
+                                    data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
                                     <i class="bi bi-person-circle fs-4"></i>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li><h6 class="dropdown-header">@(fullName ?? "User")</h6></li>
-                                    <li><p class="dropdown-item-text small text-muted">@email</p></li>
-                                    <li><hr class="dropdown-divider"></li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2"
+                                    aria-labelledby="userDropdown" style="border-radius: 12px; min-width: 200px;">
                                     <li>
-                                        <a class="dropdown-item" asp-action="ChangePassword" asp-controller="Account">
+                                        <h6 class="dropdown-header fw-bold">@(fullName ?? "Người dùng")</h6>
+                                    </li>
+                                    <li>
+                                        <p class="dropdown-item-text small text-muted mb-0">@email</p>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-action="ChangePassword" asp-controller="Account">
                                             <i class="bi bi-key me-2"></i>Đổi mật khẩu
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
                                     <li>
                                         <form asp-action="Logout" asp-controller="Account" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="dropdown-item text-danger">
+                                            <button type="submit" class="dropdown-item text-danger py-2">
                                                 <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
                                             </button>
                                         </form>
@@ -114,11 +138,33 @@
                         }
                         else
                         {
-                            <!-- User is not logged in - Show login button -->
                             <a class="btn btn-link p-2" asp-action="Login" asp-controller="Account" aria-label="Đăng nhập">
                                 <i class="bi bi-person-circle fs-4"></i>
                             </a>
                         }
+                    </div>
+                </div>
+
+                <!-- Mobile Search Overlay (Full width when active) -->
+                <div id="mobileSearchContainer" class="d-md-none">
+                    <div class="d-flex align-items-center w-100 p-2">
+                        <button class="btn btn-link p-2 me-2" id="closeMobileSearch" type="button"
+                            aria-label="Close search">
+                            <i class="bi bi-arrow-left fs-4"></i>
+                        </button>
+                        <div class="search-input-group input-group flex-grow-1 position-relative">
+                            <input type="text" id="mobileSearchInput" class="form-control"
+                                placeholder="Tìm kiếm tour..." aria-label="Search mobile">
+                            <button class="btn btn-link" type="button" id="mobileSearchBtn">
+                                <i class="bi bi-search"></i>
+                            </button>
+
+                            <!-- Mobile Search Results Dropdown -->
+                            <div id="mobileSearchResultsDropdown" class="position-absolute bg-white shadow-lg rounded"
+                                style="display: none; top: 100%; left: 0; right: 0; z-index: 1100; max-height: 400px; overflow-y: auto; margin-top: 8px; border: 1px solid #eee;">
+                                <div id="mobileSearchResultsList"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -141,7 +187,8 @@
 
 
     <!-- Force Logout Notification Modal -->
-    <div class="modal fade" id="forceLogoutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="forceLogoutModalLabel" aria-hidden="true">
+    <div class="modal fade" id="forceLogoutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="forceLogoutModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-danger text-white border-0">
@@ -169,7 +216,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    
+
     <script>
         // Global SignalR connection for UserHub
         const userConnection = new signalR.HubConnectionBuilder()
@@ -180,27 +227,27 @@
         userConnection.on("ForceLogout", function (message) {
             // Set message
             document.getElementById('forceLogoutMessage').textContent = message;
-            
+
             // Show modal
             var logoutModal = new bootstrap.Modal(document.getElementById('forceLogoutModal'));
             logoutModal.show();
-            
+
             // Countdown
             var seconds = 5;
             var countdownElement = document.getElementById('logoutCountdown');
-            
-            var interval = setInterval(function() {
+
+            var interval = setInterval(function () {
                 seconds--;
                 countdownElement.textContent = seconds;
-                
+
                 if (seconds <= 0) {
                     clearInterval(interval);
                     performLogout();
                 }
             }, 1000);
-            
+
             // Handle "Logout Now" button
-            document.getElementById('logoutNowBtn').addEventListener('click', function() {
+            document.getElementById('logoutNowBtn').addEventListener('click', function () {
                 clearInterval(interval);
                 performLogout();
             });
@@ -211,7 +258,7 @@
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = '/Account/Logout';
-            
+
             // Add CSRF token
             var token = document.querySelector('input[name="__RequestVerificationToken"]');
             if (token) {
@@ -221,7 +268,7 @@
                 input.value = token.value;
                 form.appendChild(input);
             }
-            
+
             document.body.appendChild(form);
             form.submit();
         }
@@ -231,13 +278,13 @@
         });
 
         // ===== Notification System =====
-        
+
         // Load notifications on page load
         async function loadNotifications() {
             try {
                 const response = await fetch('/api/notification/list?limit=10');
                 const data = await response.json();
-                
+
                 if (data.success && data.data) {
                     displayNotifications(data.data);
                     updateUnreadCount();
@@ -246,11 +293,11 @@
                 console.error('Error loading notifications:', error);
             }
         }
-        
+
         // Display notifications in dropdown
         function displayNotifications(notifications) {
             const notificationList = document.getElementById('notificationList');
-            
+
             if (!notifications || notifications.length === 0) {
                 notificationList.innerHTML = `
                     <div class="text-center text-muted py-3">
@@ -259,9 +306,9 @@
                     </div>`;
                 return;
             }
-            
+
             notificationList.innerHTML = notifications.map(n => createNotificationItem(n)).join('');
-            
+
             // Attach click handlers for mark as read
             notifications.forEach(n => {
                 if (!n.isRead) {
@@ -272,13 +319,13 @@
                 }
             });
         }
-        
+
         // Create HTML for a notification item
         function createNotificationItem(notification) {
             const timeAgo = getTimeAgo(new Date(notification.sentAt));
             const readClass = notification.isRead ? '' : 'bg-light';
             const icon = getNotificationIcon(notification.notificationType);
-            
+
             return `
                 <div id="notif-${notification.notificationId}" class="dropdown-item ${readClass}" style="cursor: pointer; white-space: normal;">
                     <div class="d-flex align-items-start">
@@ -295,37 +342,37 @@
                 <li><hr class="dropdown-divider"></li>
             `;
         }
-        
+
         // Get icon based on notification type
         function getNotificationIcon(type) {
-            switch(type) {
+            switch (type) {
                 case 'Booking': return 'bi-ticket-perforated';
                 case 'Promotion': return 'bi-tag';
                 default: return 'bi-bell';
             }
         }
-        
+
         // Calculate relative time
         function getTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
-            
+
             if (seconds < 60) return 'Vừa xong';
             if (seconds < 3600) return Math.floor(seconds / 60) + ' phút trước';
             if (seconds < 86400) return Math.floor(seconds / 3600) + ' giờ trước';
             if (seconds < 604800) return Math.floor(seconds / 86400) + ' ngày trước';
             return date.toLocaleDateString('vi-VN');
         }
-        
+
         // Update unread count badge
         async function updateUnreadCount() {
             try {
                 const response = await fetch('/api/notification/unread-count');
                 const data = await response.json();
-                
+
                 if (data.success) {
                     const badge = document.getElementById('notificationBadge');
                     const countText = document.getElementById('unreadCount');
-                    
+
                     if (data.count > 0) {
                         badge.textContent = data.count > 99 ? '99+' : data.count;
                         badge.style.display = 'inline';
@@ -339,7 +386,7 @@
                 console.error('Error updating unread count:', error);
             }
         }
-        
+
         // Mark notification as read
         async function markAsRead(notificationId) {
             try {
@@ -347,14 +394,14 @@
                     method: 'POST'
                 });
                 const data = await response.json();
-                
+
                 if (data.success) {
                     // Update UI
                     const item = document.getElementById(`notif-${notificationId}`);
                     if (item) {
                         item.classList.remove('bg-light');
                     }
-                    
+
                     // Refresh count
                     await updateUnreadCount();
                 }
@@ -362,18 +409,18 @@
                 console.error('Error marking as read:', error);
             }
         }
-        
+
         // Listen for real-time notifications via SignalR
         userConnection.on("ReceiveNotification", function (notification) {
             console.log('Received notification:', notification);
-            
+
             // Show toast notification (optional)
             showNotificationToast(notification);
-            
+
             // Reload notifications and update count
             loadNotifications();
         });
-        
+
         // Show toast notification (optional)
         function showNotificationToast(notification) {
             const toastHtml = `
@@ -391,23 +438,23 @@
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
                 </div>`;
-            
+
             const container = document.createElement('div');
             container.innerHTML = toastHtml;
             document.body.appendChild(container);
-            
+
             const toastElement = container.querySelector('.toast');
             const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
             toast.show();
-            
+
             // Remove element after hidden
             toastElement.addEventListener('hidden.bs.toast', () => {
                 container.remove();
             });
         }
-        
+
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Only load notifications if user is logged in
             const userId = '@Context.Session.GetString("UserId")';
             if (userId) {
@@ -418,44 +465,87 @@
 
     <!-- Tour Search JavaScript -->
     <script>
-        (function() {
-            const searchInput = document.getElementById('tourSearchInput');
+        (function () {
+            const searchInputs = [document.getElementById('tourSearchInput'), document.getElementById('mobileSearchInput')].filter(x => x);
             const searchBtn = document.getElementById('searchBtn');
-            const resultsDropdown = document.getElementById('searchResultsDropdown');
-            const resultsList = document.getElementById('searchResultsList');
-            
+            const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+            const dropdowns = [document.getElementById('searchResultsDropdown'), document.getElementById('mobileSearchResultsDropdown')].filter(x => x);
+            const lists = [document.getElementById('searchResultsList'), document.getElementById('mobileSearchResultsList')].filter(x => x);
+
             let debounceTimer;
             let currentSelectedIndex = -1;
             let searchResults = [];
-            
-            if (!searchInput) return; // Guard clause
-            
-            // Debounced search function
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value.trim();
-                
-                clearTimeout(debounceTimer);
-                
-                if (query.length < 2) {
-                    hideResults();
-                    return;
-                }
-                
-                // Show loading state
-                showLoading();
-                
-                // Debounce API call
-                debounceTimer = setTimeout(() => {
-                    performSearch(query);
-                }, 300);
+
+            if (searchInputs.length === 0) return;
+
+            // Debounced search function for all inputs
+            searchInputs.forEach(input => {
+                input.addEventListener('input', function (e) {
+                    const query = e.target.value.trim();
+
+                    // Sync other inputs
+                    searchInputs.forEach(other => {
+                        if (other !== input) other.value = e.target.value;
+                    });
+
+                    clearTimeout(debounceTimer);
+
+                    if (query.length < 2) {
+                        hideResults();
+                        return;
+                    }
+
+                    showLoading();
+
+                    debounceTimer = setTimeout(() => {
+                        performSearch(query);
+                    }, 300);
+                });
+
+                // Keyboard navigation
+                input.addEventListener('keydown', function (e) {
+                    const activeList = lists.find(l => l.parentElement.style.display !== 'none');
+                    if (!activeList) return;
+                    const items = activeList.querySelectorAll('.search-result-item');
+
+                    if (items.length === 0) return;
+
+                    switch (e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
+                            updateSelection(items);
+                            break;
+
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+                            updateSelection(items);
+                            break;
+
+                        case 'Enter':
+                            e.preventDefault();
+                            if (currentSelectedIndex >= 0 && currentSelectedIndex < searchResults.length) {
+                                navigateToTour(searchResults[currentSelectedIndex].tourID);
+                            } else if (input.value.trim().length >= 2) {
+                                performSearch(input.value.trim());
+                            }
+                            break;
+
+                        case 'Escape':
+                            hideResults();
+                            input.blur();
+                            break;
+                    }
+                });
             });
-            
+
             // Perform search API call
             async function performSearch(query) {
                 try {
                     const response = await fetch(`/api/search/tours?query=${encodeURIComponent(query)}&limit=8`);
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         searchResults = data.data;
                         displayResults(searchResults);
@@ -467,39 +557,38 @@
                     showError();
                 }
             }
-            
-            // Display search results
+
+            // Display search results in all lists
             function displayResults(results) {
                 currentSelectedIndex = -1;
-                
-                if (!results || results.length === 0) {
-                    resultsList.innerHTML = `
-                        <div class="p-3 text-center text-muted">
+
+                const html = (!results || results.length === 0)
+                    ? `<div class="p-3 text-center text-muted">
                             <i class="bi bi-search"></i>
                             <p class="mb-0 small">Không tìm thấy tour nào</p>
-                        </div>`;
-                    resultsDropdown.style.display = 'block';
-                    return;
+                        </div>`
+                    : results.map((tour, index) => createResultItem(tour, index)).join('');
+
+                lists.forEach(list => list.innerHTML = html);
+                dropdowns.forEach(dropdown => dropdown.style.display = 'block');
+
+                // Attach click handlers to all new items
+                if (results && results.length > 0) {
+                    results.forEach((tour, index) => {
+                        const items = document.querySelectorAll(`[id^="search-result-${index}"]`);
+                        items.forEach(item => {
+                            item.addEventListener('click', () => navigateToTour(tour.tourID));
+                        });
+                    });
                 }
-                
-                resultsList.innerHTML = results.map((tour, index) => createResultItem(tour, index)).join('');
-                resultsDropdown.style.display = 'block';
-                
-                // Attach click handlers
-                results.forEach((tour, index) => {
-                    const item = document.getElementById(`search-result-${index}`);
-                    if (item) {
-                        item.addEventListener('click', () => navigateToTour(tour.tourID));
-                    }
-                });
             }
-            
+
             // Create HTML for a result item
             function createResultItem(tour, index) {
                 const price = tour.minPrice ? formatPrice(tour.minPrice, tour.currency) : 'Liên hệ';
                 const location = [tour.city, tour.countryName].filter(x => x).join(', ') || tour.locationName || '';
                 const defaultImage = '/images/tour-placeholder.jpg';
-                
+
                 return `
                     <div id="search-result-${index}" class="search-result-item p-3 border-bottom" data-index="${index}" style="cursor: pointer; transition: background-color 0.2s;">
                         <div class="d-flex align-items-center">
@@ -508,133 +597,91 @@
                                  style="width: 60px; height: 60px; object-fit: cover;"
                                  onerror="this.src='${defaultImage}'">
                             <div class="flex-grow-1" style="min-width: 0;">
-                                <h6 class="mb-1 text-truncate fw-bold">${tour.tourName}</h6>
-                                <p class="mb-1 small text-muted text-truncate">
+                                <h6 class="mb-1 text-truncate fw-bold small">${tour.tourName}</h6>
+                                <p class="mb-1 smaller text-muted text-truncate" style="font-size: 0.75rem;">
                                     <i class="bi bi-geo-alt"></i> ${location}
-                                    ${tour.categoryName ? `<span class="ms-2"><i class="bi bi-tag"></i> ${tour.categoryName}</span>` : ''}
                                 </p>
-                                <p class="mb-0 small text-primary fw-semibold">
+                                <p class="mb-0 smaller text-primary fw-semibold" style="font-size: 0.75rem;">
                                     <i class="bi bi-cash"></i> Từ ${price}
                                 </p>
                             </div>
                         </div>
                     </div>`;
             }
-            
-            // Format price
+
             function formatPrice(price, currency) {
                 return new Intl.NumberFormat('vi-VN').format(price) + ' ' + currency;
             }
-            
-            // Show loading state
+
             function showLoading() {
-                resultsList.innerHTML = `
+                const html = `
                     <div class="p-3 text-center">
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="visually-hidden">Đang tìm...</span>
                         </div>
                         <p class="mb-0 small text-muted mt-2">Đang tìm kiếm...</p>
                     </div>`;
-                resultsDropdown.style.display = 'block';
+                lists.forEach(list => list.innerHTML = html);
+                dropdowns.forEach(dropdown => dropdown.style.display = 'block');
             }
-            
-            // Show error
+
             function showError() {
-                resultsList.innerHTML = `
+                const html = `
                     <div class="p-3 text-center text-danger">
                         <i class="bi bi-exclamation-triangle"></i>
                         <p class="mb-0 small">Đã xảy ra lỗi khi tìm kiếm</p>
                     </div>`;
-                resultsDropdown.style.display = 'block';
+                lists.forEach(list => list.innerHTML = html);
+                dropdowns.forEach(dropdown => dropdown.style.display = 'block');
             }
-            
-            // Hide results
+
             function hideResults() {
-                resultsDropdown.style.display = 'none';
+                dropdowns.forEach(dropdown => dropdown.style.display = 'none');
                 currentSelectedIndex = -1;
             }
-            
-            // Navigate to tour details
+
             function navigateToTour(tourId) {
                 window.location.href = `/Home/TourDetails/${tourId}`;
             }
-            
-            // Keyboard navigation
-            searchInput.addEventListener('keydown', function(e) {
-                const items = document.querySelectorAll('.search-result-item');
-                
-                if (items.length === 0) return;
-                
-                switch(e.key) {
-                    case 'ArrowDown':
-                        e.preventDefault();
-                        currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
-                        updateSelection(items);
-                        break;
-                        
-                    case 'ArrowUp':
-                        e.preventDefault();
-                        currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
-                        updateSelection(items);
-                        break;
-                        
-                    case 'Enter':
-                        e.preventDefault();
-                        if (currentSelectedIndex >= 0 && currentSelectedIndex < searchResults.length) {
-                            navigateToTour(searchResults[currentSelectedIndex].tourID);
-                        }
-                        break;
-                        
-                    case 'Escape':
-                        hideResults();
-                        searchInput.blur();
-                        break;
-                }
-            });
-            
-            // Update selection highlight
+
             function updateSelection(items) {
                 items.forEach((item, index) => {
-                    if (index === currentSelectedIndex) {
-                        item.style.backgroundColor = '#f0f0f0';
-                        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                    } else {
-                        item.style.backgroundColor = '';
-                    }
+                    item.style.backgroundColor = (index === currentSelectedIndex) ? '#f0f0f0' : '';
+                    if (index === currentSelectedIndex) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                 });
             }
-            
+
             // Hover effect
-            document.addEventListener('mouseover', function(e) {
-                if (e.target.closest('.search-result-item')) {
-                    const item = e.target.closest('.search-result-item');
+            document.addEventListener('mouseover', function (e) {
+                const item = e.target.closest('.search-result-item');
+                if (item) {
                     const index = parseInt(item.getAttribute('data-index'));
                     currentSelectedIndex = index;
-                    
-                    const items = document.querySelectorAll('.search-result-item');
+                    const items = item.parentElement.querySelectorAll('.search-result-item');
                     updateSelection(items);
                 }
             });
-            
+
             // Click outside to close
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !resultsDropdown.contains(e.target)) {
+            document.addEventListener('click', function (e) {
+                const isClickInside = searchInputs.some(input => input.contains(e.target)) ||
+                    dropdowns.some(dropdown => dropdown.contains(e.target));
+                if (!isClickInside) {
                     hideResults();
                 }
             });
-            
-            // Search button click
-            if (searchBtn) {
-                searchBtn.addEventListener('click', function() {
-                    const query = searchInput.value.trim();
-                    if (query.length >= 2) {
-                        performSearch(query);
-                    }
+
+            // Search button clicks
+            [searchBtn, mobileSearchBtn].filter(x => x).forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const activeInput = searchInputs.find(input => input.value.trim().length >= 2);
+                    if (activeInput) performSearch(activeInput.value.trim());
                 });
-            }
+            });
         })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

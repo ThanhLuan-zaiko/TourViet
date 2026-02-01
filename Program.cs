@@ -59,6 +59,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddApplicationServices();
+builder.Services.AddAppRateLimiter();
 
 // Add SignalR for real-time features
 builder.Services.AddSignalR();
@@ -89,6 +90,7 @@ app.UseSession();
 app.UseMiddleware<GlobalExceptionMiddleware>(); // Should be first to catch all exceptions
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<AuthenticationMiddleware>();
+app.UseRateLimiter();
 app.UseBookingAuthorization(); // Booking-specific authorization
 
 app.UseAuthorization();
